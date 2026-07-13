@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/azkar/presentation/pages/azkar_view.dart';
+import '../../features/hadith/presentation/pages/hadith_details_view.dart';
 import '../../features/home/presentation/pages/home_layout.dart';
 import '../../features/intro/presentation/pages/intro_view.dart';
 import '../../features/quran/presentation/pages/quran_details_view.dart';
@@ -12,6 +13,7 @@ abstract class AppRoutes {
     IntroView.routeName: (context) => const IntroView(),
     HomeLayout.routeName: (context) => const HomeLayout(),
     QuranDetailsView.routeName: (context) => const QuranDetailsView(),
+    HadithDetailsView.routeName: (context) => const HadithDetailsView(),
     AzkarView.routeName: (context) => const AzkarView(),
   };
 }

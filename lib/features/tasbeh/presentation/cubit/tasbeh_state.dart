@@ -16,13 +16,14 @@ class TasbehState extends Equatable {
     this.dhikrIndex = 0,
   });
 
-  /// Presses per dhikr before advancing to the next.
-  static const int target = 30;
+  /// Presses per dhikr before advancing to the next (a full misbaha = 33).
+  static const int target = 33;
 
-  /// The dhikr cycle, in order.
+  /// The dhikr cycle, in order (Figma review comment #8).
   static const List<String> dhikrList = [
     'سبحان الله',
     'الحمد لله',
+    'لا إله إلا الله',
     'الله أكبر',
   ];
 

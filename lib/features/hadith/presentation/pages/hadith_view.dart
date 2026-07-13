@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/hadith_bloc.dart';
+import 'hadith_details_view.dart';
 
 class HadithView extends StatelessWidget {
   const HadithView({super.key});
@@ -65,48 +66,87 @@ class _HadithViewBody extends StatelessWidget {
                     );
                   }
 
-                  return CarouselSlider(
+                  return CarouselSlider.builder(
+                    itemCount: state.hadiths.length,
                     options: CarouselOptions(
                       height: double.infinity,
-                      viewportFraction: 0.85,
+                      viewportFraction: 0.8,
+                      enlargeCenterPage: true,
                       enableInfiniteScroll: false,
                     ),
-                    items: state.hadiths.map((hadith) {
-                      return Container(
-                        width: MediaQuery.of(context).size.width,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 20,
+                    itemBuilder: (context, index, realIndex) {
+                      final hadith = state.hadiths[index];
+                      return GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          HadithDetailsView.routeName,
+                          arguments: (hadith: hadith, number: index + 1),
                         ),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryColor,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              hadith.title,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.titleLarge,
-                            ),
-                            const Divider(color: AppColors.backgroundColor),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: Text(
-                                  hadith.content,
-                                  textAlign: TextAlign.center,
-                                  textDirection: TextDirection.rtl,
-                                  style: theme.textTheme.bodyLarge!.copyWith(
-                                    height: 1.8,
-                                  ),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 20,
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Stack(
+                            children: [
+                              // Corner ornaments, tinted dark so they read on
+                              // the gold parchment (spec §2.5).
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                child: Assets.images.imgLeftCorner.image(
+                                  width: 52,
+                                  height: 52,
+                                  color: AppColors.backgroundColor,
+                                  colorBlendMode: BlendMode.srcIn,
                                 ),
                               ),
-                            ),
-                          ],
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Assets.images.imgRightCorner.image(
+                                  width: 52,
+                                  height: 52,
+                                  color: AppColors.backgroundColor,
+                                  colorBlendMode: BlendMode.srcIn,
+                                ),
+                              ),
+                              Positioned.fill(
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      hadith.title,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.titleLarge,
+                                    ),
+                                    const Divider(
+                                      color: AppColors.backgroundColor,
+                                    ),
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        child: Text(
+                                          hadith.content,
+                                          textAlign: TextAlign.center,
+                                          textDirection: TextDirection.rtl,
+                                          style: theme.textTheme.bodyLarge!
+                                              .copyWith(height: 1.8),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
-                    }).toList(),
+                    },
                   );
                 },
               ),

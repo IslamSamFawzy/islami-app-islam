@@ -60,7 +60,7 @@ class _TasbehViewBody extends StatelessWidget {
                     const SizedBox(height: 24),
                     Text(
                       state.currentDhikr,
-                      style: theme.textTheme.headlineLarge!.copyWith(
+                      style: theme.textTheme.titleLarge!.copyWith(
                         color: AppColors.primaryColor,
                       ),
                     ),
@@ -68,20 +68,7 @@ class _TasbehViewBody extends StatelessWidget {
                     Text(
                       '${state.count}',
                       style: theme.textTheme.headlineLarge!.copyWith(
-                        color: Colors.white,
-                        fontSize: 40,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: () => context.read<TasbehCubit>().reset(),
-                      icon: const Icon(
-                        Icons.refresh,
-                        color: AppColors.primaryColor,
-                      ),
-                      label: const Text(
-                        'Reset',
-                        style: TextStyle(color: AppColors.primaryColor),
+                        color: AppColors.white,
                       ),
                     ),
                   ],
