@@ -75,6 +75,10 @@ class $AssetsImagesGen {
   AssetGenImage get imgBottomDecoration =>
       const AssetGenImage('assets/images/img_bottom_decoration.png');
 
+  /// File path: assets/images/img_hadith_corner.png
+  AssetGenImage get imgHadithCorner =>
+      const AssetGenImage('assets/images/img_hadith_corner.png');
+
   /// File path: assets/images/img_header.png
   AssetGenImage get imgHeader =>
       const AssetGenImage('assets/images/img_header.png');
@@ -169,6 +173,7 @@ class $AssetsImagesGen {
     azkarMorning,
     hadethBackground,
     imgBottomDecoration,
+    imgHadithCorner,
     imgHeader,
     imgLeftCorner,
     imgMostRecent,

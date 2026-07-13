@@ -94,26 +94,26 @@ class _HadithViewBody extends StatelessWidget {
                           ),
                           child: Stack(
                             children: [
-                              // Corner ornaments, tinted dark so they read on
-                              // the gold parchment (spec §2.5).
+                              // Dark filigree corner ornaments on the gold
+                              // parchment (spec §2.5): top-left as-is, top-right
+                              // mirrored.
                               Positioned(
                                 left: 0,
                                 top: 0,
-                                child: Assets.images.imgLeftCorner.image(
-                                  width: 52,
-                                  height: 52,
-                                  color: AppColors.backgroundColor,
-                                  colorBlendMode: BlendMode.srcIn,
+                                child: Assets.images.imgHadithCorner.image(
+                                  width: 70,
+                                  height: 70,
                                 ),
                               ),
                               Positioned(
                                 right: 0,
                                 top: 0,
-                                child: Assets.images.imgRightCorner.image(
-                                  width: 52,
-                                  height: 52,
-                                  color: AppColors.backgroundColor,
-                                  colorBlendMode: BlendMode.srcIn,
+                                child: Transform.flip(
+                                  flipX: true,
+                                  child: Assets.images.imgHadithCorner.image(
+                                    width: 70,
+                                    height: 70,
+                                  ),
                                 ),
                               ),
                               Positioned.fill(
