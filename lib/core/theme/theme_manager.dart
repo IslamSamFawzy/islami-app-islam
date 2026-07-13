@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:islami/core/theme/app_colors.dart';
 
 abstract class ThemeManager {
-  static ThemeData lightTheme() => ThemeData(
+  // NOTE: this is the app's single (dark) theme — named `darkTheme` after the
+  // Figma file, which ships one dark theme only.
+  static ThemeData darkTheme() => ThemeData(
+    // Janna at the theme level so no widget can fall back to Arial (spec §3,
+    // Figma review comment #6). Ad-hoc TextStyles without a family inherit this.
+    fontFamily: 'Janna',
     scaffoldBackgroundColor: AppColors.backgroundColor,
     primaryColor: AppColors.primaryColor,
     bottomNavigationBarTheme: BottomNavigationBarThemeData(

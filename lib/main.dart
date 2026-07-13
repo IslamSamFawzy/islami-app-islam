@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeManager.lightTheme(),
+      theme: ThemeManager.darkTheme(),
       debugShowCheckedModeBanner: false,
       initialRoute: SplashView.routeName,
       routes: AppRoutes.routes,
