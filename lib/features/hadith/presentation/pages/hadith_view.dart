@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,25 +96,23 @@ class _HadithViewBody extends StatelessWidget {
                           ),
                           child: Stack(
                             children: [
-                              // Dark filigree corner ornaments on the gold
-                              // parchment (spec §2.5): top-left as-is, top-right
-                              // mirrored.
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                child: Assets.images.imgHadithCorner.image(
-                                  width: 70,
-                                  height: 70,
-                                ),
-                              ),
+                              // One dark filigree asset for both top corners
+                              // (spec §2.5): top-right as exported, top-left the
+                              // same image rotated -180°.
                               Positioned(
                                 right: 0,
                                 top: 0,
-                                child: Transform.flip(
-                                  flipX: true,
+                                child: Assets.images.imgHadithCorner.image(
+                                  width: 72,
+                                ),
+                              ),
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                child: Transform.rotate(
+                                  angle: -pi,
                                   child: Assets.images.imgHadithCorner.image(
-                                    width: 70,
-                                    height: 70,
+                                    width: 72,
                                   ),
                                 ),
                               ),
