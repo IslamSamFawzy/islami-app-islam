@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../home/presentation/pages/home_layout.dart';
+import '../../../intro/presentation/pages/intro_view.dart';
 import '../cubit/splash_cubit.dart';
 
 class SplashView extends StatelessWidget {
@@ -13,13 +15,15 @@ class SplashView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SplashCubit()..startTimer(),
+      create: (_) => SplashCubit(sl())..startTimer(),
       child: BlocListener<SplashCubit, SplashState>(
         listener: (context, state) {
           if (state.status == SplashStatus.navigate) {
             Navigator.pushNamedAndRemoveUntil(
               context,
-              HomeLayout.routeName,
+              state.onboardingSeen
+                  ? HomeLayout.routeName
+                  : IntroView.routeName,
               (route) => false,
             );
           }

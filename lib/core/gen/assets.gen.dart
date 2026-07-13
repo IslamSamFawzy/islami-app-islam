@@ -17,6 +17,9 @@ import 'package:vector_graphics/vector_graphics.dart' as _vg;
 class $AssetsFilesGen {
   const $AssetsFilesGen();
 
+  /// Directory path: assets/files/azkar
+  $AssetsFilesAzkarGen get azkar => const $AssetsFilesAzkarGen();
+
   /// Directory path: assets/files/suras
   $AssetsFilesSurasGen get suras => const $AssetsFilesSurasGen();
 }
@@ -56,6 +59,14 @@ class $AssetsIconsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  /// File path: assets/images/azkar_evening.png
+  AssetGenImage get azkarEvening =>
+      const AssetGenImage('assets/images/azkar_evening.png');
+
+  /// File path: assets/images/azkar_morning.png
+  AssetGenImage get azkarMorning =>
+      const AssetGenImage('assets/images/azkar_morning.png');
+
   /// File path: assets/images/hadeth_background.png
   AssetGenImage get hadethBackground =>
       const AssetGenImage('assets/images/hadeth_background.png');
@@ -83,6 +94,26 @@ class $AssetsImagesGen {
   /// File path: assets/images/img_sura_number_theme.png
   AssetGenImage get imgSuraNumberTheme =>
       const AssetGenImage('assets/images/img_sura_number_theme.png');
+
+  /// File path: assets/images/intro_1_calligraphy.png
+  AssetGenImage get intro1Calligraphy =>
+      const AssetGenImage('assets/images/intro_1_calligraphy.png');
+
+  /// File path: assets/images/intro_2_mosque.png
+  AssetGenImage get intro2Mosque =>
+      const AssetGenImage('assets/images/intro_2_mosque.png');
+
+  /// File path: assets/images/intro_3_quran.png
+  AssetGenImage get intro3Quran =>
+      const AssetGenImage('assets/images/intro_3_quran.png');
+
+  /// File path: assets/images/intro_4_tasbeh.png
+  AssetGenImage get intro4Tasbeh =>
+      const AssetGenImage('assets/images/intro_4_tasbeh.png');
+
+  /// File path: assets/images/intro_5_radio.png
+  AssetGenImage get intro5Radio =>
+      const AssetGenImage('assets/images/intro_5_radio.png');
 
   /// File path: assets/images/islami_logo.png
   AssetGenImage get islamiLogo =>
@@ -134,6 +165,8 @@ class $AssetsImagesGen {
 
   /// List of all assets
   List<AssetGenImage> get values => [
+    azkarEvening,
+    azkarMorning,
     hadethBackground,
     imgBottomDecoration,
     imgHeader,
@@ -141,6 +174,11 @@ class $AssetsImagesGen {
     imgMostRecent,
     imgRightCorner,
     imgSuraNumberTheme,
+    intro1Calligraphy,
+    intro2Mosque,
+    intro3Quran,
+    intro4Tasbeh,
+    intro5Radio,
     islamiLogo,
     logoSplash,
     logoSplsh,
@@ -154,6 +192,19 @@ class $AssetsImagesGen {
     taspehBackground,
     timeBackground,
   ];
+}
+
+class $AssetsFilesAzkarGen {
+  const $AssetsFilesAzkarGen();
+
+  /// File path: assets/files/azkar/evening.json
+  String get evening => 'assets/files/azkar/evening.json';
+
+  /// File path: assets/files/azkar/morning.json
+  String get morning => 'assets/files/azkar/morning.json';
+
+  /// List of all assets
+  List<String> get values => [evening, morning];
 }
 
 class $AssetsFilesSurasGen {
