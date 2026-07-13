@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -98,7 +96,7 @@ class _HadithViewBody extends StatelessWidget {
                             children: [
                               // One dark filigree asset for both top corners
                               // (spec §2.5): top-right as exported, top-left the
-                              // same image rotated -180°.
+                              // same image mirrored so it hugs the left corner.
                               Positioned(
                                 right: 0,
                                 top: 0,
@@ -109,8 +107,8 @@ class _HadithViewBody extends StatelessWidget {
                               Positioned(
                                 left: 0,
                                 top: 0,
-                                child: Transform.rotate(
-                                  angle: -pi,
+                                child: Transform.flip(
+                                  flipX: true,
                                   child: Assets.images.imgHadithCorner.image(
                                     width: 72,
                                   ),
@@ -119,11 +117,18 @@ class _HadithViewBody extends StatelessWidget {
                               Positioned.fill(
                                 child: Column(
                                   children: [
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      hadith.title,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.titleLarge,
+                                    // Title sits in the ornament band (centered
+                                    // between the two corners); the divider and
+                                    // body start below so nothing overlaps.
+                                    SizedBox(
+                                      height: 78,
+                                      child: Center(
+                                        child: Text(
+                                          hadith.title,
+                                          textAlign: TextAlign.center,
+                                          style: theme.textTheme.titleLarge,
+                                        ),
+                                      ),
                                     ),
                                     const Divider(
                                       color: AppColors.backgroundColor,
