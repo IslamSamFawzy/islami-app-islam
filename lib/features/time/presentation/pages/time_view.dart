@@ -84,14 +84,12 @@ class _TimeViewBody extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'Azkar',
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     color: AppColors.textColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -162,8 +160,8 @@ class _AzkarCard extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [Color(0xff262019), Color(0xff0A0806)],
           ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primaryColor, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primaryColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +175,7 @@ class _AzkarCard extends StatelessWidget {
               child: Text(
                 title,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),

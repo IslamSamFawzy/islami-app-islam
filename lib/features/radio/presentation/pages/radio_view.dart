@@ -139,15 +139,16 @@ class _TabButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryColor : AppColors.backgroundColor,
+          color: selected ? AppColors.primaryColor : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.primaryColor),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: selected ? AppColors.backgroundColor : AppColors.primaryColor,
-            fontWeight: FontWeight.bold,
+          // Both states use Janna (theme font); only the colour changes so the
+          // unselected tab never falls back to Arial (Figma comment #6).
+          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+            color: selected ? AppColors.titleTextColor : AppColors.textColor,
           ),
         ),
       ),
