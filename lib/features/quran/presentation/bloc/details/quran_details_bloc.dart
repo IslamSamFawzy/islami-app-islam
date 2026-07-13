@@ -12,6 +12,13 @@ class QuranDetailsBloc extends Bloc<QuranDetailsEvent, QuranDetailsState> {
   QuranDetailsBloc({required this.getSuraVerses})
       : super(const QuranDetailsState()) {
     on<LoadVersesEvent>(_onLoadVerses);
+    on<SelectVerseEvent>(_onSelectVerse);
+  }
+
+  void _onSelectVerse(SelectVerseEvent event, Emitter<QuranDetailsState> emit) {
+    // Tapping the already-selected ayah clears the highlight.
+    final next = state.selectedIndex == event.index ? -1 : event.index;
+    emit(state.copyWith(selectedIndex: next));
   }
 
   Future<void> _onLoadVerses(

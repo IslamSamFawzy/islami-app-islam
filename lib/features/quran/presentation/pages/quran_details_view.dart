@@ -72,21 +72,21 @@ class QuranDetailsView extends StatelessWidget {
                     );
                   }
 
-                  return ListView.builder(
+                  return ListView.separated(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 20,
                     ),
                     itemCount: state.verses.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      return Text(
-                        "${state.verses[index]} ﴿${_toArabicNumber(index + 1)}﴾",
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleLarge!.copyWith(
-                          color: AppColors.primaryColor,
-                          height: 1.8,
-                        ),
+                      return _AyahCard(
+                        text:
+                            "${state.verses[index]} ﴿${_toArabicNumber(index + 1)}﴾",
+                        selected: state.selectedIndex == index,
+                        onTap: () => context
+                            .read<QuranDetailsBloc>()
+                            .add(SelectVerseEvent(index)),
                       );
                     },
                   );
@@ -107,5 +107,45 @@ class QuranDetailsView extends StatelessWidget {
         .split('')
         .map((e) => arabicNumbers[int.parse(e)])
         .join();
+  }
+}
+
+/// A single ayah rendered as a bordered card (spec §2.4): 1px gold border,
+/// radius 8, transparent fill, gold RTL text with the verse number after it.
+/// When [selected] it flips to a solid-gold fill with dark text.
+class _AyahCard extends StatelessWidget {
+  final String text;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _AyahCard({
+    required this.text,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryColor : Colors.transparent,
+          border: Border.all(color: AppColors.primaryColor, width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          text,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            color: selected ? AppColors.titleTextColor : AppColors.primaryColor,
+            height: 1.8,
+          ),
+        ),
+      ),
+    );
   }
 }

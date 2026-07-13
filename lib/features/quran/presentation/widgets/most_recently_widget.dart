@@ -29,7 +29,7 @@ class MostRecentlyWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Most Recently',
-                style: theme.textTheme.titleMedium!.copyWith(
+                style: theme.textTheme.titleLarge!.copyWith(
                   color: AppColors.textColor,
                 ),
               ),

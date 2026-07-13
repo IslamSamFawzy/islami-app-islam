@@ -16,3 +16,14 @@ class LoadVersesEvent extends QuranDetailsEvent {
   @override
   List<Object?> get props => [suraId];
 }
+
+/// Selects (or, if already selected, deselects) the ayah at [index] so it is
+/// rendered filled gold with dark text — the "currently read" state (spec §2.4).
+class SelectVerseEvent extends QuranDetailsEvent {
+  final int index;
+
+  const SelectVerseEvent(this.index);
+
+  @override
+  List<Object?> get props => [index];
+}

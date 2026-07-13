@@ -19,7 +19,7 @@ class SuraListView extends StatelessWidget {
         children: [
           Text(
             'Suras List',
-            style: theme.textTheme.titleMedium!.copyWith(
+            style: theme.textTheme.titleLarge!.copyWith(
               color: AppColors.textColor,
             ),
           ),
@@ -70,8 +70,9 @@ class SuraListView extends StatelessWidget {
                   return SuraItem(sura: state.filteredSuras[index]);
                 },
                 separatorBuilder: (context, index) {
+                  // Thin gold divider under each row (spec §2.3).
                   return const Divider(
-                    color: Colors.white,
+                    color: AppColors.primaryColor,
                     endIndent: 40,
                     indent: 40,
                   );

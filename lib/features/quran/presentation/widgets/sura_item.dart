@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/gen/assets.gen.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/sura.dart';
 import '../bloc/quran_bloc.dart';
 import '../pages/quran_details_view.dart';
@@ -39,7 +40,7 @@ class SuraItem extends StatelessWidget {
                   child: Text(
                     sura.id,
                     style: theme.textTheme.titleLarge!.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                 ),
@@ -54,13 +55,13 @@ class SuraItem extends StatelessWidget {
                 Text(
                   sura.nameEn,
                   style: theme.textTheme.titleLarge!.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 ),
                 Text(
                   '${sura.ayaCount} Verses',
                   style: theme.textTheme.bodyMedium!.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 ),
               ],
@@ -69,7 +70,7 @@ class SuraItem extends StatelessWidget {
           Text(
             sura.nameAr,
             style: theme.textTheme.titleLarge!.copyWith(
-              color: Colors.white,
+              color: AppColors.white,
             ),
           ),
         ],
