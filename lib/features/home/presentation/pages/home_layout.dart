@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/gen/assets.gen.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../hadith/presentation/pages/hadith_view.dart';
 import '../../../quran/presentation/pages/quran_view.dart';
 import '../../../radio/presentation/pages/radio_view.dart';
@@ -48,8 +49,8 @@ class _HomeLayoutBody extends StatelessWidget {
             onTap: (index) => context.read<HomeCubit>().changeTab(index),
             items: [
               _buildItem(Assets.icons.icQuran, 'Quran'),
-              _buildItem(Assets.icons.icHadeth, 'Hadeth'),
-              _buildItem(Assets.icons.icSebha, 'Tasbeh'),
+              _buildItem(Assets.icons.icHadeth, 'Hadith'),
+              _buildItem(Assets.icons.icSebha, 'Sebha'),
               _buildItem(Assets.icons.icRadio, 'Radio'),
               _buildItem(Assets.icons.icTime, 'Time'),
             ],
@@ -61,17 +62,27 @@ class _HomeLayoutBody extends StatelessWidget {
 
   BottomNavigationBarItem _buildItem(SvgGenImage icon, String label) {
     return BottomNavigationBarItem(
-      icon: icon.svg(width: 22, height: 22),
+      // Unselected: dark icon only, on the gold bar (spec §2.9).
+      icon: icon.svg(
+        width: 22,
+        height: 22,
+        colorFilter: const ColorFilter.mode(
+          AppColors.titleTextColor,
+          BlendMode.srcIn,
+        ),
+      ),
+      // Selected: dark #202020 pill (radius ~40, padding 20×6) with the icon
+      // tinted white inside; the label renders under it (dark) via the theme.
       activeIcon: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.black45,
+          color: AppColors.backgroundColor,
           borderRadius: BorderRadius.circular(40),
         ),
         child: icon.svg(
           width: 22,
           height: 22,
-          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
         ),
       ),
       label: label,

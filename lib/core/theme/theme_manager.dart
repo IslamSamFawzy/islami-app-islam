@@ -13,13 +13,18 @@ abstract class ThemeManager {
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       type: BottomNavigationBarType.fixed,
       backgroundColor: AppColors.primaryColor,
+      elevation: 0,
       showSelectedLabels: true,
       showUnselectedLabels: false,
-      selectedItemColor: Colors.white,
+      // The label sits UNDER the pill, on the gold bar -> dark, not white.
+      // (The white is only for the icon INSIDE the dark pill.) spec §2.9.
+      selectedItemColor: AppColors.titleTextColor,
+      unselectedItemColor: AppColors.titleTextColor,
       selectedLabelStyle: TextStyle(
+        fontFamily: 'Janna',
         fontSize: 14,
         fontWeight: FontWeight.w700,
-        color: Colors.white,
+        color: AppColors.titleTextColor,
       ),
     ),
     textTheme: TextTheme(
