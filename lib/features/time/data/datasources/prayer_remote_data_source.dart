@@ -39,7 +39,7 @@ class PrayerRemoteDataSourceImpl implements PrayerRemoteDataSource {
       }
       final body = json.decode(response.body) as Map<String, dynamic>;
       final data = (body['data'] as Map).cast<String, dynamic>();
-      return PrayerTimesModel.fromJson(data);
+      return PrayerTimesModel.fromApi(data);
     } on ServerException {
       rethrow;
     } catch (e) {

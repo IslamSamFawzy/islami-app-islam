@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../cache/cache_manager.dart';
 import '../services/audio_player_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -57,6 +58,11 @@ Future<void> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
   sl.registerLazySingleton<http.Client>(() => http.Client());
+
+  // Offline cache (thin wrapper over SharedPreferences).
+  sl.registerLazySingleton<CacheManager>(
+    () => CacheManager(sharedPreferences: sl()),
+  );
 
   // Core services
   sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());

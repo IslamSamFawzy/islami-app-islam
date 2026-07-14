@@ -33,7 +33,7 @@ class RadioRemoteDataSourceImpl implements RadioRemoteDataSource {
     final body = await _getJson('$_base/reciters?language=ar');
     final list = (body['reciters'] as List?) ?? const [];
     return list
-        .map((e) => ReciterModel.fromJson((e as Map).cast<String, dynamic>()))
+        .map((e) => ReciterModel.fromApi((e as Map).cast<String, dynamic>()))
         .where((r) => r.playUrl.isNotEmpty)
         .toList();
   }

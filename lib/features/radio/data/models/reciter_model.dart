@@ -7,7 +7,9 @@ class ReciterModel extends Reciter {
     required super.playUrl,
   });
 
-  factory ReciterModel.fromJson(Map<String, dynamic> json) {
+  /// Builds from an mp3quran API reciter object, deriving [playUrl] from the
+  /// reciter's first moshaf server.
+  factory ReciterModel.fromApi(Map<String, dynamic> json) {
     final moshafList = (json['moshaf'] as List?) ?? const [];
     String playUrl = '';
     if (moshafList.isNotEmpty) {
@@ -27,4 +29,19 @@ class ReciterModel extends Reciter {
       playUrl: playUrl,
     );
   }
+
+  /// Builds from a cached JSON object produced by [toJson].
+  factory ReciterModel.fromJson(Map<String, dynamic> json) {
+    return ReciterModel(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: (json['name'] as String?) ?? '',
+      playUrl: (json['playUrl'] as String?) ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'playUrl': playUrl,
+      };
 }

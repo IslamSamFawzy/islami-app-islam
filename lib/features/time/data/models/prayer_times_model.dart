@@ -11,7 +11,9 @@ class PrayerTimesModel extends PrayerTimes {
     required super.prayers,
   });
 
-  factory PrayerTimesModel.fromJson(Map<String, dynamic> data) {
+  /// Parses one Aladhan API day object (an element of the `timings`/`calendar`
+  /// `data`) into a model.
+  factory PrayerTimesModel.fromApi(Map<String, dynamic> data) {
     final timings = (data['timings'] as Map).cast<String, dynamic>();
     final date = (data['date'] as Map).cast<String, dynamic>();
     final gregorian = (date['gregorian'] as Map).cast<String, dynamic>();
@@ -50,4 +52,37 @@ class PrayerTimesModel extends PrayerTimes {
       prayers: prayers,
     );
   }
+
+  /// Rebuilds from a cached JSON object produced by [toJson]. [Prayer.time] is
+  /// stored as ISO-8601 and parsed back to a local [DateTime].
+  factory PrayerTimesModel.fromJson(Map<String, dynamic> json) {
+    final rawPrayers = (json['prayers'] as List?) ?? const [];
+    final prayers = [
+      for (final e in rawPrayers)
+        Prayer(
+          name: (e as Map)['name'] as String,
+          time: DateTime.parse(e['time'] as String),
+        ),
+    ];
+    return PrayerTimesModel(
+      weekday: (json['weekday'] as String?) ?? '',
+      gregorianDate: (json['gregorianDate'] as String?) ?? '',
+      gregorianYear: (json['gregorianYear'] as String?) ?? '',
+      hijriDate: (json['hijriDate'] as String?) ?? '',
+      hijriYear: (json['hijriYear'] as String?) ?? '',
+      prayers: prayers,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'weekday': weekday,
+        'gregorianDate': gregorianDate,
+        'gregorianYear': gregorianYear,
+        'hijriDate': hijriDate,
+        'hijriYear': hijriYear,
+        'prayers': [
+          for (final p in prayers)
+            {'name': p.name, 'time': p.time.toIso8601String()},
+        ],
+      };
 }
