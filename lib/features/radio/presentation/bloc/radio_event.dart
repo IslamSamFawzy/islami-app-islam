@@ -7,9 +7,15 @@ abstract class RadioEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Loads both radios and reciters.
+/// Loads both radios and reciters (cache first, then a background refresh).
 class LoadRadioDataEvent extends RadioEvent {
   const LoadRadioDataEvent();
+}
+
+/// Internal: re-fetches from the network after cache was rendered, and
+/// re-emits only if the fresh data differs.
+class _RefreshRadioDataEvent extends RadioEvent {
+  const _RefreshRadioDataEvent();
 }
 
 /// Switches between the Radio and Reciters tabs.

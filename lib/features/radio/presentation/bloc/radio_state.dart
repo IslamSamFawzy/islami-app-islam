@@ -13,6 +13,10 @@ class RadioState extends Equatable {
   final bool isPlaying;
   final String errorMessage;
 
+  /// Whether the currently displayed lists came from the cache rather than a
+  /// fresh network fetch.
+  final bool isFromCache;
+
   const RadioState({
     this.status = RadioStatus.initial,
     this.radios = const [],
@@ -21,6 +25,7 @@ class RadioState extends Equatable {
     this.currentId = '',
     this.isPlaying = false,
     this.errorMessage = '',
+    this.isFromCache = false,
   });
 
   RadioState copyWith({
@@ -31,6 +36,7 @@ class RadioState extends Equatable {
     String? currentId,
     bool? isPlaying,
     String? errorMessage,
+    bool? isFromCache,
   }) {
     return RadioState(
       status: status ?? this.status,
@@ -40,10 +46,19 @@ class RadioState extends Equatable {
       currentId: currentId ?? this.currentId,
       isPlaying: isPlaying ?? this.isPlaying,
       errorMessage: errorMessage ?? this.errorMessage,
+      isFromCache: isFromCache ?? this.isFromCache,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [status, radios, reciters, tab, currentId, isPlaying, errorMessage];
+  List<Object?> get props => [
+        status,
+        radios,
+        reciters,
+        tab,
+        currentId,
+        isPlaying,
+        errorMessage,
+        isFromCache,
+      ];
 }

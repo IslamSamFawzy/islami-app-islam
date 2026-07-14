@@ -33,6 +33,7 @@ import '../../features/time/domain/usecases/get_prayer_times.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
 
 // Radio feature
+import '../../features/radio/data/datasources/radio_local_data_source.dart';
 import '../../features/radio/data/datasources/radio_remote_data_source.dart';
 import '../../features/radio/data/repositories/radio_repository_impl.dart';
 import '../../features/radio/domain/repositories/radio_repository.dart';
@@ -156,11 +157,18 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetReciters(sl()));
 
   sl.registerLazySingleton<RadioRepository>(
-    () => RadioRepositoryImpl(remoteDataSource: sl()),
+    () => RadioRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
   );
 
   sl.registerLazySingleton<RadioRemoteDataSource>(
     () => RadioRemoteDataSourceImpl(client: sl()),
+  );
+
+  sl.registerLazySingleton<RadioLocalDataSource>(
+    () => RadioLocalDataSourceImpl(cacheManager: sl()),
   );
 
   // ---------------------------------------------------------------------------
