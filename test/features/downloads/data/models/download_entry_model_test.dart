@@ -5,6 +5,7 @@ void main() {
   test('DownloadEntryModel round-trips through toJson/fromJson', () {
     final model = DownloadEntryModel(
       reciterId: '5',
+      reciterName: 'عبد الباسط عبد الصمد',
       suraId: '2',
       path: '/data/audio/5/2.mp3',
       bytes: 1234567,

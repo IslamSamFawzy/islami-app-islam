@@ -10,6 +10,7 @@ void main() {
 
   DownloadEntryModel entry(String r, String s) => DownloadEntryModel(
         reciterId: r,
+        reciterName: 'Reciter $r',
         suraId: s,
         path: '/audio/$r/$s.mp3',
         bytes: 100,

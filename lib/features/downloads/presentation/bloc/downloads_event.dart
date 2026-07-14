@@ -16,17 +16,19 @@ class LoadDownloadsEvent extends DownloadsEvent {
 /// Queues a sura download (starts immediately if nothing is downloading).
 class EnqueueDownloadEvent extends DownloadsEvent {
   final String reciterId;
+  final String reciterName;
   final String suraId;
   final String url;
 
   const EnqueueDownloadEvent({
     required this.reciterId,
+    required this.reciterName,
     required this.suraId,
     required this.url,
   });
 
   @override
-  List<Object?> get props => [reciterId, suraId, url];
+  List<Object?> get props => [reciterId, reciterName, suraId, url];
 }
 
 /// Cancels a download, whether it is active or still queued.

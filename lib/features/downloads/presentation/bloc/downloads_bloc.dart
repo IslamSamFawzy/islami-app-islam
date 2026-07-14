@@ -23,6 +23,9 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   /// URLs for queued/active keys, needed to (re)start a download.
   final Map<String, String> _urls = {};
 
+  /// Display names by reciter id, so completed entries can be labelled.
+  final Map<String, String> _reciterNames = {};
+
   DownloadsBloc({
     required this.downloadService,
     required this.localDataSource,
@@ -67,6 +70,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
       return; // already downloaded, active, or queued
     }
     _urls[key] = event.url;
+    _reciterNames[event.reciterId] = event.reciterName;
     emit(state.copyWith(queue: [...state.queue, key]));
     _maybeStartNext(emit);
   }
@@ -95,6 +99,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
       if (!isClosed) {
         add(_DownloadCompletedEvent(DownloadEntry(
           reciterId: reciterId,
+          reciterName: _reciterNames[reciterId] ?? '',
           suraId: suraId,
           path: path,
           bytes: bytes,

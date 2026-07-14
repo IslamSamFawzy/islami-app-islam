@@ -5,8 +5,12 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/offline_banner.dart';
+import '../../../downloads/presentation/bloc/downloads_bloc.dart';
+import '../../../downloads/presentation/pages/downloads_view.dart';
+import '../../domain/entities/reciter.dart';
 import '../bloc/radio_bloc.dart';
 import '../widgets/station_tile.dart';
+import 'reciter_suras_view.dart';
 
 class RadioView extends StatelessWidget {
   const RadioView({super.key});
@@ -35,10 +39,30 @@ class _RadioViewBody extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            Center(
-              child: Assets.images.imgHeader.image(
-                width: MediaQuery.of(context).size.width * 0.55,
-              ),
+            Stack(
+              children: [
+                Center(
+                  child: Assets.images.imgHeader.image(
+                    width: MediaQuery.of(context).size.width * 0.55,
+                  ),
+                ),
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      tooltip: 'Downloads',
+                      icon: const Icon(
+                        Icons.download_for_offline_outlined,
+                        color: AppColors.primaryColor,
+                      ),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        DownloadsView.routeName,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             BlocBuilder<RadioBloc, RadioState>(
               buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
@@ -208,16 +232,69 @@ class _RecitersList extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final reciter = state.reciters[index];
-        final id = 'reciter_${reciter.id}';
-        return StationTile(
-          name: reciter.name,
-          isPlaying: state.currentId == id && state.isPlaying,
-          onPlayPause: () => context.read<RadioBloc>().add(
-                // Al-Fatiha sample; the per-reciter sura list arrives in B3.
-                PlayItemEvent(id: id, url: reciter.audioUrlFor(1)),
-              ),
-        );
+        return _ReciterTile(reciter: reciter);
       },
+    );
+  }
+}
+
+/// A reciter row on the Reciters tab. Tapping it opens the reciter's sura list
+/// (where suras can be downloaded); a badge shows how many are already saved.
+class _ReciterTile extends StatelessWidget {
+  final Reciter reciter;
+
+  const _ReciterTile({required this.reciter});
+
+  @override
+  Widget build(BuildContext context) {
+    final reciterId = reciter.id.toString();
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        ReciterSurasView.routeName,
+        arguments: reciter,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                reciter.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: AppColors.titleTextColor,
+                      fontSize: 16,
+                    ),
+              ),
+            ),
+            BlocBuilder<DownloadsBloc, DownloadsState>(
+              buildWhen: (a, b) =>
+                  a.entriesForReciter(reciterId).length !=
+                  b.entriesForReciter(reciterId).length,
+              builder: (context, state) {
+                final count = state.entriesForReciter(reciterId).length;
+                if (count == 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    '$count saved',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: AppColors.backgroundColor,
+                        ),
+                  ),
+                );
+              },
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.backgroundColor),
+          ],
+        ),
+      ),
     );
   }
 }

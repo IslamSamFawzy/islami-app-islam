@@ -3,6 +3,7 @@ import '../../domain/entities/download_entry.dart';
 class DownloadEntryModel extends DownloadEntry {
   const DownloadEntryModel({
     required super.reciterId,
+    required super.reciterName,
     required super.suraId,
     required super.path,
     required super.bytes,
@@ -11,6 +12,7 @@ class DownloadEntryModel extends DownloadEntry {
 
   factory DownloadEntryModel.fromEntry(DownloadEntry e) => DownloadEntryModel(
         reciterId: e.reciterId,
+        reciterName: e.reciterName,
         suraId: e.suraId,
         path: e.path,
         bytes: e.bytes,
@@ -20,6 +22,7 @@ class DownloadEntryModel extends DownloadEntry {
   factory DownloadEntryModel.fromJson(Map<String, dynamic> json) {
     return DownloadEntryModel(
       reciterId: (json['reciterId'] as String?) ?? '',
+      reciterName: (json['reciterName'] as String?) ?? '',
       suraId: (json['suraId'] as String?) ?? '',
       path: (json['path'] as String?) ?? '',
       bytes: (json['bytes'] as num?)?.toInt() ?? 0,
@@ -31,6 +34,7 @@ class DownloadEntryModel extends DownloadEntry {
 
   Map<String, dynamic> toJson() => {
         'reciterId': reciterId,
+        'reciterName': reciterName,
         'suraId': suraId,
         'path': path,
         'bytes': bytes,

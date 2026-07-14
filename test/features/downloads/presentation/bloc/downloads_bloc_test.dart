@@ -81,7 +81,7 @@ void main() {
   tearDown(() => bloc.close());
 
   test('enqueue downloads a sura and records it in the index', () async {
-    bloc.add(const EnqueueDownloadEvent(reciterId: '1', suraId: '2', url: 'u'));
+    bloc.add(const EnqueueDownloadEvent(reciterId: '1', reciterName: 'R1', suraId: '2', url: 'u'));
 
     await expectLater(
       bloc.stream,
@@ -92,8 +92,8 @@ void main() {
   });
 
   test('a queued second download runs after the first drains', () async {
-    bloc.add(const EnqueueDownloadEvent(reciterId: '1', suraId: '2', url: 'u1'));
-    bloc.add(const EnqueueDownloadEvent(reciterId: '1', suraId: '3', url: 'u2'));
+    bloc.add(const EnqueueDownloadEvent(reciterId: '1', reciterName: 'R1', suraId: '2', url: 'u1'));
+    bloc.add(const EnqueueDownloadEvent(reciterId: '1', reciterName: 'R1', suraId: '3', url: 'u2'));
 
     await expectLater(
       bloc.stream,
@@ -107,7 +107,7 @@ void main() {
   });
 
   test('delete removes a sura from the index', () async {
-    bloc.add(const EnqueueDownloadEvent(reciterId: '1', suraId: '2', url: 'u'));
+    bloc.add(const EnqueueDownloadEvent(reciterId: '1', reciterName: 'R1', suraId: '2', url: 'u'));
     await expectLater(
       bloc.stream,
       emitsThrough(
