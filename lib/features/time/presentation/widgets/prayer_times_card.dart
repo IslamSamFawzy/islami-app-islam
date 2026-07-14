@@ -6,8 +6,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/prayer_times.dart';
 
 /// A self-contained "Pray Time" card:
-///   * one continuous amber shape with a smooth wavy (scalloped) top, drawn by
-///     [_ScallopClipper], holding the gregorian date, title and hijri date,
+///   * one continuous amber shape with a smooth wavy top, drawn by
+///     [_ScallopClipper]: a broad gentle centre dome flanked by two shallow,
+///     smooth notches, holding the gregorian date, title and hijri date,
 ///   * an infinite prayer carousel where the centered prayer "pops out",
 ///   * a "Next Pray" countdown row with a mute toggle.
 ///
@@ -60,11 +61,11 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
   @override
   Widget build(BuildContext context) {
     final times = widget.prayerTimes;
-    // One continuous amber shape with a smooth wavy (scalloped) top, drawn by
+    // One continuous amber shape with a smooth wavy top, drawn by
     // _ScallopClipper. PhysicalShape fills it with the amber colour and casts a
     // soft shadow that follows the wavy outline.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: PhysicalShape(
         clipper: _ScallopClipper(),
         clipBehavior: Clip.antiAlias,
@@ -73,15 +74,19 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
         shadowColor: Colors.black45,
         child: Column(
           children: [
-            // Top wavy area: gregorian date | title | hijri date.
+            // Top wavy area: gregorian date | title | hijri date. The dates sit
+            // a touch lower (in the corner shoulders); the title rides the dome.
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DateLabel(
-                    line1: times.gregorianDate,
-                    line2: times.gregorianYear,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: _DateLabel(
+                      line1: times.gregorianDate,
+                      line2: times.gregorianYear,
+                    ),
                   ),
                   Expanded(
                     child: Column(
@@ -91,15 +96,25 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
                           style: Theme.of(context).textTheme.titleLarge!
                               .copyWith(color: AppColors.titleTextColor),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           times.weekday,
                           style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(color: AppColors.titleTextColor),
+                              .copyWith(
+                                color: AppColors.titleTextColor,
+                                fontSize: 18,
+                              ),
                         ),
                       ],
                     ),
                   ),
-                  _DateLabel(line1: times.hijriDate, line2: times.hijriYear),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: _DateLabel(
+                      line1: times.hijriDate,
+                      line2: times.hijriYear,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -131,7 +146,7 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             // Next prayer + mute.
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -153,7 +168,7 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -168,40 +183,61 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
   }
 }
 
-/// Draws the card outline: rounded bottom corners + a smooth wavy top with
-/// three humps (left date, center title, right date) separated by two valleys.
-/// Tweak [_valleyDepth] for deeper/shallower dips and the `0.27 / 0.37 / 0.63 /
-/// 0.73` fractions to move the valleys horizontally.
+/// Draws the card outline: rounded bottom corners + a smooth wavy top that is a
+/// single broad, gentle centre dome flanked by two shallow concave notches
+/// (the date labels sit on the lower corner shoulders on either side).
+///
+/// Every top-edge junction uses a horizontal control tangent, so the whole
+/// silhouette is one continuous, crease-free wave. Tune the four geometry
+/// constants below against the Figma frame:
+///   * [_shoulderDrop]  — how far the corner shoulders sit below the apex.
+///   * [_notchDepth]    — how deep the two notches dip below the apex.
+///   * [_notchAxis]     — horizontal centre of the notches (fraction of width).
+///   * [_notchHalfWidth]— half-width of each notch (fraction of width).
 class _ScallopClipper extends CustomClipper<Path> {
   static const double _radius = 26; // outer corner radius
-  static const double _valleyDepth = 52; // how far the dips drop from the top
+  static const double _shoulderDrop = 8; // corners this far below the apex
+  static const double _notchDepth = 26; // notch floors this far below the apex
+  static const double _notchAxis = 0.29; // notch centre (0..1 of the width)
+  static const double _notchHalfWidth = 0.09; // half a notch, as a fraction
 
   @override
   Path getClip(Size size) {
     final w = size.width;
     final h = size.height;
-    // Control-point depth so the cubic dip bottoms out near _valleyDepth.
-    const cy = _valleyDepth * 1.35;
+
+    const r = _radius;
+    const sy = _shoulderDrop; // shoulder y
+    const ny = _notchDepth; // notch-floor y (apex is y = 0)
+
+    final nl = _notchAxis * w; // left notch centre
+    final nr = (1 - _notchAxis) * w; // right notch centre
+    final nh = _notchHalfWidth * w; // notch half-width
+    final domeL = nl + nh; // dome starts (left)
+    final domeR = nr - nh; // dome ends (right)
+    final apexX = 0.5 * w;
+    final co = nh * 0.5; // notch control-point x offset
+    final domeCo = (apexX - domeL) * 0.5; // dome control-point x offset
 
     return Path()
-      ..moveTo(0, _radius)
-      ..quadraticBezierTo(0, 0, _radius, 0)
-      // flat top across the left date hump
-      ..lineTo(w * 0.27, 0)
-      // valley 1
-      ..cubicTo(w * 0.31, cy, w * 0.33, cy, w * 0.37, 0)
-      // flat top across the center title dome
-      ..lineTo(w * 0.63, 0)
-      // valley 2
-      ..cubicTo(w * 0.67, cy, w * 0.69, cy, w * 0.73, 0)
-      // flat top across the right date hump
-      ..lineTo(w - _radius, 0)
-      ..quadraticBezierTo(w, 0, w, _radius)
-      // right side down + rounded bottom corners
-      ..lineTo(w, h - _radius)
-      ..quadraticBezierTo(w, h, w - _radius, h)
-      ..lineTo(_radius, h)
-      ..quadraticBezierTo(0, h, 0, h - _radius)
+      ..moveTo(0, sy + r)
+      ..quadraticBezierTo(0, sy, r, sy) // top-left corner
+      ..lineTo(nl - nh, sy) // left shoulder
+      // left notch: dip down to the floor, then back up (smooth U)
+      ..cubicTo(nl - nh + co, sy, nl - co, ny, nl, ny)
+      ..cubicTo(nl + co, ny, nl + nh - co, sy, domeL, sy)
+      // centre dome: rise to the apex and back down
+      ..cubicTo(domeL + domeCo, sy, apexX - domeCo, 0, apexX, 0)
+      ..cubicTo(apexX + domeCo, 0, domeR - domeCo, sy, domeR, sy)
+      // right notch: mirror of the left
+      ..cubicTo(nr - nh + co, sy, nr - co, ny, nr, ny)
+      ..cubicTo(nr + co, ny, nr + nh - co, sy, nr + nh, sy)
+      ..lineTo(w - r, sy) // right shoulder
+      ..quadraticBezierTo(w, sy, w, sy + r) // top-right corner
+      ..lineTo(w, h - r)
+      ..quadraticBezierTo(w, h, w - r, h) // bottom-right corner
+      ..lineTo(r, h)
+      ..quadraticBezierTo(0, h, 0, h - r) // bottom-left corner
       ..close();
   }
 
@@ -217,22 +253,15 @@ class _DateLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodyMedium!.copyWith(
+      color: AppColors.titleTextColor,
+      fontSize: 13,
+      fontWeight: FontWeight.bold,
+    );
     return Column(
       children: [
-        Text(
-          '$line1,',
-          style: const TextStyle(
-            color: AppColors.titleTextColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          line2,
-          style: const TextStyle(
-            color: AppColors.titleTextColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text('$line1,', style: style),
+        Text(line2, style: style),
       ],
     );
   }
@@ -293,7 +322,7 @@ class _PrayerPill extends StatelessWidget {
               style: TextStyle(
                 color: selected ? Colors.white : Colors.white70,
                 fontWeight: FontWeight.bold,
-                fontSize: selected ? 15 : 12,
+                fontSize: selected ? 13 : 12,
               ),
             ),
             SizedBox(height: selected ? 10 : 6),
@@ -310,7 +339,7 @@ class _PrayerPill extends StatelessWidget {
               DateFormat('a').format(prayer.time),
               style: TextStyle(
                 color: selected ? Colors.white : Colors.white70,
-                fontSize: selected ? 13 : 11,
+                fontSize: selected ? 12 : 11,
               ),
             ),
           ],
