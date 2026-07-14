@@ -39,6 +39,17 @@ class PlayItemEvent extends RadioEvent {
   List<Object?> get props => [id, url];
 }
 
+/// Internal: forwards connectivity changes (drives the offline strip and
+/// triggers a refresh on reconnect).
+class _ConnectivityChangedEvent extends RadioEvent {
+  final bool online;
+
+  const _ConnectivityChangedEvent(this.online);
+
+  @override
+  List<Object?> get props => [online];
+}
+
 /// Internal: forwards audio player state changes.
 class _PlayerStateChangedEvent extends RadioEvent {
   final bool isPlaying;

@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/audio_player_service.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/params.dart';
 import '../../domain/entities/radio_station.dart';
 import '../../domain/entities/reciter.dart';
@@ -18,16 +19,20 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
   final GetRadios getRadios;
   final GetReciters getReciters;
   final AudioPlayerService audioPlayerService;
+  final ConnectivityService connectivityService;
 
   StreamSubscription<PlayerState>? _playerSub;
+  StreamSubscription<bool>? _connectivitySub;
 
   RadioBloc({
     required this.getRadios,
     required this.getReciters,
     required this.audioPlayerService,
+    required this.connectivityService,
   }) : super(const RadioState()) {
     on<LoadRadioDataEvent>(_onLoad);
     on<_RefreshRadioDataEvent>(_onRefresh);
+    on<_ConnectivityChangedEvent>(_onConnectivityChanged);
     on<SelectTabEvent>(_onSelectTab);
     on<PlayItemEvent>(_onPlayItem);
     on<_PlayerStateChangedEvent>(_onPlayerStateChanged);
@@ -36,6 +41,10 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
       if (!isClosed) {
         add(_PlayerStateChangedEvent(s == PlayerState.playing));
       }
+    });
+
+    _connectivitySub = connectivityService.onConnectivityChanged.listen((online) {
+      if (!isClosed) add(_ConnectivityChangedEvent(online));
     });
   }
 
@@ -68,10 +77,28 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
       radios: radios,
       reciters: reciters,
       isFromCache: fromCache,
+      // Seed the offline flag so a cold start with no connection shows the
+      // strip immediately (the stream only fires on subsequent changes).
+      isOffline: !await connectivityService.isConnected,
     ));
 
     // Phase 2 — only worth refreshing if what we showed was cached.
     if (fromCache) add(const _RefreshRadioDataEvent());
+  }
+
+  Future<void> _onConnectivityChanged(
+    _ConnectivityChangedEvent event,
+    Emitter<RadioState> emit,
+  ) async {
+    emit(state.copyWith(isOffline: !event.online));
+    if (!event.online) return;
+
+    // Back online: retry a failed load, otherwise refresh in the background.
+    if (state.status == RadioStatus.failure) {
+      add(const LoadRadioDataEvent());
+    } else {
+      add(const _RefreshRadioDataEvent());
+    }
   }
 
   Future<void> _onRefresh(
@@ -130,6 +157,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
   @override
   Future<void> close() {
     _playerSub?.cancel();
+    _connectivitySub?.cancel();
     audioPlayerService.stop();
     return super.close();
   }

@@ -14,6 +14,9 @@ class TimeState extends Equatable {
   /// fresh network fetch.
   final bool isFromCache;
 
+  /// Whether the device currently has no network connection.
+  final bool isOffline;
+
   const TimeState({
     this.status = TimeStatus.initial,
     this.prayerTimes,
@@ -22,7 +25,11 @@ class TimeState extends Equatable {
     this.muted = false,
     this.errorMessage = '',
     this.isFromCache = false,
+    this.isOffline = false,
   });
+
+  /// Whether to surface the "showing saved data" strip.
+  bool get showOfflineBanner => isFromCache && isOffline;
 
   TimeState copyWith({
     TimeStatus? status,
@@ -32,6 +39,7 @@ class TimeState extends Equatable {
     bool? muted,
     String? errorMessage,
     bool? isFromCache,
+    bool? isOffline,
   }) {
     return TimeState(
       status: status ?? this.status,
@@ -41,6 +49,7 @@ class TimeState extends Equatable {
       muted: muted ?? this.muted,
       errorMessage: errorMessage ?? this.errorMessage,
       isFromCache: isFromCache ?? this.isFromCache,
+      isOffline: isOffline ?? this.isOffline,
     );
   }
 
@@ -53,5 +62,6 @@ class TimeState extends Equatable {
         muted,
         errorMessage,
         isFromCache,
+        isOffline,
       ];
 }

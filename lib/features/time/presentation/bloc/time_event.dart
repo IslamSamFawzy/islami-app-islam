@@ -21,3 +21,14 @@ class _TickEvent extends TimeEvent {
 class ToggleMuteEvent extends TimeEvent {
   const ToggleMuteEvent();
 }
+
+/// Internal: forwards connectivity changes (drives the offline strip and
+/// retries a failed load on reconnect).
+class _ConnectivityChangedEvent extends TimeEvent {
+  final bool online;
+
+  const _ConnectivityChangedEvent(this.online);
+
+  @override
+  List<Object?> get props => [online];
+}

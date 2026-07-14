@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../cache/cache_manager.dart';
 import '../services/audio_player_service.dart';
+import '../services/connectivity_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
 
@@ -69,6 +70,7 @@ Future<void> init() async {
   // Core services
   sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   sl.registerLazySingleton<LocationService>(() => LocationService());
+  sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
 
   final notificationService = NotificationService();
   await notificationService.init();
@@ -127,6 +129,7 @@ Future<void> init() async {
       getPrayerTimes: sl(),
       notificationService: sl(),
       audioPlayerService: sl(),
+      connectivityService: sl(),
     ),
   );
 
@@ -156,6 +159,7 @@ Future<void> init() async {
       getRadios: sl(),
       getReciters: sl(),
       audioPlayerService: sl(),
+      connectivityService: sl(),
     ),
   );
 

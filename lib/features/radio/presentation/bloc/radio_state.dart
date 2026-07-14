@@ -17,6 +17,9 @@ class RadioState extends Equatable {
   /// fresh network fetch.
   final bool isFromCache;
 
+  /// Whether the device currently has no network connection.
+  final bool isOffline;
+
   const RadioState({
     this.status = RadioStatus.initial,
     this.radios = const [],
@@ -26,7 +29,11 @@ class RadioState extends Equatable {
     this.isPlaying = false,
     this.errorMessage = '',
     this.isFromCache = false,
+    this.isOffline = false,
   });
+
+  /// Whether to surface the "showing saved data" strip.
+  bool get showOfflineBanner => isFromCache && isOffline;
 
   RadioState copyWith({
     RadioStatus? status,
@@ -37,6 +44,7 @@ class RadioState extends Equatable {
     bool? isPlaying,
     String? errorMessage,
     bool? isFromCache,
+    bool? isOffline,
   }) {
     return RadioState(
       status: status ?? this.status,
@@ -47,6 +55,7 @@ class RadioState extends Equatable {
       isPlaying: isPlaying ?? this.isPlaying,
       errorMessage: errorMessage ?? this.errorMessage,
       isFromCache: isFromCache ?? this.isFromCache,
+      isOffline: isOffline ?? this.isOffline,
     );
   }
 
@@ -60,5 +69,6 @@ class RadioState extends Equatable {
         isPlaying,
         errorMessage,
         isFromCache,
+        isOffline,
       ];
 }

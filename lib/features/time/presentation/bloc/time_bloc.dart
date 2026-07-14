@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/audio_player_service.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/prayer_times.dart';
@@ -16,8 +17,10 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
   final GetPrayerTimes getPrayerTimes;
   final NotificationService notificationService;
   final AudioPlayerService audioPlayerService;
+  final ConnectivityService connectivityService;
 
   Timer? _ticker;
+  StreamSubscription<bool>? _connectivitySub;
   String _lastAdhanKey = '';
 
   /// Free online adhan audio (played in-app when a prayer time arrives).
@@ -37,10 +40,16 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     required this.getPrayerTimes,
     required this.notificationService,
     required this.audioPlayerService,
+    required this.connectivityService,
   }) : super(const TimeState()) {
     on<LoadPrayerTimesEvent>(_onLoad);
     on<_TickEvent>(_onTick);
     on<ToggleMuteEvent>(_onToggleMute);
+    on<_ConnectivityChangedEvent>(_onConnectivityChanged);
+
+    _connectivitySub = connectivityService.onConnectivityChanged.listen((online) {
+      if (!isClosed) add(_ConnectivityChangedEvent(online));
+    });
   }
 
   Future<void> _onLoad(
@@ -62,6 +71,9 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
           status: TimeStatus.success,
           prayerTimes: times,
           isFromCache: cached.fromCache,
+          // Seed the offline flag so a cold start with no connection shows the
+          // strip immediately (the stream only fires on subsequent changes).
+          isOffline: !await connectivityService.isConnected,
           nextPrayerName: next?.name ?? '',
           countdown: next == null
               ? Duration.zero
@@ -70,6 +82,18 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
         _startTicker();
       },
     );
+  }
+
+  Future<void> _onConnectivityChanged(
+    _ConnectivityChangedEvent event,
+    Emitter<TimeState> emit,
+  ) async {
+    emit(state.copyWith(isOffline: !event.online));
+    // Back online after failing to load (e.g. the month wasn't cached yet):
+    // retry. If we already have a schedule, keep it — the month is still valid.
+    if (event.online && state.status == TimeStatus.failure) {
+      add(const LoadPrayerTimesEvent());
+    }
   }
 
   void _onTick(_TickEvent event, Emitter<TimeState> emit) {
@@ -144,6 +168,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
   @override
   Future<void> close() {
     _ticker?.cancel();
+    _connectivitySub?.cancel();
     return super.close();
   }
 }

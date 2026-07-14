@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/offline_banner.dart';
 import '../bloc/radio_bloc.dart';
 import '../widgets/station_tile.dart';
 
@@ -38,6 +39,12 @@ class _RadioViewBody extends StatelessWidget {
               child: Assets.images.imgHeader.image(
                 width: MediaQuery.of(context).size.width * 0.55,
               ),
+            ),
+            BlocBuilder<RadioBloc, RadioState>(
+              buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
+              builder: (context, state) => state.showOfflineBanner
+                  ? const OfflineBanner()
+                  : const SizedBox.shrink(),
             ),
             const SizedBox(height: 10),
             const _Tabs(),
