@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../cache/cache_manager.dart';
 import '../services/audio_player_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/download_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
 
@@ -50,6 +51,10 @@ import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar.dart';
 import '../../features/azkar/presentation/bloc/azkar_bloc.dart';
 
+// Downloads feature
+import '../../features/downloads/data/datasources/downloads_local_data_source.dart';
+import '../../features/downloads/presentation/bloc/downloads_bloc.dart';
+
 /// Global service locator instance.
 final GetIt sl = GetIt.instance;
 
@@ -71,6 +76,7 @@ Future<void> init() async {
   sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   sl.registerLazySingleton<LocationService>(() => LocationService());
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
+  sl.registerLazySingleton<DownloadService>(() => DownloadService());
 
   final notificationService = NotificationService();
   await notificationService.init();
@@ -194,5 +200,19 @@ Future<void> init() async {
 
   sl.registerLazySingleton<AzkarLocalDataSource>(
     () => AzkarLocalDataSourceImpl(),
+  );
+
+  // ---------------------------------------------------------------------------
+  // Downloads feature (shared app-wide: one queue, one index)
+  // ---------------------------------------------------------------------------
+  sl.registerLazySingleton<DownloadsBloc>(
+    () => DownloadsBloc(
+      downloadService: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<DownloadsLocalDataSource>(
+    () => DownloadsLocalDataSourceImpl(sharedPreferences: sl()),
   );
 }
