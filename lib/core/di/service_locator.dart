@@ -26,6 +26,7 @@ import '../../features/hadith/domain/usecases/get_all_hadiths.dart';
 import '../../features/hadith/presentation/bloc/hadith_bloc.dart';
 
 // Time feature
+import '../../features/time/data/datasources/prayer_local_data_source.dart';
 import '../../features/time/data/datasources/prayer_remote_data_source.dart';
 import '../../features/time/data/repositories/prayer_repository_impl.dart';
 import '../../features/time/domain/repositories/prayer_repository.dart';
@@ -134,12 +135,17 @@ Future<void> init() async {
   sl.registerLazySingleton<PrayerRepository>(
     () => PrayerRepositoryImpl(
       remoteDataSource: sl(),
+      localDataSource: sl(),
       locationService: sl(),
     ),
   );
 
   sl.registerLazySingleton<PrayerRemoteDataSource>(
     () => PrayerRemoteDataSourceImpl(client: sl()),
+  );
+
+  sl.registerLazySingleton<PrayerLocalDataSource>(
+    () => PrayerLocalDataSourceImpl(cacheManager: sl()),
   );
 
   // ---------------------------------------------------------------------------

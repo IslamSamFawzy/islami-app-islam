@@ -54,12 +54,14 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
         status: TimeStatus.failure,
         errorMessage: failure.message,
       )),
-      (times) async {
+      (cached) async {
+        final times = cached.data;
         await _scheduleNotifications(times);
         final next = _nextPrayer(times);
         emit(state.copyWith(
           status: TimeStatus.success,
           prayerTimes: times,
+          isFromCache: cached.fromCache,
           nextPrayerName: next?.name ?? '',
           countdown: next == null
               ? Duration.zero
