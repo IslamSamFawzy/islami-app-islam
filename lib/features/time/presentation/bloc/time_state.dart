@@ -28,8 +28,9 @@ class TimeState extends Equatable {
     this.isOffline = false,
   });
 
-  /// Whether to surface the "showing saved data" strip.
-  bool get showOfflineBanner => isFromCache && isOffline;
+  /// Whether to surface the "showing saved data" strip: offline while a saved
+  /// schedule is on screen (data shown while offline is saved data either way).
+  bool get showOfflineBanner => isOffline && prayerTimes != null;
 
   TimeState copyWith({
     TimeStatus? status,

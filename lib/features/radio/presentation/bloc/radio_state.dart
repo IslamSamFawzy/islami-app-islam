@@ -39,8 +39,11 @@ class RadioState extends Equatable {
     this.noticeSeq = 0,
   });
 
-  /// Whether to surface the "showing saved data" strip.
-  bool get showOfflineBanner => isFromCache && isOffline;
+  /// Whether to surface the "showing saved data" strip: offline while saved
+  /// content is on screen (regardless of whether this exact render came
+  /// straight from disk — data shown while offline is saved data either way).
+  bool get showOfflineBanner =>
+      isOffline && (radios.isNotEmpty || reciters.isNotEmpty);
 
   RadioState copyWith({
     RadioStatus? status,
