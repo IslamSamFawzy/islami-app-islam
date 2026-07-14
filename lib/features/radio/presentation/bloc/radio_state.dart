@@ -20,6 +20,11 @@ class RadioState extends Equatable {
   /// Whether the device currently has no network connection.
   final bool isOffline;
 
+  /// A one-shot user message (e.g. tapping a live stream while offline).
+  /// [noticeSeq] changes on every new notice so the UI shows it exactly once.
+  final String notice;
+  final int noticeSeq;
+
   const RadioState({
     this.status = RadioStatus.initial,
     this.radios = const [],
@@ -30,6 +35,8 @@ class RadioState extends Equatable {
     this.errorMessage = '',
     this.isFromCache = false,
     this.isOffline = false,
+    this.notice = '',
+    this.noticeSeq = 0,
   });
 
   /// Whether to surface the "showing saved data" strip.
@@ -45,6 +52,8 @@ class RadioState extends Equatable {
     String? errorMessage,
     bool? isFromCache,
     bool? isOffline,
+    String? notice,
+    int? noticeSeq,
   }) {
     return RadioState(
       status: status ?? this.status,
@@ -56,6 +65,8 @@ class RadioState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       isFromCache: isFromCache ?? this.isFromCache,
       isOffline: isOffline ?? this.isOffline,
+      notice: notice ?? this.notice,
+      noticeSeq: noticeSeq ?? this.noticeSeq,
     );
   }
 
@@ -70,5 +81,7 @@ class RadioState extends Equatable {
         errorMessage,
         isFromCache,
         isOffline,
+        notice,
+        noticeSeq,
       ];
 }

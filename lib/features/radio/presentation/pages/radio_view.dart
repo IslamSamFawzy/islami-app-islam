@@ -37,75 +37,82 @@ class _RadioViewBody extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Center(
-                  child: Assets.images.imgHeader.image(
-                    width: MediaQuery.of(context).size.width * 0.55,
+        child: BlocListener<RadioBloc, RadioState>(
+          listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
+          listener: (context, state) {
+            if (state.notice.isEmpty) return;
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(content: Text(state.notice)));
+          },
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Center(
+                    child: Assets.images.imgHeader.image(
+                      width: MediaQuery.of(context).size.width * 0.55,
+                    ),
                   ),
-                ),
-                Positioned.fill(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      tooltip: 'Downloads',
-                      icon: const Icon(
-                        Icons.download_for_offline_outlined,
-                        color: AppColors.primaryColor,
-                      ),
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        DownloadsView.routeName,
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        tooltip: 'Downloads',
+                        icon: const Icon(
+                          Icons.download_for_offline_outlined,
+                          color: AppColors.primaryColor,
+                        ),
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          DownloadsView.routeName,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            BlocBuilder<RadioBloc, RadioState>(
-              buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
-              builder: (context, state) => state.showOfflineBanner
-                  ? const OfflineBanner()
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 10),
-            const _Tabs(),
-            const SizedBox(height: 12),
-            Expanded(
-              child: BlocBuilder<RadioBloc, RadioState>(
-                builder: (context, state) {
-                  if (state.status == RadioStatus.loading ||
-                      state.status == RadioStatus.initial) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primaryColor,
-                      ),
-                    );
-                  }
-                  if (state.status == RadioStatus.failure) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          state.errorMessage,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge!
-                              .copyWith(color: AppColors.primaryColor),
-                        ),
-                      ),
-                    );
-                  }
-                  return state.tab == RadioTab.radio
-                      ? _RadioList(state: state)
-                      : _RecitersList(state: state);
-                },
+                ],
               ),
-            ),
-          ],
+              BlocBuilder<RadioBloc, RadioState>(
+                buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
+                builder: (context, state) => state.showOfflineBanner
+                    ? const OfflineBanner()
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 10),
+              const _Tabs(),
+              const SizedBox(height: 12),
+              Expanded(
+                child: BlocBuilder<RadioBloc, RadioState>(
+                  builder: (context, state) {
+                    if (state.status == RadioStatus.loading ||
+                        state.status == RadioStatus.initial) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryColor,
+                        ),
+                      );
+                    }
+                    if (state.status == RadioStatus.failure) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            state.errorMessage,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge!
+                                .copyWith(color: AppColors.primaryColor),
+                          ),
+                        ),
+                      );
+                    }
+                    return state.tab == RadioTab.radio
+                        ? _RadioList(state: state)
+                        : _RecitersList(state: state);
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -128,9 +135,9 @@ class _Tabs extends StatelessWidget {
                 child: _TabButton(
                   label: 'Radio',
                   selected: state.tab == RadioTab.radio,
-                  onTap: () => context
-                      .read<RadioBloc>()
-                      .add(const SelectTabEvent(RadioTab.radio)),
+                  onTap: () => context.read<RadioBloc>().add(
+                    const SelectTabEvent(RadioTab.radio),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -138,9 +145,9 @@ class _Tabs extends StatelessWidget {
                 child: _TabButton(
                   label: 'Reciters',
                   selected: state.tab == RadioTab.reciters,
-                  onTap: () => context
-                      .read<RadioBloc>()
-                      .add(const SelectTabEvent(RadioTab.reciters)),
+                  onTap: () => context.read<RadioBloc>().add(
+                    const SelectTabEvent(RadioTab.reciters),
+                  ),
                 ),
               ),
             ],
@@ -208,8 +215,8 @@ class _RadioList extends StatelessWidget {
           name: station.name,
           isPlaying: state.currentId == id && state.isPlaying,
           onPlayPause: () => context.read<RadioBloc>().add(
-                PlayItemEvent(id: id, url: station.url),
-              ),
+            PlayItemEvent(id: id, url: station.url),
+          ),
         );
       },
     );
@@ -268,9 +275,9 @@ class _ReciterTile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: AppColors.titleTextColor,
-                      fontSize: 16,
-                    ),
+                  color: AppColors.titleTextColor,
+                  fontSize: 16,
+                ),
               ),
             ),
             BlocBuilder<DownloadsBloc, DownloadsState>(
@@ -285,8 +292,8 @@ class _ReciterTile extends StatelessWidget {
                   child: Text(
                     '$count saved',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: AppColors.backgroundColor,
-                        ),
+                      color: AppColors.backgroundColor,
+                    ),
                   ),
                 );
               },
@@ -307,10 +314,7 @@ class _EmptyHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(
-        text,
-        style: const TextStyle(color: AppColors.primaryColor),
-      ),
+      child: Text(text, style: const TextStyle(color: AppColors.primaryColor)),
     );
   }
 }

@@ -143,6 +143,14 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
       }
       return;
     }
+    // Live streams are online-only; say so instead of failing silently.
+    if (state.isOffline) {
+      emit(state.copyWith(
+        notice: 'Live radio needs an internet connection.',
+        noticeSeq: state.noticeSeq + 1,
+      ));
+      return;
+    }
     emit(state.copyWith(currentId: event.id));
     await audioPlayerService.playUrl(event.url);
   }

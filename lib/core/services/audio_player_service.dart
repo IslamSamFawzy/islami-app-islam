@@ -18,6 +18,12 @@ class AudioPlayerService {
     await _player.play(UrlSource(url));
   }
 
+  /// Stops any current audio and plays a local file (works offline).
+  Future<void> playFile(String path) async {
+    await _player.stop();
+    await _player.play(DeviceFileSource(path));
+  }
+
   Future<void> pause() => _player.pause();
 
   Future<void> resume() => _player.resume();
