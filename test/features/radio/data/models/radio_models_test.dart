@@ -19,20 +19,36 @@ void main() {
       const model = ReciterModel(
         id: 3,
         name: 'عبد الرحمن السديس',
-        playUrl: 'https://server.mp3quran.net/sds/001.mp3',
+        moshafServer: 'https://server.mp3quran.net/sds/',
+        surahList: [1, 2, 3, 114],
       );
       expect(ReciterModel.fromJson(model.toJson()), model);
     });
 
-    test('fromApi derives a sample playUrl from the first moshaf server', () {
+    test('fromApi normalises the server and parses surah_list', () {
       final model = ReciterModel.fromApi({
         'id': 3,
         'name': 'عبد الرحمن السديس',
         'moshaf': [
-          {'server': 'https://server.mp3quran.net/sds'},
+          {
+            'server': 'https://server.mp3quran.net/sds', // no trailing slash
+            'surah_list': '1,2,3,114',
+          },
         ],
       });
-      expect(model.playUrl, 'https://server.mp3quran.net/sds/001.mp3');
+
+      expect(model.moshafServer, 'https://server.mp3quran.net/sds/');
+      expect(model.surahList, [1, 2, 3, 114]);
+    });
+
+    test('audioUrlFor zero-pads the sura number to three digits', () {
+      const model = ReciterModel(
+        id: 3,
+        name: 'x',
+        moshafServer: 'https://server.mp3quran.net/sds/',
+        surahList: [2],
+      );
+      expect(model.audioUrlFor(2), 'https://server.mp3quran.net/sds/002.mp3');
     });
   });
 }

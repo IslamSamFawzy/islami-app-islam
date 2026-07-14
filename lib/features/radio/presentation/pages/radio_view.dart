@@ -213,7 +213,8 @@ class _RecitersList extends StatelessWidget {
           name: reciter.name,
           isPlaying: state.currentId == id && state.isPlaying,
           onPlayPause: () => context.read<RadioBloc>().add(
-                PlayItemEvent(id: id, url: reciter.playUrl),
+                // Al-Fatiha sample; the per-reciter sura list arrives in B3.
+                PlayItemEvent(id: id, url: reciter.audioUrlFor(1)),
               ),
         );
       },

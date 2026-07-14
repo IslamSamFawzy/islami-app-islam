@@ -34,7 +34,7 @@ class RadioRemoteDataSourceImpl implements RadioRemoteDataSource {
     final list = (body['reciters'] as List?) ?? const [];
     return list
         .map((e) => ReciterModel.fromApi((e as Map).cast<String, dynamic>()))
-        .where((r) => r.playUrl.isNotEmpty)
+        .where((r) => r.moshafServer.isNotEmpty && r.surahList.isNotEmpty)
         .toList();
   }
 
