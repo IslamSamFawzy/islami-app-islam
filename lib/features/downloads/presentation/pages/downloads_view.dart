@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/constants/sura_names.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/download_entry.dart';
@@ -177,6 +178,10 @@ class _SuraTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final number = int.tryParse(entry.suraId);
+    final info = number == null ? null : SuraNames.byNumber(number);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -186,20 +191,45 @@ class _SuraTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              'Sura ${entry.suraId}',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: AppColors.titleTextColor,
-                    fontSize: 16,
-                  ),
+          // Number.
+          Text(
+            entry.suraId,
+            style: theme.textTheme.titleLarge!.copyWith(
+              color: AppColors.titleTextColor.withValues(alpha: 0.7),
+              fontSize: 16,
             ),
           ),
+          const SizedBox(width: 12),
+          // English name (falls back to "Sura N").
+          Expanded(
+            child: Text(
+              info?.nameEn ?? 'Sura ${entry.suraId}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge!.copyWith(
+                color: AppColors.titleTextColor,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          // Arabic name, RTL.
+          if (info != null) ...[
+            const SizedBox(width: 8),
+            Text(
+              info.nameAr,
+              textDirection: TextDirection.rtl,
+              style: theme.textTheme.titleLarge!.copyWith(
+                color: AppColors.titleTextColor,
+                fontSize: 16,
+              ),
+            ),
+          ],
+          const SizedBox(width: 8),
           Text(
             formatBytes(entry.bytes),
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: AppColors.backgroundColor,
-                ),
+            style: theme.textTheme.bodyMedium!.copyWith(
+              color: AppColors.backgroundColor,
+            ),
           ),
           IconButton(
             tooltip: 'Delete',

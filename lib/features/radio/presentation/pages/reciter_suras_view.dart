@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -93,6 +94,9 @@ class _SuraRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final info = SuraNames.byNumber(sura);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -120,15 +124,39 @@ class _SuraRow extends StatelessWidget {
             },
           ),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Sura $sura',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: AppColors.titleTextColor,
-                    fontSize: 16,
-                  ),
+          // Sura number.
+          Text(
+            '$sura',
+            style: theme.textTheme.titleLarge!.copyWith(
+              color: AppColors.titleTextColor.withValues(alpha: 0.7),
+              fontSize: 16,
             ),
           ),
+          const SizedBox(width: 12),
+          // English name (falls back to "Sura N" if the number is unknown).
+          Expanded(
+            child: Text(
+              info?.nameEn ?? 'Sura $sura',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge!.copyWith(
+                color: AppColors.titleTextColor,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          // Arabic name, RTL on the right (like the Quran tab's rows).
+          if (info != null) ...[
+            const SizedBox(width: 8),
+            Text(
+              info.nameAr,
+              textDirection: TextDirection.rtl,
+              style: theme.textTheme.titleLarge!.copyWith(
+                color: AppColors.titleTextColor,
+                fontSize: 16,
+              ),
+            ),
+          ],
           SuraDownloadControl(
             reciterId: reciter.id.toString(),
             reciterName: reciter.name,
