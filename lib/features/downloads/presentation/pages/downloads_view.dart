@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/sura_names.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/download_entry.dart';
 import '../bloc/downloads_bloc.dart';
+import '../cubit/downloads_playback_cubit.dart';
 
 /// The downloads library: every saved sura grouped by reciter, with the total
 /// size on disk and controls to delete a single sura or a whole reciter.
@@ -16,44 +18,59 @@ class DownloadsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: Assets.images.radioBackground.provider(),
-          fit: BoxFit.cover,
-        ),
+    return BlocProvider(
+      create: (context) => DownloadsPlaybackCubit(
+        audioPlayerService: sl(),
+        downloadsBloc: context.read<DownloadsBloc>(),
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: AppColors.primaryColor),
-          title: Text(
-            'Downloads',
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: AppColors.primaryColor,
-                ),
+      child: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: Assets.images.radioBackground.provider(),
+            fit: BoxFit.cover,
           ),
         ),
-        body: SafeArea(
-          top: false,
-          child: BlocBuilder<DownloadsBloc, DownloadsState>(
-            builder: (context, state) {
-              if (state.entries.isEmpty) {
-                return const _EmptyHint();
-              }
-              final reciterIds = state.reciterIds;
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                children: [
-                  _TotalSize(bytes: state.totalBytes),
-                  const SizedBox(height: 16),
-                  for (final reciterId in reciterIds)
-                    _ReciterGroup(state: state, reciterId: reciterId),
-                ],
-              );
-            },
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            centerTitle: true,
+            iconTheme: const IconThemeData(color: AppColors.primaryColor),
+            title: Text(
+              'Downloads',
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                    color: AppColors.primaryColor,
+                  ),
+            ),
+          ),
+          body: SafeArea(
+            top: false,
+            child: BlocListener<DownloadsPlaybackCubit, DownloadsPlaybackState>(
+              listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
+              listener: (context, state) {
+                if (state.notice.isEmpty) return;
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(SnackBar(content: Text(state.notice)));
+              },
+              child: BlocBuilder<DownloadsBloc, DownloadsState>(
+                builder: (context, state) {
+                  if (state.entries.isEmpty) {
+                    return const _EmptyHint();
+                  }
+                  final reciterIds = state.reciterIds;
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    children: [
+                      _TotalSize(bytes: state.totalBytes),
+                      const SizedBox(height: 16),
+                      for (final reciterId in reciterIds)
+                        _ReciterGroup(state: state, reciterId: reciterId),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -132,6 +149,7 @@ class _ReciterGroup extends StatelessWidget {
 
   Future<void> _confirmDeleteReciter(BuildContext context, String name) async {
     final bloc = context.read<DownloadsBloc>();
+    final playback = context.read<DownloadsPlaybackCubit>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -166,6 +184,8 @@ class _ReciterGroup extends StatelessWidget {
       ),
     );
     if (confirmed == true) {
+      // Stop first if the playing sura belongs to this reciter.
+      await playback.stopIfReciter(reciterId);
       bloc.add(DeleteReciterDownloadsEvent(reciterId));
     }
   }
@@ -182,68 +202,93 @@ class _SuraTile extends StatelessWidget {
     final number = int.tryParse(entry.suraId);
     final info = number == null ? null : SuraNames.byNumber(number);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          // Number.
-          Text(
-            entry.suraId,
-            style: theme.textTheme.titleLarge!.copyWith(
-              color: AppColors.titleTextColor.withValues(alpha: 0.7),
-              fontSize: 16,
-            ),
+    return BlocBuilder<DownloadsPlaybackCubit, DownloadsPlaybackState>(
+      buildWhen: (a, b) =>
+          a.isCurrent(entry) != b.isCurrent(entry) ||
+          a.isPlaying != b.isPlaying,
+      builder: (context, playback) {
+        final isCurrent = playback.isCurrent(entry);
+        final playing = isCurrent && playback.isPlaying;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.primaryColor,
+            borderRadius: BorderRadius.circular(16),
+            // The currently playing row stands out with a dark border.
+            border: isCurrent
+                ? Border.all(color: AppColors.backgroundColor, width: 2)
+                : null,
           ),
-          const SizedBox(width: 12),
-          // English name (falls back to "Sura N").
-          Expanded(
-            child: Text(
-              info?.nameEn ?? 'Sura ${entry.suraId}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge!.copyWith(
-                color: AppColors.titleTextColor,
-                fontSize: 16,
+          child: Row(
+            children: [
+              // Gold play/pause control (matches the reciter/station tiles).
+              GestureDetector(
+                onTap: () =>
+                    context.read<DownloadsPlaybackCubit>().toggle(entry),
+                child: Icon(
+                  playing
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_fill,
+                  color: AppColors.backgroundColor,
+                  size: 32,
+                ),
               ),
-            ),
-          ),
-          // Arabic name, RTL.
-          if (info != null) ...[
-            const SizedBox(width: 8),
-            Text(
-              info.nameAr,
-              textDirection: TextDirection.rtl,
-              style: theme.textTheme.titleLarge!.copyWith(
-                color: AppColors.titleTextColor,
-                fontSize: 16,
-              ),
-            ),
-          ],
-          const SizedBox(width: 8),
-          Text(
-            formatBytes(entry.bytes),
-            style: theme.textTheme.bodyMedium!.copyWith(
-              color: AppColors.backgroundColor,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Delete',
-            icon: const Icon(Icons.delete_outline_rounded,
-                color: AppColors.backgroundColor),
-            onPressed: () => context.read<DownloadsBloc>().add(
-                  DeleteDownloadEvent(
-                    reciterId: entry.reciterId,
-                    suraId: entry.suraId,
+              const SizedBox(width: 10),
+              // Number + English name (falls back to "Sura N").
+              Expanded(
+                child: Text(
+                  info == null
+                      ? 'Sura ${entry.suraId}'
+                      : '${entry.suraId}. ${info.nameEn}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge!.copyWith(
+                    color: AppColors.titleTextColor,
+                    fontSize: 16,
                   ),
                 ),
+              ),
+              // Arabic name, RTL.
+              if (info != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  info.nameAr,
+                  textDirection: TextDirection.rtl,
+                  style: theme.textTheme.titleLarge!.copyWith(
+                    color: AppColors.titleTextColor,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+              const SizedBox(width: 8),
+              Text(
+                formatBytes(entry.bytes),
+                style: theme.textTheme.bodyMedium!.copyWith(
+                  color: AppColors.backgroundColor,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Delete',
+                icon: const Icon(Icons.delete_outline_rounded,
+                    color: AppColors.backgroundColor),
+                onPressed: () async {
+                  final downloads = context.read<DownloadsBloc>();
+                  final playbackCubit =
+                      context.read<DownloadsPlaybackCubit>();
+                  // Stop first so the player never holds a deleted file.
+                  await playbackCubit.stopIfCurrent(entry);
+                  downloads.add(DeleteDownloadEvent(
+                    reciterId: entry.reciterId,
+                    suraId: entry.suraId,
+                  ));
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
