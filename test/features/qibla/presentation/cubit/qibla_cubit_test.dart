@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:islami/core/cache/cache_manager.dart';
 import 'package:islami/core/error/exceptions.dart';
 import 'package:islami/core/services/compass_service.dart';
+import 'package:islami/core/services/declination_service.dart';
 import 'package:islami/core/services/location_service.dart';
 import 'package:islami/features/qibla/presentation/cubit/qibla_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +28,23 @@ class _FakeCompass implements CompassService {
 
   @override
   Stream<CompassReading> get readings => controller.stream;
+}
+
+class _FakeDeclination implements DeclinationService {
+  final double value;
+  int calls = 0;
+
+  _FakeDeclination([this.value = 0]);
+
+  @override
+  Future<double> getDeclination({
+    required double latitude,
+    required double longitude,
+    double altitude = 0,
+  }) async {
+    calls++;
+    return value;
+  }
 }
 
 Position _pos(double lat, double lng) => Position(
@@ -59,12 +77,22 @@ void main() {
     cache = await freshCache();
   });
 
+  QiblaCubit build({
+    _FakeLocation? location,
+    _FakeCompass? compass,
+    _FakeDeclination? declination,
+  }) =>
+      QiblaCubit(
+        locationService: location ?? _FakeLocation(position: _pos(30.0444, 31.2357)),
+        compassService: compass ?? _FakeCompass(),
+        declinationService: declination ?? _FakeDeclination(),
+        cacheManager: cache,
+      );
+
   test('resolves location, computes the Qibla, and caches the coordinates',
       () async {
-    final cubit = QiblaCubit(
-      locationService: _FakeLocation(position: _pos(30.0444, 31.2357)), // Cairo
-      compassService: _FakeCompass(),
-      cacheManager: cache,
+    final cubit = build(
+      location: _FakeLocation(position: _pos(30.0444, 31.2357)), // Cairo
     );
 
     await cubit.init();
@@ -84,12 +112,8 @@ void main() {
 
   test('alignment fires once per crossing and tracks accuracy', () async {
     final compass = _FakeCompass();
-    final cubit = QiblaCubit(
-      locationService: _FakeLocation(position: _pos(30.0444, 31.2357)),
-      compassService: compass,
-      cacheManager: cache,
-    );
-    await cubit.init(); // qiblaBearing ≈ 136.14
+    final cubit = build(compass: compass);
+    await cubit.init(); // qiblaBearing ≈ 136.14, declination 0
 
     // Pointing at the Qibla → aligned, seq bumps once, good accuracy.
     compass.controller.add(const CompassReading(heading: 136, accuracy: 15));
@@ -124,12 +148,62 @@ void main() {
     await cubit.close();
   });
 
+  test('applies the magnetic declination to the heading and caches it',
+      () async {
+    final compass = _FakeCompass();
+    final cubit = build(
+      compass: compass,
+      declination: _FakeDeclination(5), // +5° east
+    );
+    await cubit.init(); // qiblaBearing ≈ 136.14
+
+    // A magnetic heading of 131° + 5° declination = 136° true → aligned.
+    compass.controller.add(const CompassReading(heading: 131, accuracy: 15));
+    await _settle();
+    expect(cubit.state.isAligned, isTrue);
+    // Stored heading is already in the true-north frame.
+    expect(cubit.state.heading, closeTo(136, 0.001));
+
+    // The declination is cached alongside the coordinates.
+    final data = cache.read('qibla_last_location')?['data'] as Map;
+    expect(data['declination'], closeTo(5, 0.001));
+
+    await cubit.close();
+  });
+
+  test('reuses the cached declination when offline (no fresh lookup)',
+      () async {
+    // Seed the cache as if a previous online session had stored everything.
+    await cache.write('qibla_last_location',
+        {'lat': 30.0444, 'lng': 31.2357, 'declination': 5.0});
+
+    final compass = _FakeCompass();
+    final declination = _FakeDeclination(999); // must NOT be used offline
+    final cubit = build(
+      location: _FakeLocation(
+          error: const LocationException('Location services are disabled')),
+      compass: compass,
+      declination: declination,
+    );
+
+    await cubit.init();
+
+    expect(cubit.state.status, QiblaStatus.ready);
+    expect(cubit.state.usingCachedLocation, isTrue);
+    expect(declination.calls, 0); // offline → no channel call
+
+    // The cached +5° is applied: 131° magnetic → 136° true → aligned.
+    compass.controller.add(const CompassReading(heading: 131, accuracy: 15));
+    await _settle();
+    expect(cubit.state.isAligned, isTrue);
+
+    await cubit.close();
+  });
+
   test('denied permission maps to permissionDenied (no cache)', () async {
-    final cubit = QiblaCubit(
-      locationService:
+    final cubit = build(
+      location:
           _FakeLocation(error: const LocationException('Location permission denied')),
-      compassService: _FakeCompass(),
-      cacheManager: cache,
     );
 
     await cubit.init();
@@ -139,35 +213,14 @@ void main() {
   });
 
   test('disabled services map to serviceDisabled (no cache)', () async {
-    final cubit = QiblaCubit(
-      locationService: _FakeLocation(
+    final cubit = build(
+      location: _FakeLocation(
           error: const LocationException('Location services are disabled')),
-      compassService: _FakeCompass(),
-      cacheManager: cache,
     );
 
     await cubit.init();
 
     expect(cubit.state.status, QiblaStatus.serviceDisabled);
-    await cubit.close();
-  });
-
-  test('falls back to cached coordinates when a fresh fix fails', () async {
-    await cache.write('qibla_last_location', {'lat': 30.0444, 'lng': 31.2357});
-
-    final cubit = QiblaCubit(
-      locationService: _FakeLocation(
-          error: const LocationException('Location services are disabled')),
-      compassService: _FakeCompass(),
-      cacheManager: cache,
-    );
-
-    await cubit.init();
-
-    // Offline, but still fully usable from the last known location.
-    expect(cubit.state.status, QiblaStatus.ready);
-    expect(cubit.state.usingCachedLocation, isTrue);
-    expect(cubit.state.qiblaBearing, closeTo(136.14, 0.5));
     await cubit.close();
   });
 }

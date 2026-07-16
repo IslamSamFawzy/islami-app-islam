@@ -6,6 +6,7 @@ import '../cache/cache_manager.dart';
 import '../services/audio_player_service.dart';
 import '../services/compass_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/declination_service.dart';
 import '../services/download_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -80,6 +81,7 @@ Future<void> init() async {
   sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   sl.registerLazySingleton<LocationService>(() => LocationService());
   sl.registerLazySingleton<CompassService>(() => CompassService());
+  sl.registerLazySingleton<DeclinationService>(() => DeclinationService());
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
   sl.registerLazySingleton<DownloadService>(() => DownloadService());
 
@@ -228,6 +230,7 @@ Future<void> init() async {
     () => QiblaCubit(
       locationService: sl(),
       compassService: sl(),
+      declinationService: sl(),
       cacheManager: sl(),
     ),
   );

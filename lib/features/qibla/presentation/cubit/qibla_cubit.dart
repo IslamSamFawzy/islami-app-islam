@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/cache/cache_manager.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/services/compass_service.dart';
+import '../../../../core/services/declination_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/qibla_calculator.dart';
 
@@ -20,6 +21,7 @@ part 'qibla_state.dart';
 class QiblaCubit extends Cubit<QiblaState> {
   final LocationService locationService;
   final CompassService compassService;
+  final DeclinationService declinationService;
   final CacheManager cacheManager;
 
   StreamSubscription<CompassReading>? _compassSub;
@@ -28,6 +30,7 @@ class QiblaCubit extends Cubit<QiblaState> {
   QiblaCubit({
     required this.locationService,
     required this.compassService,
+    required this.declinationService,
     required this.cacheManager,
   }) : super(const QiblaState());
 
@@ -48,19 +51,16 @@ class QiblaCubit extends Cubit<QiblaState> {
   // The Qibla bearing is relative to TRUE north; a phone compass is not.
   //
   //  • iOS   – flutter_compass already returns CoreLocation's `trueHeading`,
-  //            so headings arrive in the true-north frame: no correction.
-  //  • Android – the plugin returns the MAGNETIC azimuth and exposes no true
-  //            value. Converting it needs the local magnetic declination,
-  //            which comes from a geomagnetic model (WMM/IGRF).
+  //            so no correction is applied (DeclinationService returns 0 off
+  //            Android, which prevents a double correction here).
+  //  • Android – the plugin returns the MAGNETIC azimuth; we add the local
+  //            magnetic declination from android.hardware.GeomagneticField
+  //            (Google's WMM, via DeclinationService) to reach true north.
   //
-  // This build applies NO declination offset (see the report): embedding an
-  // unverifiable coefficient table would risk pointing confidently in the
-  // wrong direction — worse than a small, known error — and pulling in another
-  // package was out of scope. On Android the needle can therefore read off by
-  // the local declination (a few degrees around Egypt/KSA, 10°+ in some
-  // regions). To fix properly, return the modeled declination here, gated to
-  // Android only so iOS is not double-corrected.
-  double get _magneticDeclination => 0.0;
+  // Resolved once from the same coordinates the Qibla uses, cached alongside
+  // them (declination changes very slowly), and left at 0 if the lookup fails
+  // rather than blocking the compass.
+  double _declination = 0;
 
   /// Resolves location, computes the Qibla, and starts the compass stream.
   Future<void> init() async {
@@ -74,14 +74,16 @@ class QiblaCubit extends Cubit<QiblaState> {
       final position = await locationService.getCurrentPosition();
       lat = position.latitude;
       lng = position.longitude;
-      await _cacheLocation(lat, lng);
+      _declination = await _resolveDeclination(lat, lng, position.altitude);
+      await _cacheLocation(lat, lng, _declination);
     } on LocationException catch (e) {
       // Offline / denied / disabled — Qibla needs no network, so fall back to
-      // the last known coordinates if we have them.
+      // the last known coordinates (and their declination) if we have them.
       final saved = _readCachedLocation();
       if (saved != null) {
         lat = saved.$1;
         lng = saved.$2;
+        _declination = saved.$3;
         usingCache = true;
       } else {
         emit(QiblaState(
@@ -137,7 +139,7 @@ class QiblaCubit extends Cubit<QiblaState> {
     final raw = reading.heading;
     // Store the heading already in the true-north frame (see declination note).
     final trueHeading =
-        raw == null ? null : _normalise360(raw + _magneticDeclination);
+        raw == null ? null : _normalise360(raw + _declination);
 
     var aligned = state.isAligned;
     var seq = state.alignedSeq;
@@ -163,20 +165,47 @@ class QiblaCubit extends Cubit<QiblaState> {
     ));
   }
 
-  Future<void> _cacheLocation(double lat, double lng) async {
+  /// Never lets a declination lookup throw into [init] — the service already
+  /// returns 0 on failure, this is belt-and-braces so the compass never stalls.
+  Future<double> _resolveDeclination(
+      double lat, double lng, double altitude) async {
     try {
-      await cacheManager.write(_cacheKey, {'lat': lat, 'lng': lng});
+      return await declinationService.getDeclination(
+        latitude: lat,
+        longitude: lng,
+        altitude: altitude,
+      );
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> _cacheLocation(
+      double lat, double lng, double declination) async {
+    try {
+      await cacheManager.write(_cacheKey, {
+        'lat': lat,
+        'lng': lng,
+        'declination': declination,
+      });
     } catch (_) {
       // Best-effort — the screen still works this session without the cache.
     }
   }
 
-  (double, double)? _readCachedLocation() {
+  (double, double, double)? _readCachedLocation() {
     final data = cacheManager.read(_cacheKey)?['data'];
     if (data is Map) {
       final lat = data['lat'];
       final lng = data['lng'];
-      if (lat is num && lng is num) return (lat.toDouble(), lng.toDouble());
+      final declination = data['declination'];
+      if (lat is num && lng is num) {
+        return (
+          lat.toDouble(),
+          lng.toDouble(),
+          declination is num ? declination.toDouble() : 0.0,
+        );
+      }
     }
     return null;
   }
