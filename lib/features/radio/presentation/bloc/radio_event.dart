@@ -28,6 +28,16 @@ class SelectTabEvent extends RadioEvent {
   List<Object?> get props => [tab];
 }
 
+/// Filters the active tab's list by [query].
+class SearchRadioEvent extends RadioEvent {
+  final String query;
+
+  const SearchRadioEvent(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}
+
 /// Plays the item with [id] from [url] (or toggles it if already current).
 class PlayItemEvent extends RadioEvent {
   final String id;

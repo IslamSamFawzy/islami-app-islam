@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/params.dart';
+import '../../../../core/utils/arabic_search.dart';
 import '../../domain/entities/radio_station.dart';
 import '../../domain/entities/reciter.dart';
 import '../../domain/usecases/get_radios.dart';
@@ -34,6 +35,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     on<_RefreshRadioDataEvent>(_onRefresh);
     on<_ConnectivityChangedEvent>(_onConnectivityChanged);
     on<SelectTabEvent>(_onSelectTab);
+    on<SearchRadioEvent>(_onSearch);
     on<PlayItemEvent>(_onPlayItem);
     on<_PlayerStateChangedEvent>(_onPlayerStateChanged);
 
@@ -127,7 +129,12 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
   }
 
   void _onSelectTab(SelectTabEvent event, Emitter<RadioState> emit) {
-    emit(state.copyWith(tab: event.tab));
+    // Clear the query on tab switch so a stale filter never carries over.
+    emit(state.copyWith(tab: event.tab, query: ''));
+  }
+
+  void _onSearch(SearchRadioEvent event, Emitter<RadioState> emit) {
+    emit(state.copyWith(query: event.query));
   }
 
   Future<void> _onPlayItem(

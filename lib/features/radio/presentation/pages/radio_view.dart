@@ -5,6 +5,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/offline_banner.dart';
+import '../../../../core/widgets/search_field.dart';
 import '../../../downloads/presentation/bloc/downloads_bloc.dart';
 import '../../../downloads/presentation/pages/downloads_view.dart';
 import '../../domain/entities/reciter.dart';
@@ -79,6 +80,11 @@ class _RadioViewBody extends StatelessWidget {
                     : const SizedBox.shrink(),
               ),
               const SizedBox(height: 10),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: _RadioSearchField(),
+              ),
+              const SizedBox(height: 12),
               const _Tabs(),
               const SizedBox(height: 12),
               Expanded(
@@ -194,6 +200,43 @@ class _TabButton extends StatelessWidget {
   }
 }
 
+/// The search field above the tabs. Owns its controller so the text can be
+/// cleared when the tab switches; its hint follows the active tab.
+class _RadioSearchField extends StatefulWidget {
+  const _RadioSearchField();
+
+  @override
+  State<_RadioSearchField> createState() => _RadioSearchFieldState();
+}
+
+class _RadioSearchFieldState extends State<_RadioSearchField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<RadioBloc, RadioState>(
+      buildWhen: (a, b) => a.tab != b.tab,
+      listenWhen: (a, b) => a.tab != b.tab,
+      // The bloc already cleared the query on tab switch; clear the text too.
+      listener: (_, _) => _controller.clear(),
+      builder: (context, state) => SearchField(
+        controller: _controller,
+        hintText: state.tab == RadioTab.radio
+            ? 'Search stations'
+            : 'Search reciters',
+        onChanged: (value) =>
+            context.read<RadioBloc>().add(SearchRadioEvent(value)),
+      ),
+    );
+  }
+}
+
 class _RadioList extends StatelessWidget {
   final RadioState state;
 
@@ -204,12 +247,14 @@ class _RadioList extends StatelessWidget {
     if (state.radios.isEmpty) {
       return const _EmptyHint(text: 'No radios available');
     }
+    final radios = state.filteredRadios;
+    if (radios.isEmpty) return const _NoResults();
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-      itemCount: state.radios.length,
+      itemCount: radios.length,
       separatorBuilder: (_, _) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
-        final station = state.radios[index];
+        final station = radios[index];
         final id = 'radio_${station.id}';
         return StationTile(
           name: station.name,
@@ -233,12 +278,14 @@ class _RecitersList extends StatelessWidget {
     if (state.reciters.isEmpty) {
       return const _EmptyHint(text: 'No reciters available');
     }
+    final reciters = state.filteredReciters;
+    if (reciters.isEmpty) return const _NoResults();
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-      itemCount: state.reciters.length,
+      itemCount: reciters.length,
       separatorBuilder: (_, _) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
-        final reciter = state.reciters[index];
+        final reciter = reciters[index];
         return _ReciterTile(reciter: reciter);
       },
     );
@@ -315,6 +362,24 @@ class _EmptyHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(text, style: const TextStyle(color: AppColors.primaryColor)),
+    );
+  }
+}
+
+/// Shown when a search filters everything out (there is data, just no match).
+class _NoResults extends StatelessWidget {
+  const _NoResults();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        'No results',
+        style: Theme.of(context)
+            .textTheme
+            .bodyLarge!
+            .copyWith(color: AppColors.textColor),
+      ),
     );
   }
 }

@@ -5,6 +5,8 @@ import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/arabic_search.dart';
+import '../../../../core/widgets/search_field.dart';
 import '../../../downloads/presentation/widgets/sura_download_control.dart';
 import '../../domain/entities/reciter.dart';
 import '../cubit/sura_playback_cubit.dart';
@@ -33,13 +35,38 @@ class ReciterSurasView extends StatelessWidget {
   }
 }
 
-class _ReciterSurasBody extends StatelessWidget {
+class _ReciterSurasBody extends StatefulWidget {
   final Reciter reciter;
 
   const _ReciterSurasBody({required this.reciter});
 
   @override
+  State<_ReciterSurasBody> createState() => _ReciterSurasBodyState();
+}
+
+class _ReciterSurasBodyState extends State<_ReciterSurasBody> {
+  String _query = '';
+
+  /// Suras matching the query by number, English or Arabic name.
+  List<int> get _visibleSuras {
+    final reciter = widget.reciter;
+    if (_query.trim().isEmpty) return reciter.surahList;
+    return reciter.surahList.where((n) {
+      final info = SuraNames.byNumber(n);
+      return ArabicSearch.suraMatches(
+        query: _query,
+        number: n,
+        nameEn: info?.nameEn ?? 'Sura $n',
+        nameAr: info?.nameAr ?? '',
+      );
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final reciter = widget.reciter;
+    final suras = _visibleSuras;
+
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -70,17 +97,51 @@ class _ReciterSurasBody extends StatelessWidget {
                 ..hideCurrentSnackBar()
                 ..showSnackBar(SnackBar(content: Text(state.notice)));
             },
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: reciter.surahList.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final sura = reciter.surahList[index];
-                return _SuraRow(reciter: reciter, sura: sura);
-              },
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: SearchField(
+                    hintText: 'Search suras',
+                    onChanged: (value) => setState(() => _query = value),
+                  ),
+                ),
+                Expanded(
+                  child: suras.isEmpty
+                      ? const _NoResults()
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                          itemCount: suras.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            return _SuraRow(
+                                reciter: reciter, sura: suras[index]);
+                          },
+                        ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shown when a search filters every sura out.
+class _NoResults extends StatelessWidget {
+  const _NoResults();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        'No results',
+        style: Theme.of(context)
+            .textTheme
+            .bodyLarge!
+            .copyWith(color: AppColors.textColor),
       ),
     );
   }

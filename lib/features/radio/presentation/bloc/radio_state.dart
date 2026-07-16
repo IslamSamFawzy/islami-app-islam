@@ -9,6 +9,10 @@ class RadioState extends Equatable {
   final List<RadioStation> radios;
   final List<Reciter> reciters;
   final RadioTab tab;
+
+  /// Search query filtering the active tab's list (cleared on tab switch).
+  final String query;
+
   final String currentId;
   final bool isPlaying;
   final String errorMessage;
@@ -30,6 +34,7 @@ class RadioState extends Equatable {
     this.radios = const [],
     this.reciters = const [],
     this.tab = RadioTab.radio,
+    this.query = '',
     this.currentId = '',
     this.isPlaying = false,
     this.errorMessage = '',
@@ -38,6 +43,16 @@ class RadioState extends Equatable {
     this.notice = '',
     this.noticeSeq = 0,
   });
+
+  /// Radios matching [query] (all of them when the query is empty).
+  List<RadioStation> get filteredRadios => query.isEmpty
+      ? radios
+      : radios.where((s) => ArabicSearch.matches(query, s.name)).toList();
+
+  /// Reciters matching [query] (all of them when the query is empty).
+  List<Reciter> get filteredReciters => query.isEmpty
+      ? reciters
+      : reciters.where((r) => ArabicSearch.matches(query, r.name)).toList();
 
   /// Whether to surface the "showing saved data" strip: offline while saved
   /// content is on screen (regardless of whether this exact render came
@@ -50,6 +65,7 @@ class RadioState extends Equatable {
     List<RadioStation>? radios,
     List<Reciter>? reciters,
     RadioTab? tab,
+    String? query,
     String? currentId,
     bool? isPlaying,
     String? errorMessage,
@@ -63,6 +79,7 @@ class RadioState extends Equatable {
       radios: radios ?? this.radios,
       reciters: reciters ?? this.reciters,
       tab: tab ?? this.tab,
+      query: query ?? this.query,
       currentId: currentId ?? this.currentId,
       isPlaying: isPlaying ?? this.isPlaying,
       errorMessage: errorMessage ?? this.errorMessage,
@@ -79,6 +96,7 @@ class RadioState extends Equatable {
         radios,
         reciters,
         tab,
+        query,
         currentId,
         isPlaying,
         errorMessage,
