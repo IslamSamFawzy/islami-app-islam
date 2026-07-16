@@ -1,8 +1,21 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Release signing is read from android/key.properties when present (kept out of
+// git — see .gitignore). When it is absent the release build falls back to the
+// debug key so the build never fails for someone without the keystore.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -22,23 +35,46 @@ android {
     }
 
     defaultConfig {
-        // Sideload-only for now; com.route.* chosen while still free (design
-        // credits "Route"). Avoids the Play-reserved com.example.* prefix.
         applicationId = "com.route.islami"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        // geolocator + flutter_local_notifications require minSdk 23.
+        // flutter.minSdkVersion resolves to 24 on this toolchain (>= the 23 that
+        // geolocator + flutter_local_notifications need), so no explicit pin.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // Only defined when a real keystore is configured; otherwise the release
+        // build below uses the debug signing config.
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                // Fallback: debug key so `flutter build apk --release` still works
+                // without the keystore (the APK installs, but is not the real key).
+                signingConfigs.getByName("debug")
+            }
+
+            // Shrink & obfuscate with R8. proguard-rules.pro keeps the classes
+            // that plugins reach by reflection (flutter_local_notifications/Gson).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
