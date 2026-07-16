@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/gen/assets.gen.dart';
@@ -40,38 +41,26 @@ class _TasbehViewBody extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
+            // Plain cream text, no underline (matches the Figma); tashkeel kept.
             Text(
               'سَبِّحِ اسْمَ رَبِّكَ الأَعْلَى',
               style: theme.textTheme.headlineSmall!.copyWith(
-                color: AppColors.primaryColor,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.primaryColor,
+                color: AppColors.textColor,
               ),
             ),
             const Spacer(),
             BlocBuilder<TasbehCubit, TasbehState>(
               builder: (context, state) {
-                return Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.read<TasbehCubit>().increment(),
-                      child: TasbehBeads(totalCount: state.totalCount),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      state.currentDhikr,
-                      style: theme.textTheme.titleLarge!.copyWith(
-                        color: AppColors.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      '${state.count}',
-                      style: theme.textTheme.headlineLarge!.copyWith(
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ],
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    context.read<TasbehCubit>().increment();
+                  },
+                  child: TasbehBeads(
+                    totalCount: state.totalCount,
+                    dhikr: state.currentDhikr,
+                    count: state.count,
+                  ),
                 );
               },
             ),
