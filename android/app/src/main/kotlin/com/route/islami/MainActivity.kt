@@ -1,5 +1,6 @@
 package com.route.islami
 
+import android.content.Intent
 import android.hardware.GeomagneticField
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -9,11 +10,15 @@ class MainActivity : FlutterActivity() {
     // Exposes the magnetic declination so the Qibla compass can convert the
     // magnetometer's magnetic-north heading to true north. GeomagneticField is
     // Android's own WMM implementation — no extra dependency, no data table.
-    private val channelName = "islami/geomagnetic"
+    private val geomagneticChannel = "islami/geomagnetic"
+
+    // Schedules/cancels the native adhan alarms (see AdhanScheduler).
+    private val adhanChannel = "islami/adhan"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, geomagneticChannel)
             .setMethodCallHandler { call, result ->
                 if (call.method == "getDeclination") {
                     val lat = call.argument<Double>("lat")
@@ -32,6 +37,38 @@ class MainActivity : FlutterActivity() {
                     result.success(field.declination.toDouble())
                 } else {
                     result.notImplemented()
+                }
+            }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, adhanChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "schedule" -> {
+                        val list = call.argument<List<Map<String, Any>>>("adhans")
+                            ?: emptyList()
+                        val adhans = list.map {
+                            AdhanScheduler.Adhan(
+                                it["name"] as String,
+                                (it["hour"] as Number).toInt(),
+                                (it["minute"] as Number).toInt(),
+                                it["fajr"] as Boolean,
+                            )
+                        }
+                        AdhanScheduler.schedule(applicationContext, adhans)
+                        result.success(null)
+                    }
+                    "cancel" -> {
+                        AdhanScheduler.cancel(applicationContext)
+                        result.success(null)
+                    }
+                    "stopNow" -> {
+                        startService(
+                            Intent(this, AdhanService::class.java)
+                                .apply { action = AdhanService.ACTION_STOP },
+                        )
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
                 }
             }
     }

@@ -3,9 +3,8 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/services/audio_player_service.dart';
+import '../../../../core/services/adhan_scheduler.dart';
 import '../../../../core/services/connectivity_service.dart';
-import '../../../../core/services/notification_service.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/prayer_times.dart';
 import '../../domain/usecases/get_prayer_times.dart';
@@ -15,17 +14,11 @@ part 'time_state.dart';
 
 class TimeBloc extends Bloc<TimeEvent, TimeState> {
   final GetPrayerTimes getPrayerTimes;
-  final NotificationService notificationService;
-  final AudioPlayerService audioPlayerService;
+  final AdhanScheduler adhanScheduler;
   final ConnectivityService connectivityService;
 
   Timer? _ticker;
   StreamSubscription<bool>? _connectivitySub;
-  String _lastAdhanKey = '';
-
-  /// Free online adhan audio (played in-app when a prayer time arrives).
-  static const String _adhanUrl =
-      'https://www.islamcan.com/audio/adhan/azan2.mp3';
 
   /// Prayer names that trigger an adhan (Sunrise is informational only).
   static const List<String> _adhanPrayers = [
@@ -38,8 +31,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
 
   TimeBloc({
     required this.getPrayerTimes,
-    required this.notificationService,
-    required this.audioPlayerService,
+    required this.adhanScheduler,
     required this.connectivityService,
   }) : super(const TimeState()) {
     on<LoadPrayerTimesEvent>(_onLoad);
@@ -65,7 +57,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
       )),
       (cached) async {
         final times = cached.data;
-        await _scheduleNotifications(times);
+        await _syncAdhans(times);
         final next = _nextPrayer(times);
         emit(state.copyWith(
           status: TimeStatus.success,
@@ -107,16 +99,24 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
           ? Duration.zero
           : next.time.difference(DateTime.now()),
     ));
-
-    _maybePlayAdhan(times);
   }
 
-  void _onToggleMute(ToggleMuteEvent event, Emitter<TimeState> emit) {
+  Future<void> _onToggleMute(
+    ToggleMuteEvent event,
+    Emitter<TimeState> emit,
+  ) async {
     final muted = !state.muted;
-    if (muted) {
-      audioPlayerService.stop();
-    }
     emit(state.copyWith(muted: muted));
+
+    if (muted) {
+      // Muted must mean nothing fires — cancel the alarms and stop any adhan
+      // currently playing.
+      await adhanScheduler.cancel();
+      await adhanScheduler.stopNow();
+    } else {
+      final times = state.prayerTimes;
+      if (times != null) await adhanScheduler.schedule(_adhanTimes(times));
+    }
   }
 
   void _startTicker() {
@@ -126,19 +126,19 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     });
   }
 
-  Future<void> _scheduleNotifications(PrayerTimes times) async {
-    await notificationService.cancelAll();
-    var id = 0;
-    for (final prayer in times.prayers) {
-      if (!_adhanPrayers.contains(prayer.name)) continue;
-      await notificationService.schedulePrayer(
-        id: id++,
-        title: 'حان وقت صلاة ${prayer.name}',
-        body: 'الله أكبر — حيّ على الصلاة',
-        time: prayer.time,
-      );
+  /// Arms (or clears, when muted) the native adhan alarms for [times].
+  Future<void> _syncAdhans(PrayerTimes times) async {
+    if (state.muted) {
+      await adhanScheduler.cancel();
+    } else {
+      await adhanScheduler.schedule(_adhanTimes(times));
     }
   }
+
+  List<AdhanTime> _adhanTimes(PrayerTimes times) => times.prayers
+      .where((p) => _adhanPrayers.contains(p.name))
+      .map((p) => AdhanTime(name: p.name, time: p.time, isFajr: p.name == 'Fajr'))
+      .toList();
 
   /// Returns the next upcoming adhan prayer today, or null if all have passed.
   Prayer? _nextPrayer(PrayerTimes times) {
@@ -148,21 +148,6 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
         .toList()
       ..sort((a, b) => a.time.compareTo(b.time));
     return upcoming.isEmpty ? null : upcoming.first;
-  }
-
-  void _maybePlayAdhan(PrayerTimes times) {
-    if (state.muted) return;
-    final now = DateTime.now();
-    for (final prayer in times.prayers) {
-      if (!_adhanPrayers.contains(prayer.name)) continue;
-      if (prayer.time.hour == now.hour && prayer.time.minute == now.minute) {
-        final key = '${prayer.name}-${now.day}-${now.hour}-${now.minute}';
-        if (key != _lastAdhanKey) {
-          _lastAdhanKey = key;
-          audioPlayerService.playUrl(_adhanUrl);
-        }
-      }
-    }
   }
 
   @override

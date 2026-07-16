@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../cache/cache_manager.dart';
+import '../services/adhan_scheduler.dart';
 import '../services/audio_player_service.dart';
 import '../services/compass_service.dart';
 import '../services/connectivity_service.dart';
@@ -82,6 +83,7 @@ Future<void> init() async {
   sl.registerLazySingleton<LocationService>(() => LocationService());
   sl.registerLazySingleton<CompassService>(() => CompassService());
   sl.registerLazySingleton<DeclinationService>(() => DeclinationService());
+  sl.registerLazySingleton<AdhanScheduler>(() => AdhanScheduler());
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
   sl.registerLazySingleton<DownloadService>(() => DownloadService());
 
@@ -140,8 +142,7 @@ Future<void> init() async {
   sl.registerFactory(
     () => TimeBloc(
       getPrayerTimes: sl(),
-      notificationService: sl(),
-      audioPlayerService: sl(),
+      adhanScheduler: sl(),
       connectivityService: sl(),
     ),
   );
