@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../azkar/domain/entities/azkar.dart';
 import '../../../azkar/presentation/pages/azkar_view.dart';
+import '../../../qibla/presentation/pages/qibla_view.dart';
 import '../bloc/time_bloc.dart';
 import '../widgets/prayer_times_card.dart';
 
@@ -102,7 +103,76 @@ class _TimeViewBody extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const _AzkarRow(),
+              const SizedBox(height: 20),
+              const _QiblaCard(),
               const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Entry card that opens the Qibla compass. Shares the Azkar cards' visual
+/// language (dark gradient + gold border) but is shorter and full-width.
+class _QiblaCard extends StatelessWidget {
+  const _QiblaCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, QiblaView.routeName),
+        child: Container(
+          height: 110,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xff262019), Color(0xff0A0806)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primaryColor),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.explore_outlined,
+                color: AppColors.primaryColor,
+                size: 48,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Qibla',
+                      style: theme.textTheme.titleLarge!.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tap to find the Qibla direction',
+                      style: theme.textTheme.bodyMedium!.copyWith(
+                        color: AppColors.textColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: AppColors.primaryColor.withValues(alpha: 0.7),
+              ),
             ],
           ),
         ),

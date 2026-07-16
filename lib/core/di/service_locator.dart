@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../cache/cache_manager.dart';
 import '../services/audio_player_service.dart';
+import '../services/compass_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/download_service.dart';
 import '../services/location_service.dart';
@@ -55,6 +56,9 @@ import '../../features/azkar/presentation/bloc/azkar_bloc.dart';
 import '../../features/downloads/data/datasources/downloads_local_data_source.dart';
 import '../../features/downloads/presentation/bloc/downloads_bloc.dart';
 
+// Qibla feature
+import '../../features/qibla/presentation/cubit/qibla_cubit.dart';
+
 /// Global service locator instance.
 final GetIt sl = GetIt.instance;
 
@@ -75,6 +79,7 @@ Future<void> init() async {
   // Core services
   sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
   sl.registerLazySingleton<LocationService>(() => LocationService());
+  sl.registerLazySingleton<CompassService>(() => CompassService());
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
   sl.registerLazySingleton<DownloadService>(() => DownloadService());
 
@@ -214,5 +219,16 @@ Future<void> init() async {
 
   sl.registerLazySingleton<DownloadsLocalDataSource>(
     () => DownloadsLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // Qibla feature (sensor + pure maths — no data source)
+  // ---------------------------------------------------------------------------
+  sl.registerFactory(
+    () => QiblaCubit(
+      locationService: sl(),
+      compassService: sl(),
+      cacheManager: sl(),
+    ),
   );
 }
