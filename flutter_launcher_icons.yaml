@@ -1,0 +1,12 @@
+# Build-time launcher icon generation (Android only for now).
+# Source PNGs live in assets/icon/ and are NOT bundled as runtime assets.
+# Regenerate with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/ic_launcher.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icon/ic_launcher_foreground.png"
+  # The foreground PNG is already sized (58%) for the adaptive safe zone, so
+  # skip the tool's default 16% inset that would shrink the mosque further.
+  adaptive_icon_foreground_inset: 0
