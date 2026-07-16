@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.islami"
+    namespace = "com.route.islami"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,8 +22,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.islami"
+        // Sideload-only for now; com.route.* chosen while still free (design
+        // credits "Route"). Avoids the Play-reserved com.example.* prefix.
+        applicationId = "com.route.islami"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // geolocator + flutter_local_notifications require minSdk 23.

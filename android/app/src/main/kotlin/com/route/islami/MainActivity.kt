@@ -1,4 +1,4 @@
-package com.example.islami
+package com.route.islami
 
 import android.hardware.GeomagneticField
 import io.flutter.embedding.android.FlutterActivity
