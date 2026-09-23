@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/error/exceptions.dart';
+import '../../../../core/data/guard.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/hadith.dart';
 import '../../domain/repositories/hadith_repository.dart';
@@ -12,12 +12,7 @@ class HadithRepositoryImpl implements HadithRepository {
   HadithRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, List<Hadith>>> getAllHadiths() async {
-    try {
-      final hadiths = await localDataSource.getAllHadiths();
-      return Right(hadiths);
-    } on LocalDataException catch (e) {
-      return Left(LocalDataFailure(e.message));
-    }
+  Future<Either<Failure, List<Hadith>>> getAllHadiths() {
+    return guardLocalData(localDataSource.getAllHadiths);
   }
 }
