@@ -1,7 +1,4 @@
-import 'dart:convert';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../../../core/cache/json_store.dart';
 import '../models/download_entry_model.dart';
 
 /// A SharedPreferences-backed index of downloaded suras, keyed by
@@ -19,25 +16,17 @@ abstract class DownloadsLocalDataSource {
 }
 
 class DownloadsLocalDataSourceImpl implements DownloadsLocalDataSource {
-  final SharedPreferences sharedPreferences;
+  final JsonStore jsonStore;
 
-  DownloadsLocalDataSourceImpl({required this.sharedPreferences});
+  DownloadsLocalDataSourceImpl({required this.jsonStore});
 
+  /// Unchanged since the first release — renaming it would orphan every
+  /// user's download index.
   static const String _key = 'downloads_index';
 
-  Map<String, dynamic> _read() {
-    final raw = sharedPreferences.getString(_key);
-    if (raw == null) return {};
-    try {
-      final decoded = json.decode(raw);
-      return decoded is Map ? decoded.cast<String, dynamic>() : {};
-    } catch (_) {
-      return {};
-    }
-  }
+  Map<String, dynamic> _read() => jsonStore.readMap(_key);
 
-  Future<void> _write(Map<String, dynamic> map) =>
-      sharedPreferences.setString(_key, json.encode(map));
+  Future<void> _write(Map<String, dynamic> map) => jsonStore.writeMap(_key, map);
 
   @override
   List<DownloadEntryModel> getAll() {

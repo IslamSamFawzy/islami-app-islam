@@ -55,6 +55,35 @@ class CacheManager {
     }
   }
 
+  /// Stores [items] under [key] as a JSON list, via [toJson].
+  Future<void> writeList<T>(
+    String key,
+    List<T> items,
+    Map<String, dynamic> Function(T) toJson,
+  ) {
+    return write(key, items.map(toJson).toList());
+  }
+
+  /// The list stored under [key], or `null` when it is absent, corrupt, or —
+  /// when [ttl] is given — older than [ttl].
+  List<T>? readList<T>(
+    String key,
+    T Function(Map<String, dynamic>) fromJson, {
+    Duration? ttl,
+  }) {
+    if (ttl != null && isStale(key, ttl)) return null;
+    final data = read(key)?['data'];
+    if (data is! List) return null;
+    try {
+      return data
+          .map((e) => fromJson((e as Map).cast<String, dynamic>()))
+          .toList();
+    } catch (_) {
+      // A corrupt entry is treated as a cache miss rather than crashing.
+      return null;
+    }
+  }
+
   /// The instant [key] was last written, or `null` if absent/corrupt.
   DateTime? cachedAt(String key) {
     final envelope = read(key);

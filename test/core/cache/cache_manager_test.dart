@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/cache/cache_manager.dart';
 import 'package:islami/core/error/exceptions.dart';
@@ -41,6 +43,50 @@ void main() {
       () => cache.write('bad', {'fn': () {}}),
       throwsA(isA<CacheException>()),
     );
+  });
+
+  test('writeList then readList round-trips the items', () async {
+    await cache.writeList('radios', const [1, 2], (n) => {'id': n});
+
+    expect(cache.readList('radios', (j) => j['id'] as int), [1, 2]);
+  });
+
+  test('readList returns null past the TTL, and ignores age without one',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'cache_radios': json.encode({
+        'cachedAt': DateTime.now()
+            .subtract(const Duration(days: 8))
+            .toIso8601String(),
+        'data': [
+          {'id': 1},
+        ],
+      }),
+    });
+    cache = CacheManager(
+      sharedPreferences: await SharedPreferences.getInstance(),
+    );
+
+    expect(
+      cache.readList(
+        'radios',
+        (j) => j['id'] as int,
+        ttl: const Duration(days: 7),
+      ),
+      isNull,
+    );
+    expect(cache.readList('radios', (j) => j['id'] as int), [1]);
+  });
+
+  test('readList returns null when the entry is missing or unparsable',
+      () async {
+    expect(cache.readList('missing', (j) => j['id'] as int), isNull);
+
+    await cache.write('radios', {'not': 'a list'});
+    expect(cache.readList('radios', (j) => j['id'] as int), isNull);
+
+    await cache.writeList('radios', const [1], (n) => {'id': n});
+    expect(cache.readList('radios', (j) => j['nope'] as int), isNull);
   });
 
   test('clearAll wipes cache entries but leaves other prefs intact', () async {

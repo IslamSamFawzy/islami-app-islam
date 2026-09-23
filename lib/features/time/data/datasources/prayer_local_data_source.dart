@@ -17,21 +17,13 @@ class PrayerLocalDataSourceImpl implements PrayerLocalDataSource {
 
   @override
   Future<void> cacheMonth(String key, List<PrayerTimesModel> month) {
-    return cacheManager.write(key, month.map((d) => d.toJson()).toList());
+    return cacheManager.writeList(key, month, (d) => d.toJson());
   }
 
   @override
   List<PrayerTimesModel>? getCachedMonth(String key) {
-    final data = cacheManager.read(key)?['data'];
-    if (data is! List) return null;
-    try {
-      return data
-          .map((e) =>
-              PrayerTimesModel.fromJson((e as Map).cast<String, dynamic>()))
-          .toList();
-    } catch (_) {
-      // A corrupt entry is treated as a cache miss rather than crashing.
-      return null;
-    }
+    // No TTL: a month's times never change, and the key already carries the
+    // month, so a stale entry is simply one for a month that has passed.
+    return cacheManager.readList(key, PrayerTimesModel.fromJson);
   }
 }

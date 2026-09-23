@@ -26,46 +26,29 @@ class RadioLocalDataSourceImpl implements RadioLocalDataSource {
 
   @override
   Future<void> cacheRadios(List<RadioStationModel> radios) {
-    return cacheManager.write(
-      _radiosKey,
-      radios.map((r) => r.toJson()).toList(),
-    );
+    return cacheManager.writeList(_radiosKey, radios, (r) => r.toJson());
   }
 
   @override
   List<RadioStationModel>? getCachedRadios() {
-    return _readList(_radiosKey, RadioStationModel.fromJson);
-  }
-
-  @override
-  Future<void> cacheReciters(List<ReciterModel> reciters) {
-    return cacheManager.write(
-      _recitersKey,
-      reciters.map((r) => r.toJson()).toList(),
+    return cacheManager.readList(
+      _radiosKey,
+      RadioStationModel.fromJson,
+      ttl: _ttl,
     );
   }
 
   @override
-  List<ReciterModel>? getCachedReciters() {
-    return _readList(_recitersKey, ReciterModel.fromJson);
+  Future<void> cacheReciters(List<ReciterModel> reciters) {
+    return cacheManager.writeList(_recitersKey, reciters, (r) => r.toJson());
   }
 
-  /// Reads a cached list under [key], returning `null` if the entry is missing,
-  /// stale (older than [_ttl]), or cannot be parsed.
-  List<T>? _readList<T>(
-    String key,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
-    if (cacheManager.isStale(key, _ttl)) return null;
-    final data = cacheManager.read(key)?['data'];
-    if (data is! List) return null;
-    try {
-      return data
-          .map((e) => fromJson((e as Map).cast<String, dynamic>()))
-          .toList();
-    } catch (_) {
-      // A corrupt entry is treated as a cache miss rather than crashing.
-      return null;
-    }
+  @override
+  List<ReciterModel>? getCachedReciters() {
+    return cacheManager.readList(
+      _recitersKey,
+      ReciterModel.fromJson,
+      ttl: _ttl,
+    );
   }
 }

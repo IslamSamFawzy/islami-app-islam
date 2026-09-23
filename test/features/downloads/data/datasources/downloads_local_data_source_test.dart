@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:islami/core/cache/json_store.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +23,9 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     ds = DownloadsLocalDataSourceImpl(
-      sharedPreferences: await SharedPreferences.getInstance(),
+      jsonStore: JsonStore(
+        sharedPreferences: await SharedPreferences.getInstance(),
+      ),
     );
   });
 
@@ -40,6 +45,21 @@ void main() {
 
     expect(ds.get('1', '2'), isNull);
     expect(ds.getAll().length, 1);
+  });
+
+  test('reads an index written under the pre-existing storage key', () async {
+    // The key is part of the app's on-disk contract: change it and every
+    // user's downloads disappear from the library.
+    SharedPreferences.setMockInitialValues({
+      'downloads_index': json.encode({'1/2': entry('1', '2').toJson()}),
+    });
+    ds = DownloadsLocalDataSourceImpl(
+      jsonStore: JsonStore(
+        sharedPreferences: await SharedPreferences.getInstance(),
+      ),
+    );
+
+    expect(ds.get('1', '2'), entry('1', '2'));
   });
 
   test('removeReciter drops every entry for that reciter', () async {

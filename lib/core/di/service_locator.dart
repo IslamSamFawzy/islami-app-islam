@@ -47,6 +47,7 @@ import '../../features/time/domain/services/next_prayer_calculator.dart';
 import '../../features/time/domain/usecases/get_prayer_times.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
 import '../cache/cache_manager.dart';
+import '../cache/json_store.dart';
 import '../network/api_client.dart';
 import '../services/adhan_scheduler.dart';
 import '../services/audio_player_service.dart';
@@ -74,6 +75,11 @@ Future<void> init() async {
   // Offline cache (thin wrapper over SharedPreferences).
   sl.registerLazySingleton<CacheManager>(
     () => CacheManager(sharedPreferences: sl()),
+  );
+
+  // Plain JSON storage for state the app owns (e.g. the downloads index).
+  sl.registerLazySingleton<JsonStore>(
+    () => JsonStore(sharedPreferences: sl()),
   );
 
   // Core services
@@ -227,7 +233,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<DownloadsLocalDataSource>(
-    () => DownloadsLocalDataSourceImpl(sharedPreferences: sl()),
+    () => DownloadsLocalDataSourceImpl(jsonStore: sl()),
   );
 
   // ---------------------------------------------------------------------------
