@@ -85,7 +85,7 @@ class _DownloadCompletedEvent extends DownloadsEvent {
 
 /// Internal: the active download failed or was cancelled.
 class _DownloadFailedEvent extends DownloadsEvent {
-  final String key;
+  final DownloadKey key;
 
   const _DownloadFailedEvent(this.key);
 

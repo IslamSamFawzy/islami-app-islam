@@ -8,6 +8,7 @@ import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/download_service.dart';
 import '../../../downloads/data/datasources/downloads_local_data_source.dart';
+import '../../../downloads/domain/entities/download_key.dart';
 import '../../domain/entities/reciter.dart';
 
 part 'sura_playback_state.dart';
@@ -52,7 +53,9 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     }
 
     // Local first — a downloaded file plays without any connection.
-    final entry = downloadsLocalDataSource.get(reciter.id.toString(), suraId);
+    final entry = downloadsLocalDataSource.get(
+      DownloadKey(reciterId: reciter.id.toString(), suraId: suraId),
+    );
     if (entry != null && await downloadService.pathExists(entry.path)) {
       emit(state.copyWith(currentSuraId: suraId));
       await audioPlayerService.playFile(entry.path);

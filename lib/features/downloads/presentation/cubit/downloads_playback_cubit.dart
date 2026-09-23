@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/download_service.dart';
 import '../../domain/entities/download_entry.dart';
+import '../../domain/entities/download_key.dart';
 import '../bloc/downloads_bloc.dart';
 
 part 'downloads_playback_state.dart';
@@ -77,12 +78,12 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
   /// Stops playback if the current entry belongs to [reciterId] (used before a
   /// "delete all for this reciter").
   Future<void> stopIfReciter(String reciterId) async {
-    if (state.currentKey.startsWith('$reciterId/')) await _stop();
+    if (state.currentKey?.reciterId == reciterId) await _stop();
   }
 
   Future<void> _stop() async {
     await audioPlayerService.stop();
-    emit(state.copyWith(currentKey: '', isPlaying: false));
+    emit(state.copyWith(clearCurrentKey: true, isPlaying: false));
   }
 
   @override
@@ -90,7 +91,7 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
     _sub?.cancel();
     // Only stop if this screen actually owns the current audio, so merely
     // opening and leaving Downloads doesn't cut off playback started elsewhere.
-    if (state.currentKey.isNotEmpty) audioPlayerService.stop();
+    if (state.currentKey != null) audioPlayerService.stop();
     return super.close();
   }
 }

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'download_key.dart';
+
 /// A record in the downloads index: one sura audio file saved on disk.
 class DownloadEntry extends Equatable {
   final String reciterId;
@@ -18,8 +20,8 @@ class DownloadEntry extends Equatable {
     required this.downloadedAt,
   });
 
-  /// Composite index key, `<reciterId>/<suraId>`.
-  String get key => '$reciterId/$suraId';
+  /// Where this entry sits in the index.
+  DownloadKey get key => DownloadKey(reciterId: reciterId, suraId: suraId);
 
   @override
   List<Object?> get props =>

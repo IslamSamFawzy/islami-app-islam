@@ -1,4 +1,5 @@
 import '../../../../core/cache/json_store.dart';
+import '../../domain/entities/download_key.dart';
 import '../models/download_entry_model.dart';
 
 /// A SharedPreferences-backed index of downloaded suras, keyed by
@@ -6,11 +7,11 @@ import '../models/download_entry_model.dart';
 abstract class DownloadsLocalDataSource {
   List<DownloadEntryModel> getAll();
 
-  DownloadEntryModel? get(String reciterId, String suraId);
+  DownloadEntryModel? get(DownloadKey key);
 
   Future<void> put(DownloadEntryModel entry);
 
-  Future<void> remove(String reciterId, String suraId);
+  Future<void> remove(DownloadKey key);
 
   Future<void> removeReciter(String reciterId);
 }
@@ -38,8 +39,8 @@ class DownloadsLocalDataSourceImpl implements DownloadsLocalDataSource {
   }
 
   @override
-  DownloadEntryModel? get(String reciterId, String suraId) {
-    final raw = _read()['$reciterId/$suraId'];
+  DownloadEntryModel? get(DownloadKey key) {
+    final raw = _read()['$key'];
     if (raw is! Map) return null;
     return DownloadEntryModel.fromJson(raw.cast<String, dynamic>());
   }
@@ -47,14 +48,14 @@ class DownloadsLocalDataSourceImpl implements DownloadsLocalDataSource {
   @override
   Future<void> put(DownloadEntryModel entry) async {
     final map = _read();
-    map[entry.key] = entry.toJson();
+    map['${entry.key}'] = entry.toJson();
     await _write(map);
   }
 
   @override
-  Future<void> remove(String reciterId, String suraId) async {
+  Future<void> remove(DownloadKey key) async {
     final map = _read();
-    map.remove('$reciterId/$suraId');
+    map.remove('$key');
     await _write(map);
   }
 

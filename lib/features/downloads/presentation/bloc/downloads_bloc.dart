@@ -7,6 +7,7 @@ import '../../../../core/services/download_service.dart';
 import '../../data/datasources/downloads_local_data_source.dart';
 import '../../data/models/download_entry_model.dart';
 import '../../domain/entities/download_entry.dart';
+import '../../domain/entities/download_key.dart';
 
 part 'downloads_event.dart';
 part 'downloads_state.dart';
@@ -20,7 +21,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   StreamSubscription<double>? _progressSub;
 
   /// URLs for queued/active keys, needed to (re)start a download.
-  final Map<String, String> _urls = {};
+  final Map<DownloadKey, String> _urls = {};
 
   /// Display names by reciter id, so completed entries can be labelled.
   final Map<String, String> _reciterNames = {};
@@ -45,12 +46,12 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     LoadDownloadsEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    final valid = <String, DownloadEntry>{};
+    final valid = <DownloadKey, DownloadEntry>{};
     for (final e in localDataSource.getAll()) {
       if (await downloadService.pathExists(e.path)) {
         valid[e.key] = e;
       } else {
-        await localDataSource.remove(e.reciterId, e.suraId);
+        await localDataSource.remove(e.key);
       }
     }
     emit(state.copyWith(entries: valid));
@@ -60,7 +61,10 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     EnqueueDownloadEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    final key = DownloadsState.keyOf(event.reciterId, event.suraId);
+    final key = DownloadKey(
+      reciterId: event.reciterId,
+      suraId: event.suraId,
+    );
     if (state.entries.containsKey(key) ||
         state.activeKey == key ||
         state.queue.contains(key)) {
@@ -73,7 +77,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   }
 
   void _maybeStartNext(Emitter<DownloadsState> emit) {
-    if (state.activeKey.isNotEmpty || state.queue.isEmpty) return;
+    if (state.activeKey != null || state.queue.isEmpty) return;
     final key = state.queue.first;
     final url = _urls[key];
     final rest = state.queue.sublist(1);
@@ -85,10 +89,9 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     _beginDownload(key, url);
   }
 
-  void _beginDownload(String key, String url) {
-    final parts = key.split('/');
-    final reciterId = parts[0];
-    final suraId = parts.length > 1 ? parts[1] : '';
+  void _beginDownload(DownloadKey key, String url) {
+    final reciterId = key.reciterId;
+    final suraId = key.suraId;
     downloadService
         .download(url: url, reciterId: reciterId, suraId: suraId)
         .then((path) async {
@@ -114,7 +117,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   }
 
   void _onProgress(_DownloadProgressEvent event, Emitter<DownloadsState> emit) {
-    if (state.activeKey.isEmpty) return;
+    if (state.activeKey == null) return;
     emit(state.copyWith(activeProgress: event.progress));
   }
 
@@ -125,9 +128,15 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     final entry = event.entry;
     await localDataSource.put(DownloadEntryModel.fromEntry(entry));
     _urls.remove(entry.key);
-    final entries = Map<String, DownloadEntry>.from(state.entries)
+    final entries = Map<DownloadKey, DownloadEntry>.from(state.entries)
       ..[entry.key] = entry;
-    emit(state.copyWith(entries: entries, activeKey: '', activeProgress: 0));
+    emit(
+      state.copyWith(
+        entries: entries,
+        clearActiveKey: true,
+        activeProgress: 0,
+      ),
+    );
     _maybeStartNext(emit);
   }
 
@@ -135,7 +144,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     _urls.remove(event.key);
     // A late failure for a no-longer-active key (e.g. cancelled) just advances.
     if (state.activeKey == event.key) {
-      emit(state.copyWith(activeKey: '', activeProgress: 0));
+      emit(state.copyWith(clearActiveKey: true, activeProgress: 0));
     }
     _maybeStartNext(emit);
   }
@@ -144,11 +153,14 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     CancelDownloadEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    final key = DownloadsState.keyOf(event.reciterId, event.suraId);
+    final key = DownloadKey(
+      reciterId: event.reciterId,
+      suraId: event.suraId,
+    );
     _urls.remove(key);
     if (state.activeKey == key) {
       // Clear active first so the resulting failure is a no-op, then cancel.
-      emit(state.copyWith(activeKey: '', activeProgress: 0));
+      emit(state.copyWith(clearActiveKey: true, activeProgress: 0));
       downloadService.cancel();
       _maybeStartNext(emit);
     } else if (state.queue.contains(key)) {
@@ -160,10 +172,14 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     DeleteDownloadEvent event,
     Emitter<DownloadsState> emit,
   ) async {
+    final key = DownloadKey(
+      reciterId: event.reciterId,
+      suraId: event.suraId,
+    );
     await downloadService.delete(event.reciterId, event.suraId);
-    await localDataSource.remove(event.reciterId, event.suraId);
-    final entries = Map<String, DownloadEntry>.from(state.entries)
-      ..remove(DownloadsState.keyOf(event.reciterId, event.suraId));
+    await localDataSource.remove(key);
+    final entries = Map<DownloadKey, DownloadEntry>.from(state.entries)
+      ..remove(key);
     emit(state.copyWith(entries: entries));
   }
 
@@ -173,7 +189,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   ) async {
     await downloadService.deleteReciter(event.reciterId);
     await localDataSource.removeReciter(event.reciterId);
-    final entries = Map<String, DownloadEntry>.from(state.entries)
+    final entries = Map<DownloadKey, DownloadEntry>.from(state.entries)
       ..removeWhere((_, e) => e.reciterId == event.reciterId);
     emit(state.copyWith(entries: entries));
   }

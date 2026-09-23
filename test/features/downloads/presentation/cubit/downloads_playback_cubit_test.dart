@@ -8,6 +8,7 @@ import 'package:islami/core/services/download_service.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
 import 'package:islami/features/downloads/domain/entities/download_entry.dart';
+import 'package:islami/features/downloads/domain/entities/download_key.dart';
 import 'package:islami/features/downloads/presentation/bloc/downloads_bloc.dart';
 import 'package:islami/features/downloads/presentation/cubit/downloads_playback_cubit.dart';
 
@@ -72,13 +73,12 @@ class _FakeLocal implements DownloadsLocalDataSource {
   @override
   List<DownloadEntryModel> getAll() => store.values.toList();
   @override
-  DownloadEntryModel? get(String reciterId, String suraId) =>
-      store['$reciterId/$suraId'];
+  DownloadEntryModel? get(DownloadKey key) => store['$key'];
   @override
-  Future<void> put(DownloadEntryModel entry) async => store[entry.key] = entry;
+  Future<void> put(DownloadEntryModel entry) async =>
+      store['${entry.key}'] = entry;
   @override
-  Future<void> remove(String reciterId, String suraId) async =>
-      store.remove('$reciterId/$suraId');
+  Future<void> remove(DownloadKey key) async => store.remove('$key');
   @override
   Future<void> removeReciter(String reciterId) async =>
       store.removeWhere((k, _) => k.startsWith('$reciterId/'));
@@ -196,7 +196,7 @@ void main() {
 
     await cubit.stopIfCurrent(entry); // current
     expect(audio.stops, 1);
-    expect(cubit.state.currentKey, isEmpty);
+    expect(cubit.state.currentKey, isNull);
 
     await cubit.close();
     await dir.delete(recursive: true);

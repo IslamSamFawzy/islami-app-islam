@@ -8,6 +8,7 @@ import 'package:islami/core/services/connectivity_service.dart';
 import 'package:islami/core/services/download_service.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
+import 'package:islami/features/downloads/domain/entities/download_key.dart';
 import 'package:islami/features/radio/domain/entities/reciter.dart';
 import 'package:islami/features/radio/presentation/cubit/sura_playback_cubit.dart';
 
@@ -44,7 +45,7 @@ class _FakeLocal implements DownloadsLocalDataSource {
   DownloadEntryModel? entry;
 
   @override
-  DownloadEntryModel? get(String reciterId, String suraId) => entry;
+  DownloadEntryModel? get(DownloadKey key) => entry;
 
   @override
   List<DownloadEntryModel> getAll() => entry == null ? [] : [entry!];
@@ -53,7 +54,7 @@ class _FakeLocal implements DownloadsLocalDataSource {
   Future<void> put(DownloadEntryModel e) async {}
 
   @override
-  Future<void> remove(String reciterId, String suraId) async {}
+  Future<void> remove(DownloadKey key) async {}
 
   @override
   Future<void> removeReciter(String reciterId) async {}

@@ -4,12 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/cache/json_store.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
+import 'package:islami/features/downloads/domain/entities/download_key.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late DownloadsLocalDataSourceImpl ds;
+
+  DownloadKey key(String r, String s) =>
+      DownloadKey(reciterId: r, suraId: s);
 
   DownloadEntryModel entry(String r, String s) => DownloadEntryModel(
         reciterId: r,
@@ -33,7 +37,7 @@ void main() {
     await ds.put(entry('1', '2'));
     await ds.put(entry('1', '3'));
 
-    expect(ds.get('1', '2'), entry('1', '2'));
+    expect(ds.get(key('1', '2')), entry('1', '2'));
     expect(ds.getAll().length, 2);
   });
 
@@ -41,9 +45,9 @@ void main() {
     await ds.put(entry('1', '2'));
     await ds.put(entry('1', '3'));
 
-    await ds.remove('1', '2');
+    await ds.remove(key('1', '2'));
 
-    expect(ds.get('1', '2'), isNull);
+    expect(ds.get(key('1', '2')), isNull);
     expect(ds.getAll().length, 1);
   });
 
@@ -59,7 +63,7 @@ void main() {
       ),
     );
 
-    expect(ds.get('1', '2'), entry('1', '2'));
+    expect(ds.get(key('1', '2')), entry('1', '2'));
   });
 
   test('removeReciter drops every entry for that reciter', () async {

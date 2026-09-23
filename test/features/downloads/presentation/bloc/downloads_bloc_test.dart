@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/services/download_service.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
+import 'package:islami/features/downloads/domain/entities/download_key.dart';
 import 'package:islami/features/downloads/presentation/bloc/downloads_bloc.dart';
 
 class _FakeDownloadService implements DownloadService {
@@ -66,15 +67,14 @@ class _FakeLocal implements DownloadsLocalDataSource {
   List<DownloadEntryModel> getAll() => store.values.toList();
 
   @override
-  DownloadEntryModel? get(String reciterId, String suraId) =>
-      store['$reciterId/$suraId'];
+  DownloadEntryModel? get(DownloadKey key) => store['$key'];
 
   @override
-  Future<void> put(DownloadEntryModel entry) async => store[entry.key] = entry;
+  Future<void> put(DownloadEntryModel entry) async =>
+      store['${entry.key}'] = entry;
 
   @override
-  Future<void> remove(String reciterId, String suraId) async =>
-      store.remove('$reciterId/$suraId');
+  Future<void> remove(DownloadKey key) async => store.remove('$key');
 
   @override
   Future<void> removeReciter(String reciterId) async =>
@@ -110,12 +110,12 @@ void main() {
         predicate<DownloadsState>(
           (s) =>
               s.isDownloaded('1', '2') &&
-              s.activeKey.isEmpty &&
+              s.activeKey == null &&
               s.queue.isEmpty,
         ),
       ),
     );
-    expect(local.get('1', '2'), isNotNull);
+    expect(local.get(const DownloadKey(reciterId: '1', suraId: '2')), isNotNull);
   });
 
   test('a queued second download runs after the first drains', () async {
@@ -143,7 +143,7 @@ void main() {
           (s) =>
               s.isDownloaded('1', '2') &&
               s.isDownloaded('1', '3') &&
-              s.activeKey.isEmpty &&
+              s.activeKey == null &&
               s.queue.isEmpty,
         ),
       ),
@@ -170,6 +170,6 @@ void main() {
       bloc.stream,
       emitsThrough(predicate<DownloadsState>((s) => !s.isDownloaded('1', '2'))),
     );
-    expect(local.get('1', '2'), isNull);
+    expect(local.get(const DownloadKey(reciterId: '1', suraId: '2')), isNull);
   });
 }
