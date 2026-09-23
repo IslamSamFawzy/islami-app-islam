@@ -19,11 +19,16 @@ class CompassReading {
   const CompassReading({this.heading, this.accuracy});
 }
 
-/// Thin wrapper around [FlutterCompass] — mirrors [LocationService] in style so
-/// the presentation layer depends on our own type, not the plugin.
-class CompassService {
+/// Contract for a stream of device compass readings.
+abstract class CompassService {
   /// Stream of compass readings. Yields an empty stream on platforms without a
   /// compass channel (e.g. web/desktop) so listeners simply never fire.
+  Stream<CompassReading> get readings;
+}
+
+/// [CompassService] implementation backed by the flutter_compass plugin.
+class FlutterCompassService implements CompassService {
+  @override
   Stream<CompassReading> get readings =>
       FlutterCompass.events?.map(
         (e) => CompassReading(heading: e.heading, accuracy: e.accuracy),

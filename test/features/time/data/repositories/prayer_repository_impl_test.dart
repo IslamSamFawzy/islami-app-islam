@@ -55,7 +55,7 @@ class _FakeLocal implements PrayerLocalDataSource {
 }
 
 /// Forces the Cairo fallback so tests don't touch platform location services.
-class _FakeLocation extends LocationService {
+class _FakeLocation implements LocationService {
   @override
   Future<Position> getCurrentPosition() async {
     throw const LocationException('denied');
@@ -96,18 +96,21 @@ void main() {
     expect(remote.calls, 0);
   });
 
-  test('cache miss downloads the month, caches it, and returns today', () async {
-    remote.month = [_dayFor(now)];
+  test(
+    'cache miss downloads the month, caches it, and returns today',
+    () async {
+      remote.month = [_dayFor(now)];
 
-    final result = await repo.getPrayerTimes();
+      final result = await repo.getPrayerTimes();
 
-    result.fold((_) => fail('expected Right'), (r) {
-      expect(r.fromCache, isFalse);
-      expect(r.data.prayers.first.time.day, now.day);
-    });
-    expect(local.written, isNotNull);
-    expect(remote.calls, 1);
-  });
+      result.fold((_) => fail('expected Right'), (r) {
+        expect(r.fromCache, isFalse);
+        expect(r.data.prayers.first.time.day, now.day);
+      });
+      expect(local.written, isNotNull);
+      expect(remote.calls, 1);
+    },
+  );
 
   test('offline with nothing cached returns a CacheFailure', () async {
     remote.throwServer = true;

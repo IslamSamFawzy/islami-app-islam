@@ -2,6 +2,51 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Azkar feature
+import '../../features/azkar/data/datasources/azkar_local_data_source.dart';
+import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
+import '../../features/azkar/domain/repositories/azkar_repository.dart';
+import '../../features/azkar/domain/usecases/get_azkar.dart';
+import '../../features/azkar/presentation/bloc/azkar_bloc.dart';
+// Downloads feature
+import '../../features/downloads/data/datasources/downloads_local_data_source.dart';
+import '../../features/downloads/presentation/bloc/downloads_bloc.dart';
+// Hadith feature
+import '../../features/hadith/data/datasources/hadith_local_data_source.dart';
+import '../../features/hadith/data/repositories/hadith_repository_impl.dart';
+import '../../features/hadith/domain/repositories/hadith_repository.dart';
+import '../../features/hadith/domain/usecases/get_all_hadiths.dart';
+import '../../features/hadith/presentation/bloc/hadith_bloc.dart';
+// Qibla feature
+import '../../features/qibla/presentation/cubit/qibla_cubit.dart';
+// Quran feature
+import '../../features/quran/data/datasources/quran_local_data_source.dart';
+import '../../features/quran/data/repositories/quran_repository_impl.dart';
+import '../../features/quran/domain/repositories/quran_repository.dart';
+import '../../features/quran/domain/services/sura_search_filter.dart';
+import '../../features/quran/domain/usecases/add_recent_sura.dart';
+import '../../features/quran/domain/usecases/get_all_suras.dart';
+import '../../features/quran/domain/usecases/get_recent_suras.dart';
+import '../../features/quran/domain/usecases/get_sura_verses.dart';
+import '../../features/quran/presentation/bloc/details/quran_details_bloc.dart';
+import '../../features/quran/presentation/bloc/quran_bloc.dart';
+// Radio feature
+import '../../features/radio/data/datasources/radio_local_data_source.dart';
+import '../../features/radio/data/datasources/radio_remote_data_source.dart';
+import '../../features/radio/data/repositories/radio_repository_impl.dart';
+import '../../features/radio/domain/repositories/radio_repository.dart';
+import '../../features/radio/domain/usecases/get_radios.dart';
+import '../../features/radio/domain/usecases/get_reciters.dart';
+import '../../features/radio/presentation/bloc/radio_bloc.dart';
+// Time feature
+import '../../features/time/data/datasources/prayer_local_data_source.dart';
+import '../../features/time/data/datasources/prayer_remote_data_source.dart';
+import '../../features/time/data/repositories/prayer_repository_impl.dart';
+import '../../features/time/domain/repositories/prayer_repository.dart';
+import '../../features/time/domain/services/adhan_prayer_policy.dart';
+import '../../features/time/domain/services/next_prayer_calculator.dart';
+import '../../features/time/domain/usecases/get_prayer_times.dart';
+import '../../features/time/presentation/bloc/time_bloc.dart';
 import '../cache/cache_manager.dart';
 import '../services/adhan_scheduler.dart';
 import '../services/audio_player_service.dart';
@@ -11,55 +56,6 @@ import '../services/declination_service.dart';
 import '../services/download_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
-
-// Quran feature
-import '../../features/quran/data/datasources/quran_local_data_source.dart';
-import '../../features/quran/data/repositories/quran_repository_impl.dart';
-import '../../features/quran/domain/repositories/quran_repository.dart';
-import '../../features/quran/domain/usecases/add_recent_sura.dart';
-import '../../features/quran/domain/usecases/get_all_suras.dart';
-import '../../features/quran/domain/usecases/get_recent_suras.dart';
-import '../../features/quran/domain/usecases/get_sura_verses.dart';
-import '../../features/quran/presentation/bloc/quran_bloc.dart';
-import '../../features/quran/presentation/bloc/details/quran_details_bloc.dart';
-
-// Hadith feature
-import '../../features/hadith/data/datasources/hadith_local_data_source.dart';
-import '../../features/hadith/data/repositories/hadith_repository_impl.dart';
-import '../../features/hadith/domain/repositories/hadith_repository.dart';
-import '../../features/hadith/domain/usecases/get_all_hadiths.dart';
-import '../../features/hadith/presentation/bloc/hadith_bloc.dart';
-
-// Time feature
-import '../../features/time/data/datasources/prayer_local_data_source.dart';
-import '../../features/time/data/datasources/prayer_remote_data_source.dart';
-import '../../features/time/data/repositories/prayer_repository_impl.dart';
-import '../../features/time/domain/repositories/prayer_repository.dart';
-import '../../features/time/domain/usecases/get_prayer_times.dart';
-import '../../features/time/presentation/bloc/time_bloc.dart';
-
-// Radio feature
-import '../../features/radio/data/datasources/radio_local_data_source.dart';
-import '../../features/radio/data/datasources/radio_remote_data_source.dart';
-import '../../features/radio/data/repositories/radio_repository_impl.dart';
-import '../../features/radio/domain/repositories/radio_repository.dart';
-import '../../features/radio/domain/usecases/get_radios.dart';
-import '../../features/radio/domain/usecases/get_reciters.dart';
-import '../../features/radio/presentation/bloc/radio_bloc.dart';
-
-// Azkar feature
-import '../../features/azkar/data/datasources/azkar_local_data_source.dart';
-import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
-import '../../features/azkar/domain/repositories/azkar_repository.dart';
-import '../../features/azkar/domain/usecases/get_azkar.dart';
-import '../../features/azkar/presentation/bloc/azkar_bloc.dart';
-
-// Downloads feature
-import '../../features/downloads/data/datasources/downloads_local_data_source.dart';
-import '../../features/downloads/presentation/bloc/downloads_bloc.dart';
-
-// Qibla feature
-import '../../features/qibla/presentation/cubit/qibla_cubit.dart';
 
 /// Global service locator instance.
 final GetIt sl = GetIt.instance;
@@ -79,13 +75,17 @@ Future<void> init() async {
   );
 
   // Core services
-  sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerService());
-  sl.registerLazySingleton<LocationService>(() => LocationService());
-  sl.registerLazySingleton<CompassService>(() => CompassService());
-  sl.registerLazySingleton<DeclinationService>(() => DeclinationService());
+  sl.registerLazySingleton<AudioPlayerService>(() => AudioPlayerServiceImpl());
+  sl.registerLazySingleton<LocationService>(() => GeolocatorLocationService());
+  sl.registerLazySingleton<CompassService>(() => FlutterCompassService());
+  sl.registerLazySingleton<DeclinationService>(
+    () => MethodChannelDeclinationService(),
+  );
   sl.registerLazySingleton<AdhanScheduler>(() => AdhanScheduler());
-  sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
-  sl.registerLazySingleton<DownloadService>(() => DownloadService());
+  sl.registerLazySingleton<ConnectivityService>(
+    () => ConnectivityPlusService(),
+  );
+  sl.registerLazySingleton<DownloadService>(() => DownloadServiceImpl());
 
   final notificationService = NotificationService();
   await notificationService.init();
@@ -95,12 +95,15 @@ Future<void> init() async {
   // ---------------------------------------------------------------------------
   // Quran feature
   // ---------------------------------------------------------------------------
+  sl.registerLazySingleton<SuraSearchFilter>(() => DefaultSuraSearchFilter());
+
   // Bloc (factory: new instance each time it is requested)
   sl.registerFactory(
     () => QuranBloc(
       getAllSuras: sl(),
       getRecentSuras: sl(),
       addRecentSura: sl(),
+      suraSearchFilter: sl(),
     ),
   );
   sl.registerFactory(() => QuranDetailsBloc(getSuraVerses: sl()));
@@ -139,10 +142,17 @@ Future<void> init() async {
   // ---------------------------------------------------------------------------
   // Time feature (prayer times + adhan)
   // ---------------------------------------------------------------------------
+  sl.registerLazySingleton<AdhanPrayerPolicy>(() => DefaultAdhanPrayerPolicy());
+  sl.registerLazySingleton<NextPrayerCalculator>(
+    () => AdhanNextPrayerCalculator(),
+  );
+
   sl.registerFactory(
     () => TimeBloc(
       getPrayerTimes: sl(),
       adhanScheduler: sl(),
+      adhanPrayerPolicy: sl(),
+      nextPrayerCalculator: sl(),
       connectivityService: sl(),
     ),
   );
@@ -181,10 +191,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetReciters(sl()));
 
   sl.registerLazySingleton<RadioRepository>(
-    () => RadioRepositoryImpl(
-      remoteDataSource: sl(),
-      localDataSource: sl(),
-    ),
+    () => RadioRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
   );
 
   sl.registerLazySingleton<RadioRemoteDataSource>(
@@ -214,10 +221,7 @@ Future<void> init() async {
   // Downloads feature (shared app-wide: one queue, one index)
   // ---------------------------------------------------------------------------
   sl.registerLazySingleton<DownloadsBloc>(
-    () => DownloadsBloc(
-      downloadService: sl(),
-      localDataSource: sl(),
-    ),
+    () => DownloadsBloc(downloadService: sl(), localDataSource: sl()),
   );
 
   sl.registerLazySingleton<DownloadsLocalDataSource>(

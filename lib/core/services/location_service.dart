@@ -2,8 +2,14 @@ import 'package:geolocator/geolocator.dart';
 
 import '../error/exceptions.dart';
 
-/// Thin wrapper around geolocator that handles service/permission checks.
-class LocationService {
+/// Contract for resolving the device's current position.
+abstract class LocationService {
+  Future<Position> getCurrentPosition();
+}
+
+/// [LocationService] implementation backed by the geolocator plugin.
+class GeolocatorLocationService implements LocationService {
+  @override
   Future<Position> getCurrentPosition() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -21,9 +27,7 @@ class LocationService {
     }
 
     return Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.low,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
     );
   }
 }

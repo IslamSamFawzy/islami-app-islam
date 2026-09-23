@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/services/audio_player_service.dart';
 import 'package:islami/core/services/connectivity_service.dart';
+import 'package:islami/core/services/download_service.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
 import 'package:islami/features/radio/domain/entities/reciter.dart';
@@ -19,9 +20,6 @@ class _FakeAudio implements AudioPlayerService {
 
   @override
   PlayerState get state => PlayerState.stopped;
-
-  @override
-  AudioPlayer get player => throw UnimplementedError();
 
   @override
   Future<void> playFile(String path) async => playedFile = path;
@@ -73,6 +71,33 @@ class _FakeConnectivity implements ConnectivityService {
   Stream<bool> get onConnectivityChanged => const Stream.empty();
 }
 
+class _FakeDownloadService implements DownloadService {
+  @override
+  Stream<double> get progress => const Stream.empty();
+  @override
+  Future<String> download({
+    required String url,
+    required String reciterId,
+    required String suraId,
+  }) async => '';
+  @override
+  void cancel() {}
+  @override
+  Future<void> delete(String reciterId, String suraId) async {}
+  @override
+  Future<void> deleteReciter(String reciterId) async {}
+  @override
+  Future<int> fileSize(String reciterId, String suraId) async => 0;
+  @override
+  Future<bool> fileExists(String reciterId, String suraId) async => false;
+  @override
+  Future<bool> pathExists(String path) async => File(path).exists();
+  @override
+  Future<String> filePath(String reciterId, String suraId) async => '';
+  @override
+  Future<void> dispose() async {}
+}
+
 void main() {
   const reciter = Reciter(
     id: 1,
@@ -83,17 +108,20 @@ void main() {
 
   late _FakeAudio audio;
   late _FakeLocal local;
+  late _FakeDownloadService downloadService;
 
   SuraPlaybackCubit build(bool connected) => SuraPlaybackCubit(
-        reciter: reciter,
-        audioPlayerService: audio,
-        downloadsLocalDataSource: local,
-        connectivityService: _FakeConnectivity(connected),
-      );
+    reciter: reciter,
+    audioPlayerService: audio,
+    downloadsLocalDataSource: local,
+    downloadService: downloadService,
+    connectivityService: _FakeConnectivity(connected),
+  );
 
   setUp(() {
     audio = _FakeAudio();
     local = _FakeLocal();
+    downloadService = _FakeDownloadService();
   });
 
   test('plays the local file when the sura is downloaded', () async {

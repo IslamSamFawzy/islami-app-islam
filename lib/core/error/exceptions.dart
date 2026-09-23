@@ -1,5 +1,5 @@
-/// Low-level exceptions thrown by the data layer (data sources).
-/// These are caught in repository implementations and mapped to [Failure]s.
+// Low-level exceptions thrown by the data layer (data sources).
+// These are caught in repository implementations and mapped to Failures.
 
 class ServerException implements Exception {
   final String message;

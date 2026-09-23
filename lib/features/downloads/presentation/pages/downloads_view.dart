@@ -21,6 +21,7 @@ class DownloadsView extends StatelessWidget {
     return BlocProvider(
       create: (context) => DownloadsPlaybackCubit(
         audioPlayerService: sl(),
+        downloadService: sl(),
         downloadsBloc: context.read<DownloadsBloc>(),
       ),
       child: Container(
@@ -38,9 +39,9 @@ class DownloadsView extends StatelessWidget {
             iconTheme: const IconThemeData(color: AppColors.primaryColor),
             title: Text(
               'Downloads',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: AppColors.primaryColor,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge!.copyWith(color: AppColors.primaryColor),
             ),
           ),
           body: SafeArea(
@@ -88,10 +89,9 @@ class _TotalSize extends StatelessWidget {
     return Text(
       'Total on device: ${formatBytes(bytes)}',
       textAlign: TextAlign.center,
-      style: Theme.of(context)
-          .textTheme
-          .bodyLarge!
-          .copyWith(color: AppColors.textColor),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyLarge!.copyWith(color: AppColors.textColor),
     );
   }
 }
@@ -105,9 +105,14 @@ class _ReciterGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = state.entriesForReciter(reciterId)
-      ..sort((a, b) =>
-          (int.tryParse(a.suraId) ?? 0).compareTo(int.tryParse(b.suraId) ?? 0));
-    final name = entries.isEmpty ? 'Reciter $reciterId' : entries.first.reciterName;
+      ..sort(
+        (a, b) => (int.tryParse(a.suraId) ?? 0).compareTo(
+          int.tryParse(b.suraId) ?? 0,
+        ),
+      );
+    final name = entries.isEmpty
+        ? 'Reciter $reciterId'
+        : entries.first.reciterName;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -120,22 +125,23 @@ class _ReciterGroup extends StatelessWidget {
                 child: Text(
                   name.isEmpty ? 'Reciter $reciterId' : name,
                   style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                        color: AppColors.primaryColor,
-                        fontSize: 16,
-                      ),
+                    color: AppColors.primaryColor,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               Text(
                 formatBytes(state.bytesForReciter(reciterId)),
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(color: AppColors.textColor),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(color: AppColors.textColor),
               ),
               IconButton(
                 tooltip: 'Delete all',
-                icon: const Icon(Icons.delete_sweep_rounded,
-                    color: AppColors.primaryColor),
+                icon: const Icon(
+                  Icons.delete_sweep_rounded,
+                  color: AppColors.primaryColor,
+                ),
                 onPressed: () => _confirmDeleteReciter(context, name),
               ),
             ],
@@ -156,29 +162,31 @@ class _ReciterGroup extends StatelessWidget {
         backgroundColor: AppColors.backgroundColor,
         title: Text(
           'Delete downloads',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge!
-              .copyWith(color: AppColors.primaryColor),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge!.copyWith(color: AppColors.primaryColor),
         ),
         content: Text(
           'Remove all downloaded suras for '
           '${name.isEmpty ? 'this reciter' : name}?',
-          style: Theme.of(context)
-              .textTheme
-              .bodyLarge!
-              .copyWith(color: AppColors.textColor),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge!.copyWith(color: AppColors.textColor),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.textColor)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textColor),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete',
-                style: TextStyle(color: AppColors.primaryColor)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.primaryColor),
+            ),
           ),
         ],
       ),
@@ -228,9 +236,7 @@ class _SuraTile extends StatelessWidget {
                 onTap: () =>
                     context.read<DownloadsPlaybackCubit>().toggle(entry),
                 child: Icon(
-                  playing
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_fill,
+                  playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
                   color: AppColors.backgroundColor,
                   size: 32,
                 ),
@@ -271,18 +277,21 @@ class _SuraTile extends StatelessWidget {
               ),
               IconButton(
                 tooltip: 'Delete',
-                icon: const Icon(Icons.delete_outline_rounded,
-                    color: AppColors.backgroundColor),
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.backgroundColor,
+                ),
                 onPressed: () async {
                   final downloads = context.read<DownloadsBloc>();
-                  final playbackCubit =
-                      context.read<DownloadsPlaybackCubit>();
+                  final playbackCubit = context.read<DownloadsPlaybackCubit>();
                   // Stop first so the player never holds a deleted file.
                   await playbackCubit.stopIfCurrent(entry);
-                  downloads.add(DeleteDownloadEvent(
-                    reciterId: entry.reciterId,
-                    suraId: entry.suraId,
-                  ));
+                  downloads.add(
+                    DeleteDownloadEvent(
+                      reciterId: entry.reciterId,
+                      suraId: entry.suraId,
+                    ),
+                  );
                 },
               ),
             ],
@@ -304,10 +313,9 @@ class _EmptyHint extends StatelessWidget {
         child: Text(
           'No downloads yet.\nDownload suras from a reciter to listen offline.',
           textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .bodyLarge!
-              .copyWith(color: AppColors.primaryColor),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge!.copyWith(color: AppColors.primaryColor),
         ),
       ),
     );

@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/audio_player_service.dart';
+import '../../../../core/services/download_service.dart';
 import '../../domain/entities/download_entry.dart';
 import '../bloc/downloads_bloc.dart';
 
@@ -20,6 +20,7 @@ part 'downloads_playback_state.dart';
 /// stops whatever was playing elsewhere (and vice-versa).
 class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
   final AudioPlayerService audioPlayerService;
+  final DownloadService downloadService;
 
   /// Used only to drop a stale index entry via the existing reconcile path.
   final DownloadsBloc downloadsBloc;
@@ -28,6 +29,7 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
 
   DownloadsPlaybackCubit({
     required this.audioPlayerService,
+    required this.downloadService,
     required this.downloadsBloc,
   }) : super(const DownloadsPlaybackState()) {
     _sub = audioPlayerService.onStateChanged.listen((s) {
@@ -49,11 +51,13 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
     }
 
     // The file may have been deleted outside the app since the index was built.
-    if (!await File(entry.path).exists()) {
-      emit(state.copyWith(
-        notice: 'This download is missing and was removed.',
-        noticeSeq: state.noticeSeq + 1,
-      ));
+    if (!await downloadService.pathExists(entry.path)) {
+      emit(
+        state.copyWith(
+          notice: 'This download is missing and was removed.',
+          noticeSeq: state.noticeSeq + 1,
+        ),
+      );
       // Reuse the startup reconciliation to drop the stale entry — don't
       // duplicate the file-check/remove logic that DownloadsBloc already owns.
       downloadsBloc.add(const LoadDownloadsEvent());

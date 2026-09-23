@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/sura.dart';
+import '../../domain/services/sura_search_filter.dart';
 import '../../domain/usecases/add_recent_sura.dart';
 import '../../domain/usecases/get_all_suras.dart';
 import '../../domain/usecases/get_recent_suras.dart';
@@ -14,11 +15,13 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   final GetAllSuras getAllSuras;
   final GetRecentSuras getRecentSuras;
   final AddRecentSura addRecentSura;
+  final SuraSearchFilter suraSearchFilter;
 
   QuranBloc({
     required this.getAllSuras,
     required this.getRecentSuras,
     required this.addRecentSura,
+    required this.suraSearchFilter,
   }) : super(const QuranState()) {
     on<LoadSurasEvent>(_onLoadSuras);
     on<SearchSurasEvent>(_onSearchSuras);
@@ -33,16 +36,20 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     emit(state.copyWith(status: QuranStatus.loading));
     final result = await getAllSuras(const NoParams());
     await result.fold(
-      (failure) async => emit(state.copyWith(
-        status: QuranStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) async => emit(
+        state.copyWith(
+          status: QuranStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (suras) async {
-        emit(state.copyWith(
-          status: QuranStatus.success,
-          allSuras: suras,
-          filteredSuras: suras,
-        ));
+        emit(
+          state.copyWith(
+            status: QuranStatus.success,
+            allSuras: suras,
+            filteredSuras: suras,
+          ),
+        );
         await _refreshRecents(emit);
       },
     );
@@ -63,19 +70,9 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     await _refreshRecents(emit);
   }
 
-  void _onSearchSuras(
-    SearchSurasEvent event,
-    Emitter<QuranState> emit,
-  ) {
+  void _onSearchSuras(SearchSurasEvent event, Emitter<QuranState> emit) {
     final raw = event.query.trim();
-    final lower = raw.toLowerCase();
-    final filtered = raw.isEmpty
-        ? state.allSuras
-        : state.allSuras
-            .where((sura) =>
-                sura.nameEn.toLowerCase().contains(lower) ||
-                sura.nameAr.contains(raw))
-            .toList();
+    final filtered = suraSearchFilter.filter(state.allSuras, raw);
     emit(state.copyWith(query: raw, filteredSuras: filtered));
   }
 

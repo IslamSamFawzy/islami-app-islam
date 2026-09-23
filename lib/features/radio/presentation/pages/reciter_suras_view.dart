@@ -28,6 +28,7 @@ class ReciterSurasView extends StatelessWidget {
         reciter: reciter,
         audioPlayerService: sl(),
         downloadsLocalDataSource: sl(),
+        downloadService: sl(),
         connectivityService: sl(),
       ),
       child: _ReciterSurasBody(reciter: reciter),
@@ -82,9 +83,9 @@ class _ReciterSurasBodyState extends State<_ReciterSurasBody> {
           iconTheme: const IconThemeData(color: AppColors.primaryColor),
           title: Text(
             reciter.name,
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: AppColors.primaryColor,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge!.copyWith(color: AppColors.primaryColor),
           ),
         ),
         body: SafeArea(
@@ -116,7 +117,9 @@ class _ReciterSurasBodyState extends State<_ReciterSurasBody> {
                               const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             return _SuraRow(
-                                reciter: reciter, sura: suras[index]);
+                              reciter: reciter,
+                              sura: suras[index],
+                            );
                           },
                         ),
                 ),
@@ -138,10 +141,9 @@ class _NoResults extends StatelessWidget {
     return Center(
       child: Text(
         'No results',
-        style: Theme.of(context)
-            .textTheme
-            .bodyLarge!
-            .copyWith(color: AppColors.textColor),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge!.copyWith(color: AppColors.textColor),
       ),
     );
   }
@@ -175,9 +177,7 @@ class _SuraRow extends StatelessWidget {
               return GestureDetector(
                 onTap: () => context.read<SuraPlaybackCubit>().toggle(sura),
                 child: Icon(
-                  playing
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_fill,
+                  playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
                   color: AppColors.backgroundColor,
                   size: 32,
                 ),

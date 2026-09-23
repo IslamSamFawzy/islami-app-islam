@@ -7,6 +7,8 @@ import '../../../../core/services/adhan_scheduler.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/prayer_times.dart';
+import '../../domain/services/adhan_prayer_policy.dart';
+import '../../domain/services/next_prayer_calculator.dart';
 import '../../domain/usecases/get_prayer_times.dart';
 
 part 'time_event.dart';
@@ -15,23 +17,18 @@ part 'time_state.dart';
 class TimeBloc extends Bloc<TimeEvent, TimeState> {
   final GetPrayerTimes getPrayerTimes;
   final AdhanScheduler adhanScheduler;
+  final AdhanPrayerPolicy adhanPrayerPolicy;
+  final NextPrayerCalculator nextPrayerCalculator;
   final ConnectivityService connectivityService;
 
   Timer? _ticker;
   StreamSubscription<bool>? _connectivitySub;
 
-  /// Prayer names that trigger an adhan (Sunrise is informational only).
-  static const List<String> _adhanPrayers = [
-    'Fajr',
-    'Dhuhr',
-    'Asr',
-    'Maghrib',
-    'Isha',
-  ];
-
   TimeBloc({
     required this.getPrayerTimes,
     required this.adhanScheduler,
+    required this.adhanPrayerPolicy,
+    required this.nextPrayerCalculator,
     required this.connectivityService,
   }) : super(const TimeState()) {
     on<LoadPrayerTimesEvent>(_onLoad);
@@ -39,7 +36,9 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     on<ToggleMuteEvent>(_onToggleMute);
     on<_ConnectivityChangedEvent>(_onConnectivityChanged);
 
-    _connectivitySub = connectivityService.onConnectivityChanged.listen((online) {
+    _connectivitySub = connectivityService.onConnectivityChanged.listen((
+      online,
+    ) {
       if (!isClosed) add(_ConnectivityChangedEvent(online));
     });
   }
@@ -51,26 +50,30 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     emit(state.copyWith(status: TimeStatus.loading));
     final result = await getPrayerTimes(const NoParams());
     await result.fold(
-      (failure) async => emit(state.copyWith(
-        status: TimeStatus.failure,
-        errorMessage: failure.message,
-      )),
+      (failure) async => emit(
+        state.copyWith(
+          status: TimeStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
       (cached) async {
         final times = cached.data;
         await _syncAdhans(times);
-        final next = _nextPrayer(times);
-        emit(state.copyWith(
-          status: TimeStatus.success,
-          prayerTimes: times,
-          isFromCache: cached.fromCache,
-          // Seed the offline flag so a cold start with no connection shows the
-          // strip immediately (the stream only fires on subsequent changes).
-          isOffline: !await connectivityService.isConnected,
-          nextPrayerName: next?.name ?? '',
-          countdown: next == null
-              ? Duration.zero
-              : next.time.difference(DateTime.now()),
-        ));
+        final next = nextPrayerCalculator.findNext(times);
+        emit(
+          state.copyWith(
+            status: TimeStatus.success,
+            prayerTimes: times,
+            isFromCache: cached.fromCache,
+            // Seed the offline flag so a cold start with no connection shows the
+            // strip immediately (the stream only fires on subsequent changes).
+            isOffline: !await connectivityService.isConnected,
+            nextPrayerName: next?.name ?? '',
+            countdown: next == null
+                ? Duration.zero
+                : next.time.difference(DateTime.now()),
+          ),
+        );
         _startTicker();
       },
     );
@@ -92,13 +95,15 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     final times = state.prayerTimes;
     if (times == null) return;
 
-    final next = _nextPrayer(times);
-    emit(state.copyWith(
-      nextPrayerName: next?.name ?? '',
-      countdown: next == null
-          ? Duration.zero
-          : next.time.difference(DateTime.now()),
-    ));
+    final next = nextPrayerCalculator.findNext(times);
+    emit(
+      state.copyWith(
+        nextPrayerName: next?.name ?? '',
+        countdown: next == null
+            ? Duration.zero
+            : next.time.difference(DateTime.now()),
+      ),
+    );
   }
 
   Future<void> _onToggleMute(
@@ -115,7 +120,9 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
       await adhanScheduler.stopNow();
     } else {
       final times = state.prayerTimes;
-      if (times != null) await adhanScheduler.schedule(_adhanTimes(times));
+      if (times != null) {
+        await adhanScheduler.schedule(adhanPrayerPolicy.adhanTimes(times));
+      }
     }
   }
 
@@ -131,23 +138,8 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     if (state.muted) {
       await adhanScheduler.cancel();
     } else {
-      await adhanScheduler.schedule(_adhanTimes(times));
+      await adhanScheduler.schedule(adhanPrayerPolicy.adhanTimes(times));
     }
-  }
-
-  List<AdhanTime> _adhanTimes(PrayerTimes times) => times.prayers
-      .where((p) => _adhanPrayers.contains(p.name))
-      .map((p) => AdhanTime(name: p.name, time: p.time, isFajr: p.name == 'Fajr'))
-      .toList();
-
-  /// Returns the next upcoming adhan prayer today, or null if all have passed.
-  Prayer? _nextPrayer(PrayerTimes times) {
-    final now = DateTime.now();
-    final upcoming = times.prayers
-        .where((p) => _adhanPrayers.contains(p.name) && p.time.isAfter(now))
-        .toList()
-      ..sort((a, b) => a.time.compareTo(b.time));
-    return upcoming.isEmpty ? null : upcoming.first;
   }
 
   @override

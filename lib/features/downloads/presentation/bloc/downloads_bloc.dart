@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,10 +25,8 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   /// Display names by reciter id, so completed entries can be labelled.
   final Map<String, String> _reciterNames = {};
 
-  DownloadsBloc({
-    required this.downloadService,
-    required this.localDataSource,
-  }) : super(const DownloadsState()) {
+  DownloadsBloc({required this.downloadService, required this.localDataSource})
+    : super(const DownloadsState()) {
     on<LoadDownloadsEvent>(_onLoad);
     on<EnqueueDownloadEvent>(_onEnqueue);
     on<CancelDownloadEvent>(_onCancel);
@@ -50,7 +47,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   ) async {
     final valid = <String, DownloadEntry>{};
     for (final e in localDataSource.getAll()) {
-      if (await File(e.path).exists()) {
+      if (await downloadService.pathExists(e.path)) {
         valid[e.key] = e;
       } else {
         await localDataSource.remove(e.reciterId, e.suraId);
@@ -95,20 +92,25 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     downloadService
         .download(url: url, reciterId: reciterId, suraId: suraId)
         .then((path) async {
-      final bytes = await downloadService.fileSize(reciterId, suraId);
-      if (!isClosed) {
-        add(_DownloadCompletedEvent(DownloadEntry(
-          reciterId: reciterId,
-          reciterName: _reciterNames[reciterId] ?? '',
-          suraId: suraId,
-          path: path,
-          bytes: bytes,
-          downloadedAt: DateTime.now(),
-        )));
-      }
-    }).catchError((_) {
-      if (!isClosed) add(_DownloadFailedEvent(key));
-    });
+          final bytes = await downloadService.fileSize(reciterId, suraId);
+          if (!isClosed) {
+            add(
+              _DownloadCompletedEvent(
+                DownloadEntry(
+                  reciterId: reciterId,
+                  reciterName: _reciterNames[reciterId] ?? '',
+                  suraId: suraId,
+                  path: path,
+                  bytes: bytes,
+                  downloadedAt: DateTime.now(),
+                ),
+              ),
+            );
+          }
+        })
+        .catchError((_) {
+          if (!isClosed) add(_DownloadFailedEvent(key));
+        });
   }
 
   void _onProgress(_DownloadProgressEvent event, Emitter<DownloadsState> emit) {
@@ -150,9 +152,7 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
       downloadService.cancel();
       _maybeStartNext(emit);
     } else if (state.queue.contains(key)) {
-      emit(state.copyWith(
-        queue: state.queue.where((k) => k != key).toList(),
-      ));
+      emit(state.copyWith(queue: state.queue.where((k) => k != key).toList()));
     }
   }
 

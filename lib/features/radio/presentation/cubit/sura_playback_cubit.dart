@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
@@ -7,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
+import '../../../../core/services/download_service.dart';
 import '../../../downloads/data/datasources/downloads_local_data_source.dart';
 import '../../domain/entities/reciter.dart';
 
@@ -19,6 +19,7 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
   final Reciter reciter;
   final AudioPlayerService audioPlayerService;
   final DownloadsLocalDataSource downloadsLocalDataSource;
+  final DownloadService downloadService;
   final ConnectivityService connectivityService;
 
   StreamSubscription<PlayerState>? _sub;
@@ -27,6 +28,7 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     required this.reciter,
     required this.audioPlayerService,
     required this.downloadsLocalDataSource,
+    required this.downloadService,
     required this.connectivityService,
   }) : super(const SuraPlaybackState()) {
     _sub = audioPlayerService.onStateChanged.listen((s) {
@@ -51,7 +53,7 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
 
     // Local first — a downloaded file plays without any connection.
     final entry = downloadsLocalDataSource.get(reciter.id.toString(), suraId);
-    if (entry != null && await File(entry.path).exists()) {
+    if (entry != null && await downloadService.pathExists(entry.path)) {
       emit(state.copyWith(currentSuraId: suraId));
       await audioPlayerService.playFile(entry.path);
       return;
@@ -64,11 +66,14 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
       return;
     }
 
-    emit(state.copyWith(
-      notice: "You're offline. Download this sura to play it without a "
-          'connection.',
-      noticeSeq: state.noticeSeq + 1,
-    ));
+    emit(
+      state.copyWith(
+        notice:
+            "You're offline. Download this sura to play it without a "
+            'connection.',
+        noticeSeq: state.noticeSeq + 1,
+      ),
+    );
   }
 
   @override

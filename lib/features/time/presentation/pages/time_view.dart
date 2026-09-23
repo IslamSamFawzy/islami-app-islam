@@ -96,9 +96,9 @@ class _TimeViewBody extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'Azkar',
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: AppColors.textColor,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge!.copyWith(color: AppColors.textColor),
                 ),
               ),
               const SizedBox(height: 12),

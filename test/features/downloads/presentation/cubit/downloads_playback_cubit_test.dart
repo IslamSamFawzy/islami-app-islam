@@ -23,8 +23,6 @@ class _FakeAudio implements AudioPlayerService {
   @override
   PlayerState get state => PlayerState.stopped;
   @override
-  AudioPlayer get player => throw UnimplementedError();
-  @override
   Future<void> playFile(String path) async => playedFile = path;
   @override
   Future<void> playUrl(String url) async {}
@@ -49,8 +47,7 @@ class _FakeDownloadService implements DownloadService {
     required String url,
     required String reciterId,
     required String suraId,
-  }) async =>
-      '';
+  }) async => '';
   @override
   void cancel() {}
   @override
@@ -60,6 +57,10 @@ class _FakeDownloadService implements DownloadService {
   Future<void> deleteReciter(String reciterId) async {}
   @override
   Future<int> fileSize(String reciterId, String suraId) async => 0;
+  @override
+  Future<bool> fileExists(String reciterId, String suraId) async => false;
+  @override
+  Future<bool> pathExists(String path) async => File(path).exists();
   @override
   Future<String> filePath(String reciterId, String suraId) async => '';
   @override
@@ -93,7 +94,8 @@ DownloadEntry _entry(String reciterId, String suraId, String path) =>
       downloadedAt: DateTime(2026),
     );
 
-Future<void> _settle() => Future<void>.delayed(const Duration(milliseconds: 20));
+Future<void> _settle() =>
+    Future<void>.delayed(const Duration(milliseconds: 20));
 
 void main() {
   late _FakeAudio audio;
@@ -102,9 +104,10 @@ void main() {
   late DownloadsBloc bloc;
 
   DownloadsPlaybackCubit build() => DownloadsPlaybackCubit(
-        audioPlayerService: audio,
-        downloadsBloc: bloc,
-      );
+    audioPlayerService: audio,
+    downloadService: service,
+    downloadsBloc: bloc,
+  );
 
   setUp(() {
     audio = _FakeAudio();
