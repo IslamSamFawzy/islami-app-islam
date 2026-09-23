@@ -29,8 +29,7 @@ class ReciterSurasView extends StatelessWidget {
       create: (_) => SuraPlaybackCubit(
         reciter: reciter,
         audioPlayerService: sl(),
-        downloadsLocalDataSource: sl(),
-        downloadService: sl(),
+        findDownloadedFile: sl(),
         connectivityService: sl(),
       ),
       child: _ReciterSurasBody(reciter: reciter),

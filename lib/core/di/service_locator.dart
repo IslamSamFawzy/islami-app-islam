@@ -9,6 +9,14 @@ import '../../features/azkar/domain/usecases/get_azkar.dart';
 import '../../features/azkar/presentation/bloc/azkar_bloc.dart';
 // Downloads feature
 import '../../features/downloads/data/datasources/downloads_local_data_source.dart';
+import '../../features/downloads/data/repositories/downloads_repository_impl.dart';
+import '../../features/downloads/domain/repositories/downloads_repository.dart';
+import '../../features/downloads/domain/usecases/delete_download.dart';
+import '../../features/downloads/domain/usecases/delete_reciter_downloads.dart';
+import '../../features/downloads/domain/usecases/find_downloaded_file.dart';
+import '../../features/downloads/domain/usecases/get_downloads.dart';
+import '../../features/downloads/domain/usecases/reconcile_downloads.dart';
+import '../../features/downloads/domain/usecases/save_download.dart';
 import '../../features/downloads/presentation/bloc/downloads_bloc.dart';
 // Hadith feature
 import '../../features/hadith/data/datasources/hadith_local_data_source.dart';
@@ -229,7 +237,28 @@ Future<void> init() async {
   // Downloads feature (shared app-wide: one queue, one index)
   // ---------------------------------------------------------------------------
   sl.registerLazySingleton<DownloadsBloc>(
-    () => DownloadsBloc(downloadService: sl(), localDataSource: sl()),
+    () => DownloadsBloc(
+      downloadService: sl(),
+      getDownloads: sl(),
+      reconcileDownloads: sl(),
+      saveDownload: sl(),
+      deleteDownload: sl(),
+      deleteReciterDownloads: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => GetDownloads(sl()));
+  sl.registerLazySingleton(() => ReconcileDownloads(sl()));
+  sl.registerLazySingleton(() => SaveDownload(sl()));
+  sl.registerLazySingleton(() => DeleteDownload(sl()));
+  sl.registerLazySingleton(() => DeleteReciterDownloads(sl()));
+  sl.registerLazySingleton(() => FindDownloadedFile(sl()));
+
+  sl.registerLazySingleton<DownloadsRepository>(
+    () => DownloadsRepositoryImpl(
+      localDataSource: sl(),
+      downloadService: sl(),
+    ),
   );
 
   sl.registerLazySingleton<DownloadsLocalDataSource>(

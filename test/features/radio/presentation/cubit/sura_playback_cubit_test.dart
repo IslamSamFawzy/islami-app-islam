@@ -8,7 +8,9 @@ import 'package:islami/core/services/connectivity_service.dart';
 import 'package:islami/core/services/download_service.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
+import 'package:islami/features/downloads/data/repositories/downloads_repository_impl.dart';
 import 'package:islami/features/downloads/domain/entities/download_key.dart';
+import 'package:islami/features/downloads/domain/usecases/find_downloaded_file.dart';
 import 'package:islami/features/radio/domain/entities/reciter.dart';
 import 'package:islami/features/radio/presentation/cubit/sura_playback_cubit.dart';
 
@@ -114,8 +116,12 @@ void main() {
   SuraPlaybackCubit build(bool connected) => SuraPlaybackCubit(
     reciter: reciter,
     audioPlayerService: audio,
-    downloadsLocalDataSource: local,
-    downloadService: downloadService,
+    findDownloadedFile: FindDownloadedFile(
+      DownloadsRepositoryImpl(
+        localDataSource: local,
+        downloadService: downloadService,
+      ),
+    ),
     connectivityService: _FakeConnectivity(connected),
   );
 

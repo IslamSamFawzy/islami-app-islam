@@ -4,7 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/services/download_service.dart';
 import 'package:islami/features/downloads/data/datasources/downloads_local_data_source.dart';
 import 'package:islami/features/downloads/data/models/download_entry_model.dart';
+import 'package:islami/features/downloads/data/repositories/downloads_repository_impl.dart';
 import 'package:islami/features/downloads/domain/entities/download_key.dart';
+import 'package:islami/features/downloads/domain/usecases/delete_download.dart';
+import 'package:islami/features/downloads/domain/usecases/delete_reciter_downloads.dart';
+import 'package:islami/features/downloads/domain/usecases/get_downloads.dart';
+import 'package:islami/features/downloads/domain/usecases/reconcile_downloads.dart';
+import 'package:islami/features/downloads/domain/usecases/save_download.dart';
 import 'package:islami/features/downloads/presentation/bloc/downloads_bloc.dart';
 
 class _FakeDownloadService implements DownloadService {
@@ -89,7 +95,18 @@ void main() {
   setUp(() {
     service = _FakeDownloadService();
     local = _FakeLocal();
-    bloc = DownloadsBloc(downloadService: service, localDataSource: local);
+    final repository = DownloadsRepositoryImpl(
+      localDataSource: local,
+      downloadService: service,
+    );
+    bloc = DownloadsBloc(
+      downloadService: service,
+      getDownloads: GetDownloads(repository),
+      reconcileDownloads: ReconcileDownloads(repository),
+      saveDownload: SaveDownload(repository),
+      deleteDownload: DeleteDownload(repository),
+      deleteReciterDownloads: DeleteReciterDownloads(repository),
+    );
   });
 
   tearDown(() => bloc.close());

@@ -6,9 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
-import '../../../../core/services/download_service.dart';
-import '../../../downloads/data/datasources/downloads_local_data_source.dart';
 import '../../../downloads/domain/entities/download_key.dart';
+import '../../../downloads/domain/usecases/find_downloaded_file.dart';
 import '../../domain/entities/reciter.dart';
 
 part 'sura_playback_state.dart';
@@ -19,8 +18,7 @@ part 'sura_playback_state.dart';
 class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
   final Reciter reciter;
   final AudioPlayerService audioPlayerService;
-  final DownloadsLocalDataSource downloadsLocalDataSource;
-  final DownloadService downloadService;
+  final FindDownloadedFile findDownloadedFile;
   final ConnectivityService connectivityService;
 
   StreamSubscription<PlayerState>? _sub;
@@ -28,8 +26,7 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
   SuraPlaybackCubit({
     required this.reciter,
     required this.audioPlayerService,
-    required this.downloadsLocalDataSource,
-    required this.downloadService,
+    required this.findDownloadedFile,
     required this.connectivityService,
   }) : super(const SuraPlaybackState()) {
     _sub = audioPlayerService.onStateChanged.listen((s) {
@@ -53,12 +50,13 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     }
 
     // Local first — a downloaded file plays without any connection.
-    final entry = downloadsLocalDataSource.get(
+    final downloaded = await findDownloadedFile(
       DownloadKey(reciterId: reciter.id.toString(), suraId: suraId),
     );
-    if (entry != null && await downloadService.pathExists(entry.path)) {
+    final path = downloaded.getOrElse(() => null);
+    if (path != null) {
       emit(state.copyWith(currentSuraId: suraId));
-      await audioPlayerService.playFile(entry.path);
+      await audioPlayerService.playFile(path);
       return;
     }
 

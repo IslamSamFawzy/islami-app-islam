@@ -4,10 +4,14 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/download_service.dart';
-import '../../data/datasources/downloads_local_data_source.dart';
-import '../../data/models/download_entry_model.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/download_entry.dart';
 import '../../domain/entities/download_key.dart';
+import '../../domain/usecases/delete_download.dart';
+import '../../domain/usecases/delete_reciter_downloads.dart';
+import '../../domain/usecases/get_downloads.dart';
+import '../../domain/usecases/reconcile_downloads.dart';
+import '../../domain/usecases/save_download.dart';
 
 part 'downloads_event.dart';
 part 'downloads_state.dart';
@@ -15,8 +19,15 @@ part 'downloads_state.dart';
 /// Owns the download queue (one download at a time), per-item progress, and the
 /// on-disk index. Registered app-wide so downloads survive screen changes.
 class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
+  /// The transfer itself: the queue and its progress live here, the saved
+  /// library behind the use cases.
   final DownloadService downloadService;
-  final DownloadsLocalDataSource localDataSource;
+
+  final GetDownloads getDownloads;
+  final ReconcileDownloads reconcileDownloads;
+  final SaveDownload saveDownload;
+  final DeleteDownload deleteDownload;
+  final DeleteReciterDownloads deleteReciterDownloads;
 
   StreamSubscription<double>? _progressSub;
 
@@ -26,8 +37,14 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
   /// Display names by reciter id, so completed entries can be labelled.
   final Map<String, String> _reciterNames = {};
 
-  DownloadsBloc({required this.downloadService, required this.localDataSource})
-    : super(const DownloadsState()) {
+  DownloadsBloc({
+    required this.downloadService,
+    required this.getDownloads,
+    required this.reconcileDownloads,
+    required this.saveDownload,
+    required this.deleteDownload,
+    required this.deleteReciterDownloads,
+  }) : super(const DownloadsState()) {
     on<LoadDownloadsEvent>(_onLoad);
     on<EnqueueDownloadEvent>(_onEnqueue);
     on<CancelDownloadEvent>(_onCancel);
@@ -46,15 +63,13 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     LoadDownloadsEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    final valid = <DownloadKey, DownloadEntry>{};
-    for (final e in localDataSource.getAll()) {
-      if (await downloadService.pathExists(e.path)) {
-        valid[e.key] = e;
-      } else {
-        await localDataSource.remove(e.key);
-      }
-    }
-    emit(state.copyWith(entries: valid));
+    final result = await reconcileDownloads(const NoParams());
+    // On a storage failure the library on screen stays as it is — there is
+    // nothing useful to tell the user about the index.
+    result.fold(
+      (_) {},
+      (entries) => emit(state.copyWith(entries: _byKey(entries))),
+    );
   }
 
   Future<void> _onEnqueue(
@@ -125,14 +140,11 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     _DownloadCompletedEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    final entry = event.entry;
-    await localDataSource.put(DownloadEntryModel.fromEntry(entry));
-    _urls.remove(entry.key);
-    final entries = Map<DownloadKey, DownloadEntry>.from(state.entries)
-      ..[entry.key] = entry;
+    await saveDownload(event.entry);
+    _urls.remove(event.entry.key);
     emit(
       state.copyWith(
-        entries: entries,
+        entries: await _savedEntries(),
         clearActiveKey: true,
         activeProgress: 0,
       ),
@@ -172,27 +184,31 @@ class DownloadsBloc extends Bloc<DownloadsEvent, DownloadsState> {
     DeleteDownloadEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    final key = DownloadKey(
-      reciterId: event.reciterId,
-      suraId: event.suraId,
+    await deleteDownload(
+      DownloadKey(reciterId: event.reciterId, suraId: event.suraId),
     );
-    await downloadService.delete(event.reciterId, event.suraId);
-    await localDataSource.remove(key);
-    final entries = Map<DownloadKey, DownloadEntry>.from(state.entries)
-      ..remove(key);
-    emit(state.copyWith(entries: entries));
+    emit(state.copyWith(entries: await _savedEntries()));
   }
 
   Future<void> _onDeleteReciter(
     DeleteReciterDownloadsEvent event,
     Emitter<DownloadsState> emit,
   ) async {
-    await downloadService.deleteReciter(event.reciterId);
-    await localDataSource.removeReciter(event.reciterId);
-    final entries = Map<DownloadKey, DownloadEntry>.from(state.entries)
-      ..removeWhere((_, e) => e.reciterId == event.reciterId);
-    emit(state.copyWith(entries: entries));
+    await deleteReciterDownloads(event.reciterId);
+    emit(state.copyWith(entries: await _savedEntries()));
   }
+
+  /// Re-reads the index after a change, so the screen shows what is actually
+  /// saved rather than a copy patched by hand. Falls back to what is already
+  /// on screen if the read fails.
+  Future<Map<DownloadKey, DownloadEntry>> _savedEntries() async {
+    final result = await getDownloads(const NoParams());
+    return result.fold((_) => state.entries, _byKey);
+  }
+
+  Map<DownloadKey, DownloadEntry> _byKey(List<DownloadEntry> entries) => {
+    for (final entry in entries) entry.key: entry,
+  };
 
   @override
   Future<void> close() {
