@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/header_logo.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../azkar/domain/entities/azkar.dart';
@@ -30,70 +32,59 @@ class _TimeViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: Assets.images.timeBackground.provider(),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Assets.images.imgHeader.image(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                ),
-              ),
-              BlocBuilder<TimeBloc, TimeState>(
-                buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
-                builder: (context, state) => state.showOfflineBanner
-                    ? const OfflineBanner()
-                    : const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 10),
-              BlocBuilder<TimeBloc, TimeState>(
-                builder: (context, state) {
-                  if (state.status.isBusy) {
-                    return const LoadingView(padding: EdgeInsets.all(40));
-                  }
-                  if (state.status.isFailure || state.prayerTimes == null) {
-                    return ErrorView(
-                      message: state.errorMessage.isEmpty
-                          ? 'Unable to load prayer times'
-                          : state.errorMessage,
-                      padding: const EdgeInsets.all(24),
-                    );
-                  }
-                  return PrayerTimesCard(
-                    prayerTimes: state.prayerTimes!,
-                    nextPrayerName: state.nextPrayerName,
-                    countdown: state.countdown,
-                    muted: state.muted,
-                    onToggleMute: () =>
-                        context.read<TimeBloc>().add(const ToggleMuteEvent()),
+    return AppBackground(
+      image: Assets.images.timeBackground,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const HeaderLogo(),
+            BlocBuilder<TimeBloc, TimeState>(
+              buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
+              builder: (context, state) => state.showOfflineBanner
+                  ? const OfflineBanner()
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 10),
+            BlocBuilder<TimeBloc, TimeState>(
+              builder: (context, state) {
+                if (state.status.isBusy) {
+                  return const LoadingView(padding: EdgeInsets.all(40));
+                }
+                if (state.status.isFailure || state.prayerTimes == null) {
+                  return ErrorView(
+                    message: state.errorMessage.isEmpty
+                        ? 'Unable to load prayer times'
+                        : state.errorMessage,
+                    padding: const EdgeInsets.all(24),
                   );
-                },
+                }
+                return PrayerTimesCard(
+                  prayerTimes: state.prayerTimes!,
+                  nextPrayerName: state.nextPrayerName,
+                  countdown: state.countdown,
+                  muted: state.muted,
+                  onToggleMute: () =>
+                      context.read<TimeBloc>().add(const ToggleMuteEvent()),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Azkar',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge!.copyWith(color: AppColors.textColor),
               ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Azkar',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge!.copyWith(color: AppColors.textColor),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const _AzkarRow(),
-              const SizedBox(height: 20),
-              const _QiblaCard(),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            const _AzkarRow(),
+            const SizedBox(height: 20),
+            const _QiblaCard(),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );

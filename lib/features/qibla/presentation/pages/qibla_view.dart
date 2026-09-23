@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../cubit/qibla_cubit.dart';
@@ -30,65 +31,47 @@ class _QiblaViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: Assets.images.timeBackground.provider(),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: AppColors.primaryColor),
-          title: Text(
-            'Qibla',
-            style: theme.textTheme.titleLarge!.copyWith(
-              color: AppColors.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        body: BlocConsumer<QiblaCubit, QiblaState>(
-          // Fire the haptic once, on the frame we cross into alignment.
-          listenWhen: (prev, curr) =>
-              curr.alignedSeq != prev.alignedSeq && curr.isAligned,
-          listener: (_, _) => HapticFeedback.mediumImpact(),
-          builder: (context, state) {
-            switch (state.status) {
-              case QiblaStatus.loading:
-                return const LoadingView();
-              case QiblaStatus.permissionDenied:
-                return ErrorView(
-                  icon: Icons.location_off_outlined,
-                  message: 'Location permission is needed to find the Qibla.',
-                  onRetry: () => context.read<QiblaCubit>().retry(),
-                  padding: const EdgeInsets.all(32),
-                );
-              case QiblaStatus.serviceDisabled:
-                return ErrorView(
-                  icon: Icons.location_disabled_outlined,
-                  message: 'Turn on location services to find the Qibla.',
-                  onRetry: () => context.read<QiblaCubit>().retry(),
-                  padding: const EdgeInsets.all(32),
-                );
-              case QiblaStatus.error:
-                return ErrorView(
-                  icon: Icons.error_outline,
-                  message: state.errorMessage.isEmpty
-                      ? 'Something went wrong.'
-                      : state.errorMessage,
-                  onRetry: () => context.read<QiblaCubit>().retry(),
-                  padding: const EdgeInsets.all(32),
-                );
-              case QiblaStatus.ready:
-                return _ReadyState(state: state);
-            }
-          },
-        ),
+    return AppBackground(
+      image: Assets.images.timeBackground,
+      title: 'Qibla',
+      // The ready state brings its own SafeArea around the scrolling content.
+      safeArea: false,
+      child: BlocConsumer<QiblaCubit, QiblaState>(
+        // Fire the haptic once, on the frame we cross into alignment.
+        listenWhen: (prev, curr) =>
+            curr.alignedSeq != prev.alignedSeq && curr.isAligned,
+        listener: (_, _) => HapticFeedback.mediumImpact(),
+        builder: (context, state) {
+          switch (state.status) {
+            case QiblaStatus.loading:
+              return const LoadingView();
+            case QiblaStatus.permissionDenied:
+              return ErrorView(
+                icon: Icons.location_off_outlined,
+                message: 'Location permission is needed to find the Qibla.',
+                onRetry: () => context.read<QiblaCubit>().retry(),
+                padding: const EdgeInsets.all(32),
+              );
+            case QiblaStatus.serviceDisabled:
+              return ErrorView(
+                icon: Icons.location_disabled_outlined,
+                message: 'Turn on location services to find the Qibla.',
+                onRetry: () => context.read<QiblaCubit>().retry(),
+                padding: const EdgeInsets.all(32),
+              );
+            case QiblaStatus.error:
+              return ErrorView(
+                icon: Icons.error_outline,
+                message: state.errorMessage.isEmpty
+                    ? 'Something went wrong.'
+                    : state.errorMessage,
+                onRetry: () => context.read<QiblaCubit>().retry(),
+                padding: const EdgeInsets.all(32),
+              );
+            case QiblaStatus.ready:
+              return _ReadyState(state: state);
+          }
+        },
       ),
     );
   }

@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/header_logo.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../downloads/presentation/pages/downloads_view.dart';
@@ -31,81 +33,70 @@ class _RadioViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: Assets.images.radioBackground.provider(),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: SafeArea(
-        child: BlocListener<RadioBloc, RadioState>(
-          listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
-          listener: (context, state) {
-            if (state.notice.isEmpty) return;
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(state.notice)));
-          },
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  Center(
-                    child: Assets.images.imgHeader.image(
-                      width: MediaQuery.of(context).size.width * 0.55,
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        tooltip: 'Downloads',
-                        icon: const Icon(
-                          Icons.download_for_offline_outlined,
-                          color: AppColors.primaryColor,
-                        ),
-                        onPressed: () => Navigator.pushNamed(
-                          context,
-                          DownloadsView.routeName,
-                        ),
+    return AppBackground(
+      image: Assets.images.radioBackground,
+      child: BlocListener<RadioBloc, RadioState>(
+        listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
+        listener: (context, state) {
+          if (state.notice.isEmpty) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(state.notice)));
+        },
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                const HeaderLogo(widthFactor: 0.55),
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      tooltip: 'Downloads',
+                      icon: const Icon(
+                        Icons.download_for_offline_outlined,
+                        color: AppColors.primaryColor,
+                      ),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        DownloadsView.routeName,
                       ),
                     ),
                   ),
-                ],
-              ),
-              BlocBuilder<RadioBloc, RadioState>(
-                buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
-                builder: (context, state) => state.showOfflineBanner
-                    ? const OfflineBanner()
-                    : const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 10),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: RadioSearchField(),
-              ),
-              const SizedBox(height: 12),
-              const RadioTabs(),
-              const SizedBox(height: 12),
-              Expanded(
-                child: BlocBuilder<RadioBloc, RadioState>(
-                  builder: (context, state) {
-                    if (state.status.isBusy) return const LoadingView();
-                    if (state.status.isFailure) {
-                      return ErrorView(
-                        message: state.errorMessage,
-                        padding: const EdgeInsets.all(24),
-                      );
-                    }
-                    return state.tab == RadioTab.radio
-                        ? RadioList(state: state)
-                        : RecitersList(state: state);
-                  },
                 ),
+              ],
+            ),
+            BlocBuilder<RadioBloc, RadioState>(
+              buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
+              builder: (context, state) => state.showOfflineBanner
+                  ? const OfflineBanner()
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 10),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: RadioSearchField(),
+            ),
+            const SizedBox(height: 12),
+            const RadioTabs(),
+            const SizedBox(height: 12),
+            Expanded(
+              child: BlocBuilder<RadioBloc, RadioState>(
+                builder: (context, state) {
+                  if (state.status.isBusy) return const LoadingView();
+                  if (state.status.isFailure) {
+                    return ErrorView(
+                      message: state.errorMessage,
+                      padding: const EdgeInsets.all(24),
+                    );
+                  }
+                  return state.tab == RadioTab.radio
+                      ? RadioList(state: state)
+                      : RecitersList(state: state);
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

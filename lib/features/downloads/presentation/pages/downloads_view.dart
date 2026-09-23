@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/empty_message.dart';
 import '../../domain/entities/download_entry.dart';
 import '../bloc/downloads_bloc.dart';
@@ -26,59 +27,38 @@ class DownloadsView extends StatelessWidget {
         downloadService: sl(),
         downloadsBloc: context.read<DownloadsBloc>(),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: Assets.images.radioBackground.provider(),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            centerTitle: true,
-            iconTheme: const IconThemeData(color: AppColors.primaryColor),
-            title: Text(
-              'Downloads',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge!.copyWith(color: AppColors.primaryColor),
-            ),
-          ),
-          body: SafeArea(
-            top: false,
-            child: BlocListener<DownloadsPlaybackCubit, DownloadsPlaybackState>(
-              listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
-              listener: (context, state) {
-                if (state.notice.isEmpty) return;
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(state.notice)));
-              },
-              child: BlocBuilder<DownloadsBloc, DownloadsState>(
-                builder: (context, state) {
-                  if (state.entries.isEmpty) {
-                    return const EmptyMessage(
-                      message: 'No downloads yet.\nDownload suras from a '
-                          'reciter to listen offline.',
-                      padding: EdgeInsets.all(24),
-                      color: AppColors.primaryColor,
-                    );
-                  }
-                  final reciterIds = state.reciterIds;
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    children: [
-                      _TotalSize(bytes: state.totalBytes),
-                      const SizedBox(height: 16),
-                      for (final reciterId in reciterIds)
-                        _ReciterGroup(state: state, reciterId: reciterId),
-                    ],
-                  );
-                },
-              ),
-            ),
+      child: AppBackground(
+        image: Assets.images.radioBackground,
+        title: 'Downloads',
+        child: BlocListener<DownloadsPlaybackCubit, DownloadsPlaybackState>(
+          listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
+          listener: (context, state) {
+            if (state.notice.isEmpty) return;
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(content: Text(state.notice)));
+          },
+          child: BlocBuilder<DownloadsBloc, DownloadsState>(
+            builder: (context, state) {
+              if (state.entries.isEmpty) {
+                return const EmptyMessage(
+                  message: 'No downloads yet.\nDownload suras from a '
+                      'reciter to listen offline.',
+                  padding: EdgeInsets.all(24),
+                  color: AppColors.primaryColor,
+                );
+              }
+              final reciterIds = state.reciterIds;
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  _TotalSize(bytes: state.totalBytes),
+                  const SizedBox(height: 16),
+                  for (final reciterId in reciterIds)
+                    _ReciterGroup(state: state, reciterId: reciterId),
+                ],
+              );
+            },
           ),
         ),
       ),
