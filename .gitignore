@@ -49,3 +49,7 @@ app.*.map.json
 android/key.properties
 *.jks
 *.keystore
+
+# Local analyze/test transcripts
+.analyze_output.txt
+.test_output.txt
