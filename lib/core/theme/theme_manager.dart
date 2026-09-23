@@ -21,7 +21,6 @@ abstract class ThemeManager {
       selectedItemColor: AppColors.titleTextColor,
       unselectedItemColor: AppColors.titleTextColor,
       selectedLabelStyle: TextStyle(
-        fontFamily: 'Janna',
         fontSize: 14,
         fontWeight: FontWeight.w700,
         color: AppColors.titleTextColor,
@@ -29,31 +28,26 @@ abstract class ThemeManager {
     ),
     textTheme: TextTheme(
       headlineSmall: TextStyle(
-        fontFamily: "Janna",
         fontSize: 24,
         fontWeight: FontWeight.w700,
         color: AppColors.backgroundColor,
       ),
       bodyLarge: TextStyle(
-        fontFamily: "Janna",
         fontSize: 16,
         fontWeight: FontWeight.w700,
         color: AppColors.backgroundColor,
       ),
       bodyMedium: TextStyle(
-        fontFamily: "Janna",
         fontSize: 14,
         fontWeight: FontWeight.w700,
         color: AppColors.backgroundColor,
       ),
       titleLarge: TextStyle(
-        fontFamily: "Janna",
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: AppColors.backgroundColor,
       ),
       headlineLarge: TextStyle(
-        fontFamily: "Janna",
         fontSize: 24,
         fontWeight: FontWeight.w700,
         color: AppColors.backgroundColor,

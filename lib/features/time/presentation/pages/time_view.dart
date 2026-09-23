@@ -110,7 +110,10 @@ class _QiblaCard extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xff262019), Color(0xff0A0806)],
+              colors: [
+                AppColors.cardGradientTop,
+                AppColors.cardGradientBottom,
+              ],
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.primaryColor),
@@ -171,7 +174,7 @@ class _AzkarRow extends StatelessWidget {
             child: _AzkarCard(
               type: AzkarType.evening,
               title: 'Evening Azkar',
-              imagePath: 'assets/images/azkar_evening.png',
+              image: Assets.images.azkarEvening,
             ),
           ),
           const SizedBox(width: 12),
@@ -179,7 +182,7 @@ class _AzkarRow extends StatelessWidget {
             child: _AzkarCard(
               type: AzkarType.morning,
               title: 'Morning Azkar',
-              imagePath: 'assets/images/azkar_morning.png',
+              image: Assets.images.azkarMorning,
             ),
           ),
         ],
@@ -191,12 +194,12 @@ class _AzkarRow extends StatelessWidget {
 class _AzkarCard extends StatelessWidget {
   final AzkarType type;
   final String title;
-  final String imagePath;
+  final AssetGenImage image;
 
   const _AzkarCard({
     required this.type,
     required this.title,
-    required this.imagePath,
+    required this.image,
   });
 
   @override
@@ -212,7 +215,10 @@ class _AzkarCard extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xff262019), Color(0xff0A0806)],
+            colors: [
+              AppColors.cardGradientTop,
+              AppColors.cardGradientBottom,
+            ],
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.primaryColor),
@@ -222,7 +228,7 @@ class _AzkarCard extends StatelessWidget {
           children: [
             // 3D image fills the upper part of the card.
             Expanded(
-              child: Center(child: Image.asset(imagePath, fit: BoxFit.contain)),
+              child: Center(child: image.image(fit: BoxFit.contain)),
             ),
             const SizedBox(height: 8),
             Center(

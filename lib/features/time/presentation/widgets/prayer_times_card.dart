@@ -287,8 +287,12 @@ class _PrayerPill extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: selected
-              ? const [Color(0xff5A4F3D), Color(0xff262019), Color(0xff060504)]
-              : const [Color(0xff2A2218), Color(0xff0A0805)],
+              ? const [
+                  AppColors.pillSelectedTop,
+                  AppColors.pillSelectedMiddle,
+                  AppColors.pillSelectedBottom,
+                ]
+              : const [AppColors.pillTop, AppColors.pillBottom],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
