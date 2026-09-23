@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/arabic_search.dart';
+import '../../../../core/widgets/empty_message.dart';
 import '../../../../core/widgets/search_field.dart';
 import '../../../downloads/presentation/widgets/sura_download_control.dart';
 import '../../domain/entities/reciter.dart';
@@ -109,7 +110,7 @@ class _ReciterSurasBodyState extends State<_ReciterSurasBody> {
                 ),
                 Expanded(
                   child: suras.isEmpty
-                      ? const _NoResults()
+                      ? const EmptyMessage(message: 'No results')
                       : ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                           itemCount: suras.length,
@@ -127,23 +128,6 @@ class _ReciterSurasBodyState extends State<_ReciterSurasBody> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Shown when a search filters every sura out.
-class _NoResults extends StatelessWidget {
-  const _NoResults();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'No results',
-        style: Theme.of(
-          context,
-        ).textTheme.bodyLarge!.copyWith(color: AppColors.textColor),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/empty_message.dart';
 import '../../domain/entities/download_entry.dart';
 import '../bloc/downloads_bloc.dart';
 import '../cubit/downloads_playback_cubit.dart';
@@ -57,7 +58,12 @@ class DownloadsView extends StatelessWidget {
               child: BlocBuilder<DownloadsBloc, DownloadsState>(
                 builder: (context, state) {
                   if (state.entries.isEmpty) {
-                    return const _EmptyHint();
+                    return const EmptyMessage(
+                      message: 'No downloads yet.\nDownload suras from a '
+                          'reciter to listen offline.',
+                      padding: EdgeInsets.all(24),
+                      color: AppColors.primaryColor,
+                    );
                   }
                   final reciterIds = state.reciterIds;
                   return ListView(
@@ -298,26 +304,6 @@ class _SuraTile extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _EmptyHint extends StatelessWidget {
-  const _EmptyHint();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'No downloads yet.\nDownload suras from a reciter to listen offline.',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge!.copyWith(color: AppColors.primaryColor),
-        ),
-      ),
     );
   }
 }

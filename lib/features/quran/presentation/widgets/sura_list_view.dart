@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/empty_message.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/loading_view.dart';
 import '../bloc/quran_bloc.dart';
 import 'sura_item.dart';
 
@@ -26,41 +28,24 @@ class SuraListView extends StatelessWidget {
           ),
           BlocBuilder<QuranBloc, QuranState>(
             builder: (context, state) {
-              if (state.status == ViewStatus.loading ||
-                  state.status == ViewStatus.initial) {
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primaryColor,
-                    ),
-                  ),
-                );
+              if (state.status.isBusy) {
+                return const LoadingView(padding: EdgeInsets.all(20));
               }
 
-              if (state.status == ViewStatus.failure) {
-                return Padding(
+              if (state.status.isFailure) {
+                return ErrorView(
+                  message: state.errorMessage,
                   padding: const EdgeInsets.all(20),
-                  child: Center(
-                    child: Text(
-                      state.errorMessage,
-                      style: theme.textTheme.bodyMedium!
-                          .copyWith(color: AppColors.textColor),
-                    ),
-                  ),
+                  color: AppColors.textColor,
+                  dense: true,
                 );
               }
 
               if (state.filteredSuras.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Center(
-                    child: Text(
-                      'No suras found',
-                      style: theme.textTheme.bodyMedium!
-                          .copyWith(color: AppColors.textColor),
-                    ),
-                  ),
+                return const EmptyMessage(
+                  message: 'No suras found',
+                  padding: EdgeInsets.all(20),
+                  dense: true,
                 );
               }
 

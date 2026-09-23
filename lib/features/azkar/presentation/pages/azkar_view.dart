@@ -3,8 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
-import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/loading_view.dart';
 import '../../domain/entities/azkar.dart';
 import '../bloc/azkar_bloc.dart';
 
@@ -54,23 +55,9 @@ class _AzkarViewBody extends StatelessWidget {
         ),
         body: BlocBuilder<AzkarBloc, AzkarState>(
           builder: (context, state) {
-            if (state.status == ViewStatus.loading ||
-                state.status == ViewStatus.initial) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.primaryColor,
-                ),
-              );
-            }
-            if (state.status == ViewStatus.failure ||
-                state.collection == null) {
-              return Center(
-                child: Text(
-                  state.errorMessage,
-                  style: theme.textTheme.bodyLarge!
-                      .copyWith(color: AppColors.primaryColor),
-                ),
-              );
+            if (state.status.isBusy) return const LoadingView();
+            if (state.status.isFailure || state.collection == null) {
+              return ErrorView(message: state.errorMessage);
             }
 
             final azkar = state.collection!.azkar;

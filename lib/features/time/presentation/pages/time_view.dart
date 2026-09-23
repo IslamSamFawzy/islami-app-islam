@@ -3,8 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
-import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/loading_view.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../azkar/domain/entities/azkar.dart';
 import '../../../azkar/presentation/pages/azkar_view.dart';
@@ -55,31 +56,15 @@ class _TimeViewBody extends StatelessWidget {
               const SizedBox(height: 10),
               BlocBuilder<TimeBloc, TimeState>(
                 builder: (context, state) {
-                  if (state.status == ViewStatus.loading ||
-                      state.status == ViewStatus.initial) {
-                    return const Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primaryColor,
-                        ),
-                      ),
-                    );
+                  if (state.status.isBusy) {
+                    return const LoadingView(padding: EdgeInsets.all(40));
                   }
-                  if (state.status == ViewStatus.failure ||
-                      state.prayerTimes == null) {
-                    return Padding(
+                  if (state.status.isFailure || state.prayerTimes == null) {
+                    return ErrorView(
+                      message: state.errorMessage.isEmpty
+                          ? 'Unable to load prayer times'
+                          : state.errorMessage,
                       padding: const EdgeInsets.all(24),
-                      child: Center(
-                        child: Text(
-                          state.errorMessage.isEmpty
-                              ? 'Unable to load prayer times'
-                              : state.errorMessage,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(color: AppColors.primaryColor),
-                        ),
-                      ),
                     );
                   }
                   return PrayerTimesCard(

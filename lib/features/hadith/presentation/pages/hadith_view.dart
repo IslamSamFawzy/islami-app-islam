@@ -4,8 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
-import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/loading_view.dart';
 import '../bloc/hadith_bloc.dart';
 import 'hadith_details_view.dart';
 
@@ -48,23 +49,10 @@ class _HadithViewBody extends StatelessWidget {
             Expanded(
               child: BlocBuilder<HadithBloc, HadithState>(
                 builder: (context, state) {
-                  if (state.status == ViewStatus.loading ||
-                      state.status == ViewStatus.initial) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primaryColor,
-                      ),
-                    );
-                  }
+                  if (state.status.isBusy) return const LoadingView();
 
-                  if (state.status == ViewStatus.failure) {
-                    return Center(
-                      child: Text(
-                        state.errorMessage,
-                        style: theme.textTheme.bodyLarge!
-                            .copyWith(color: AppColors.primaryColor),
-                      ),
-                    );
+                  if (state.status.isFailure) {
+                    return ErrorView(message: state.errorMessage);
                   }
 
                   return CarouselSlider.builder(

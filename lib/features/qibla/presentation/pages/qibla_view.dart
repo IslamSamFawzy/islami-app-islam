@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/loading_view.dart';
 import '../cubit/qibla_cubit.dart';
 import '../widgets/qibla_compass.dart';
 
@@ -57,30 +59,29 @@ class _QiblaViewBody extends StatelessWidget {
           builder: (context, state) {
             switch (state.status) {
               case QiblaStatus.loading:
-                return const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primaryColor,
-                  ),
-                );
+                return const LoadingView();
               case QiblaStatus.permissionDenied:
-                return _MessageState(
+                return ErrorView(
                   icon: Icons.location_off_outlined,
                   message: 'Location permission is needed to find the Qibla.',
                   onRetry: () => context.read<QiblaCubit>().retry(),
+                  padding: const EdgeInsets.all(32),
                 );
               case QiblaStatus.serviceDisabled:
-                return _MessageState(
+                return ErrorView(
                   icon: Icons.location_disabled_outlined,
                   message: 'Turn on location services to find the Qibla.',
                   onRetry: () => context.read<QiblaCubit>().retry(),
+                  padding: const EdgeInsets.all(32),
                 );
               case QiblaStatus.error:
-                return _MessageState(
+                return ErrorView(
                   icon: Icons.error_outline,
                   message: state.errorMessage.isEmpty
                       ? 'Something went wrong.'
                       : state.errorMessage,
                   onRetry: () => context.read<QiblaCubit>().retry(),
+                  padding: const EdgeInsets.all(32),
                 );
               case QiblaStatus.ready:
                 return _ReadyState(state: state);
@@ -194,62 +195,6 @@ class _NoCompass extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MessageState extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final VoidCallback onRetry;
-
-  const _MessageState({
-    required this.icon,
-    required this.message,
-    required this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.primaryColor, size: 64),
-            const SizedBox(height: 20),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge!.copyWith(
-                color: AppColors.primaryColor,
-              ),
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: onRetry,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.primaryColor),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 12,
-                ),
-              ),
-              child: Text(
-                'Retry',
-                style: theme.textTheme.bodyLarge!.copyWith(
-                  color: AppColors.primaryColor,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

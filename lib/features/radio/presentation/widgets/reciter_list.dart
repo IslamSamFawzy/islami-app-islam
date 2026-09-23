@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/empty_message.dart';
 import '../../../downloads/presentation/bloc/downloads_bloc.dart';
 import '../../domain/entities/reciter.dart';
 import '../bloc/radio_bloc.dart';
 import '../pages/reciter_suras_view.dart';
-import 'radio_empty_state.dart';
 
 /// The list of reciters for the active search query.
 class RecitersList extends StatelessWidget {
@@ -17,10 +17,14 @@ class RecitersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.reciters.isEmpty) {
-      return const RadioEmptyHint(text: 'No reciters available');
+      return const EmptyMessage(
+        message: 'No reciters available',
+        color: AppColors.primaryColor,
+        dense: true,
+      );
     }
     final reciters = state.filteredReciters;
-    if (reciters.isEmpty) return const RadioNoResults();
+    if (reciters.isEmpty) return const EmptyMessage(message: 'No results');
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       itemCount: reciters.length,

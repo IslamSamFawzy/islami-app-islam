@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/empty_message.dart';
 import '../bloc/radio_bloc.dart';
 import '../widgets/station_tile.dart';
-import 'radio_empty_state.dart';
 
 /// The list of radio stations for the active search query.
 class RadioList extends StatelessWidget {
@@ -14,10 +15,14 @@ class RadioList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.radios.isEmpty) {
-      return const RadioEmptyHint(text: 'No radios available');
+      return const EmptyMessage(
+        message: 'No radios available',
+        color: AppColors.primaryColor,
+        dense: true,
+      );
     }
     final radios = state.filteredRadios;
-    if (radios.isEmpty) return const RadioNoResults();
+    if (radios.isEmpty) return const EmptyMessage(message: 'No results');
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       itemCount: radios.length,
