@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/notice_listener.dart';
+import '../../../../core/widgets/sura_audio_tile.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/empty_message.dart';
@@ -189,8 +189,6 @@ class _SuraTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final number = int.tryParse(entry.suraId);
-    final info = number == null ? null : SuraNames.byNumber(number);
 
     return BlocBuilder<DownloadsPlaybackCubit, DownloadsPlaybackState>(
       buildWhen: (a, b) =>
@@ -198,85 +196,48 @@ class _SuraTile extends StatelessWidget {
           a.isPlaying != b.isPlaying,
       builder: (context, playback) {
         final isCurrent = playback.isCurrent(entry);
-        final playing = isCurrent && playback.isPlaying;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            borderRadius: BorderRadius.circular(16),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: SuraAudioTile(
+            suraId: entry.suraId,
+            isPlaying: isCurrent && playback.isPlaying,
             // The currently playing row stands out with a dark border.
-            border: isCurrent
-                ? Border.all(color: AppColors.backgroundColor, width: 2)
-                : null,
-          ),
-          child: Row(
-            children: [
-              // Gold play/pause control (matches the reciter/station tiles).
-              GestureDetector(
-                onTap: () =>
-                    context.read<DownloadsPlaybackCubit>().toggle(entry),
-                child: Icon(
-                  playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                  color: AppColors.backgroundColor,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Number + English name (falls back to "Sura N").
-              Expanded(
-                child: Text(
-                  info == null
-                      ? 'Sura ${entry.suraId}'
-                      : '${entry.suraId}. ${info.nameEn}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleLarge!.copyWith(
-                    color: AppColors.titleTextColor,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              // Arabic name, RTL.
-              if (info != null) ...[
+            highlighted: isCurrent,
+            onPlayPause: () =>
+                context.read<DownloadsPlaybackCubit>().toggle(entry),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 const SizedBox(width: 8),
                 Text(
-                  info.nameAr,
-                  textDirection: TextDirection.rtl,
-                  style: theme.textTheme.titleLarge!.copyWith(
-                    color: AppColors.titleTextColor,
-                    fontSize: 16,
+                  formatBytes(entry.bytes),
+                  style: theme.textTheme.bodyMedium!.copyWith(
+                    color: AppColors.backgroundColor,
                   ),
                 ),
+                IconButton(
+                  tooltip: 'Delete',
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.backgroundColor,
+                  ),
+                  onPressed: () async {
+                    final downloads = context.read<DownloadsBloc>();
+                    final playbackCubit = context
+                        .read<DownloadsPlaybackCubit>();
+                    // Stop first so the player never holds a deleted file.
+                    await playbackCubit.stopIfCurrent(entry);
+                    downloads.add(
+                      DeleteDownloadEvent(
+                        reciterId: entry.reciterId,
+                        suraId: entry.suraId,
+                      ),
+                    );
+                  },
+                ),
               ],
-              const SizedBox(width: 8),
-              Text(
-                formatBytes(entry.bytes),
-                style: theme.textTheme.bodyMedium!.copyWith(
-                  color: AppColors.backgroundColor,
-                ),
-              ),
-              IconButton(
-                tooltip: 'Delete',
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: AppColors.backgroundColor,
-                ),
-                onPressed: () async {
-                  final downloads = context.read<DownloadsBloc>();
-                  final playbackCubit = context.read<DownloadsPlaybackCubit>();
-                  // Stop first so the player never holds a deleted file.
-                  await playbackCubit.stopIfCurrent(entry);
-                  downloads.add(
-                    DeleteDownloadEvent(
-                      reciterId: entry.reciterId,
-                      suraId: entry.suraId,
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         );
       },

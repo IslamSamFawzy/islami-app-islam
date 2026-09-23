@@ -4,11 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/arabic_search.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/empty_message.dart';
 import '../../../../core/widgets/notice_listener.dart';
+import '../../../../core/widgets/sura_audio_tile.dart';
 import '../../../../core/widgets/search_field.dart';
 import '../../../downloads/presentation/widgets/sura_download_control.dart';
 import '../../domain/entities/reciter.dart';
@@ -115,75 +115,23 @@ class _SuraRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final info = SuraNames.byNumber(sura);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          BlocBuilder<SuraPlaybackCubit, SuraPlaybackState>(
-            buildWhen: (a, b) =>
-                a.isCurrent(sura) != b.isCurrent(sura) ||
-                a.isPlaying != b.isPlaying,
-            builder: (context, state) {
-              final playing = state.isCurrent(sura) && state.isPlaying;
-              return GestureDetector(
-                onTap: () => context.read<SuraPlaybackCubit>().toggle(sura),
-                child: Icon(
-                  playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                  color: AppColors.backgroundColor,
-                  size: 32,
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 10),
-          // Sura number.
-          Text(
-            '$sura',
-            style: theme.textTheme.titleLarge!.copyWith(
-              color: AppColors.titleTextColor.withValues(alpha: 0.7),
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // English name (falls back to "Sura N" if the number is unknown).
-          Expanded(
-            child: Text(
-              info?.nameEn ?? 'Sura $sura',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge!.copyWith(
-                color: AppColors.titleTextColor,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          // Arabic name, RTL on the right (like the Quran tab's rows).
-          if (info != null) ...[
-            const SizedBox(width: 8),
-            Text(
-              info.nameAr,
-              textDirection: TextDirection.rtl,
-              style: theme.textTheme.titleLarge!.copyWith(
-                color: AppColors.titleTextColor,
-                fontSize: 16,
-              ),
-            ),
-          ],
-          SuraDownloadControl(
+    return BlocBuilder<SuraPlaybackCubit, SuraPlaybackState>(
+      buildWhen: (a, b) =>
+          a.isCurrent(sura) != b.isCurrent(sura) ||
+          a.isPlaying != b.isPlaying,
+      builder: (context, state) {
+        return SuraAudioTile(
+          suraId: '$sura',
+          isPlaying: state.isCurrent(sura) && state.isPlaying,
+          onPlayPause: () => context.read<SuraPlaybackCubit>().toggle(sura),
+          trailing: SuraDownloadControl(
             reciterId: reciter.id.toString(),
             reciterName: reciter.name,
             suraId: sura.toString(),
             url: reciter.audioUrlFor(sura),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

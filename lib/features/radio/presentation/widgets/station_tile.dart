@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/play_pause_button.dart';
 import 'waveform.dart';
 
 /// A gold tile showing a station/reciter name, a waveform, and play controls.
@@ -40,15 +41,10 @@ class StationTile extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              GestureDetector(
-                onTap: onPlayPause,
-                child: Icon(
-                  isPlaying
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_fill,
-                  color: AppColors.backgroundColor,
-                  size: 34,
-                ),
+              PlayPauseButton(
+                isPlaying: isPlaying,
+                onPressed: onPlayPause,
+                size: 34,
               ),
               const SizedBox(width: 12),
               Expanded(child: Waveform(active: isPlaying)),
