@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/services/audio_player_service.dart';
 import 'package:islami/core/services/connectivity_service.dart';
@@ -17,12 +16,13 @@ import 'package:islami/features/radio/presentation/cubit/sura_playback_cubit.dar
 class _FakeAudio implements AudioPlayerService {
   String? playedFile;
   String? playedUrl;
+  int stops = 0;
 
   @override
-  Stream<PlayerState> get onStateChanged => const Stream.empty();
+  Stream<bool> get isPlayingStream => const Stream.empty();
 
   @override
-  PlayerState get state => PlayerState.stopped;
+  bool get isPlaying => false;
 
   @override
   Future<void> playFile(String path) async => playedFile = path;
@@ -37,7 +37,10 @@ class _FakeAudio implements AudioPlayerService {
   Future<void> resume() async {}
 
   @override
-  Future<void> stop() async {}
+  Future<void> togglePause() async {}
+
+  @override
+  Future<void> stop() async => stops++;
 
   @override
   Future<void> dispose() async {}
@@ -160,6 +163,19 @@ void main() {
     expect(audio.playedUrl, 'https://server/002.mp3');
     expect(audio.playedFile, isNull);
     await cubit.close();
+  });
+
+  test('closing stops the audio only when this screen started it', () async {
+    // The player is shared with Radio and Downloads, so leaving the sura list
+    // without having played anything must not cut those off.
+    final idle = build(true);
+    await idle.close();
+    expect(audio.stops, 0);
+
+    final playing = build(true);
+    await playing.toggle(2);
+    await playing.close();
+    expect(audio.stops, 1);
   });
 
   test('shows a notice when not downloaded and offline', () async {

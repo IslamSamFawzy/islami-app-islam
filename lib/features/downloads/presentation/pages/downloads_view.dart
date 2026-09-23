@@ -24,7 +24,7 @@ class DownloadsView extends StatelessWidget {
     return BlocProvider(
       create: (context) => DownloadsPlaybackCubit(
         audioPlayerService: sl(),
-        downloadService: sl(),
+        findDownloadedFile: sl(),
         downloadsBloc: context.read<DownloadsBloc>(),
       ),
       child: AppBackground(

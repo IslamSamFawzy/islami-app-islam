@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/playback_controller.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../downloads/domain/entities/download_key.dart';
@@ -21,7 +21,8 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
   final FindDownloadedFile findDownloadedFile;
   final ConnectivityService connectivityService;
 
-  StreamSubscription<PlayerState>? _sub;
+  late final PlaybackController _playback;
+  StreamSubscription<PlaybackStatus>? _sub;
 
   SuraPlaybackCubit({
     required this.reciter,
@@ -29,9 +30,15 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     required this.findDownloadedFile,
     required this.connectivityService,
   }) : super(const SuraPlaybackState()) {
-    _sub = audioPlayerService.onStateChanged.listen((s) {
+    _playback = PlaybackController(audioPlayerService: audioPlayerService);
+    _sub = _playback.statusStream.listen((status) {
       if (!isClosed) {
-        emit(state.copyWith(isPlaying: s == PlayerState.playing));
+        emit(
+          state.copyWith(
+            currentSuraId: status.currentId,
+            isPlaying: status.isPlaying,
+          ),
+        );
       }
     });
   }
@@ -40,14 +47,7 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     final suraId = sura.toString();
 
     // Tapping the current sura toggles pause/resume.
-    if (state.currentSuraId == suraId) {
-      if (state.isPlaying) {
-        await audioPlayerService.pause();
-      } else {
-        await audioPlayerService.resume();
-      }
-      return;
-    }
+    if (_playback.isCurrent(suraId)) return _playback.togglePause();
 
     // Local first — a downloaded file plays without any connection.
     final downloaded = await findDownloadedFile(
@@ -55,16 +55,15 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     );
     final path = downloaded.getOrElse(() => null);
     if (path != null) {
-      emit(state.copyWith(currentSuraId: suraId));
-      await audioPlayerService.playFile(path);
-      return;
+      return _playback.play(suraId, () => audioPlayerService.playFile(path));
     }
 
     // Otherwise stream, but only if there is a connection.
     if (await connectivityService.isConnected) {
-      emit(state.copyWith(currentSuraId: suraId));
-      await audioPlayerService.playUrl(reciter.audioUrlFor(sura));
-      return;
+      return _playback.play(
+        suraId,
+        () => audioPlayerService.playUrl(reciter.audioUrlFor(sura)),
+      );
     }
 
     emit(
@@ -80,7 +79,9 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
   @override
   Future<void> close() {
     _sub?.cancel();
-    audioPlayerService.stop();
+    // Stops only audio this screen started (the shared player may be busy
+    // with a download or a radio stream).
+    _playback.close();
     return super.close();
   }
 }

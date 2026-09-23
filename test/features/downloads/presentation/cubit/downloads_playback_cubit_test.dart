@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/services/audio_player_service.dart';
 import 'package:islami/core/services/download_service.dart';
@@ -12,6 +11,7 @@ import 'package:islami/features/downloads/data/repositories/downloads_repository
 import 'package:islami/features/downloads/domain/entities/download_key.dart';
 import 'package:islami/features/downloads/domain/usecases/delete_download.dart';
 import 'package:islami/features/downloads/domain/usecases/delete_reciter_downloads.dart';
+import 'package:islami/features/downloads/domain/usecases/find_downloaded_file.dart';
 import 'package:islami/features/downloads/domain/usecases/get_downloads.dart';
 import 'package:islami/features/downloads/domain/usecases/reconcile_downloads.dart';
 import 'package:islami/features/downloads/domain/usecases/save_download.dart';
@@ -19,16 +19,17 @@ import 'package:islami/features/downloads/presentation/bloc/downloads_bloc.dart'
 import 'package:islami/features/downloads/presentation/cubit/downloads_playback_cubit.dart';
 
 class _FakeAudio implements AudioPlayerService {
-  final _controller = StreamController<PlayerState>.broadcast();
+  final _controller = StreamController<bool>.broadcast();
   String? playedFile;
   int stops = 0;
   int pauses = 0;
   int resumes = 0;
+  bool _playing = false;
 
   @override
-  Stream<PlayerState> get onStateChanged => _controller.stream;
+  Stream<bool> get isPlayingStream => _controller.stream;
   @override
-  PlayerState get state => PlayerState.stopped;
+  bool get isPlaying => _playing;
   @override
   Future<void> playFile(String path) async => playedFile = path;
   @override
@@ -38,11 +39,17 @@ class _FakeAudio implements AudioPlayerService {
   @override
   Future<void> resume() async => resumes++;
   @override
+  Future<void> togglePause() => isPlaying ? pause() : resume();
+  @override
   Future<void> stop() async => stops++;
   @override
   Future<void> dispose() async => _controller.close();
 
-  void emitState(PlayerState s) => _controller.add(s);
+  /// Mimics the player reporting that it started or stopped playing.
+  void emitPlaying(bool playing) {
+    _playing = playing;
+    _controller.add(playing);
+  }
 }
 
 class _FakeDownloadService implements DownloadService {
@@ -109,9 +116,19 @@ void main() {
   late _FakeLocal local;
   late DownloadsBloc bloc;
 
+  /// An entry that is in the index, which is the only way the Downloads
+  /// screen ever hands one to the cubit.
+  DownloadEntry indexed(String reciterId, String suraId, String path) {
+    final entry = _entry(reciterId, suraId, path);
+    local.store['${entry.key}'] = DownloadEntryModel.fromEntry(entry);
+    return entry;
+  }
+
   DownloadsPlaybackCubit build() => DownloadsPlaybackCubit(
     audioPlayerService: audio,
-    downloadService: service,
+    findDownloadedFile: FindDownloadedFile(
+      DownloadsRepositoryImpl(localDataSource: local, downloadService: service),
+    ),
     downloadsBloc: bloc,
   );
 
@@ -139,7 +156,7 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('dl_play');
     final file = File('${dir.path}/2.mp3');
     await file.writeAsString('audio');
-    final entry = _entry('1', '2', file.path);
+    final entry = indexed('1', '2', file.path);
 
     final cubit = build();
     await cubit.toggle(entry);
@@ -155,17 +172,17 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('dl_toggle');
     final file = File('${dir.path}/2.mp3');
     await file.writeAsString('audio');
-    final entry = _entry('1', '2', file.path);
+    final entry = indexed('1', '2', file.path);
 
     final cubit = build();
     await cubit.toggle(entry); // start
-    audio.emitState(PlayerState.playing);
+    audio.emitPlaying(true);
     await _settle();
 
     await cubit.toggle(entry); // same → pause
     expect(audio.pauses, 1);
 
-    audio.emitState(PlayerState.paused);
+    audio.emitPlaying(false);
     await _settle();
     await cubit.toggle(entry); // same → resume
     expect(audio.resumes, 1);
@@ -203,7 +220,7 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('dl_stop');
     final file = File('${dir.path}/2.mp3');
     await file.writeAsString('audio');
-    final entry = _entry('1', '2', file.path);
+    final entry = indexed('1', '2', file.path);
 
     final cubit = build();
     await cubit.toggle(entry);
@@ -228,7 +245,7 @@ void main() {
     final file = File('${dir.path}/2.mp3');
     await file.writeAsString('audio');
     final cubit = build();
-    await cubit.toggle(_entry('1', '2', file.path));
+    await cubit.toggle(indexed('1', '2', file.path));
     await cubit.close();
     expect(audio.stops, 1);
 

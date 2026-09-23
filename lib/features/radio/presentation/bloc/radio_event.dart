@@ -60,12 +60,12 @@ class _ConnectivityChangedEvent extends RadioEvent {
   List<Object?> get props => [online];
 }
 
-/// Internal: forwards audio player state changes.
-class _PlayerStateChangedEvent extends RadioEvent {
-  final bool isPlaying;
+/// Internal: forwards what the shared [PlaybackController] is on.
+class _PlaybackChangedEvent extends RadioEvent {
+  final PlaybackStatus status;
 
-  const _PlayerStateChangedEvent(this.isPlaying);
+  const _PlaybackChangedEvent(this.status);
 
   @override
-  List<Object?> get props => [isPlaying];
+  List<Object?> get props => [status];
 }

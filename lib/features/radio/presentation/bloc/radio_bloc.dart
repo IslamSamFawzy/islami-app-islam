@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/playback_controller.dart';
 import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
@@ -23,7 +23,8 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
   final AudioPlayerService audioPlayerService;
   final ConnectivityService connectivityService;
 
-  StreamSubscription<PlayerState>? _playerSub;
+  late final PlaybackController _playback;
+  StreamSubscription<PlaybackStatus>? _playbackSub;
   StreamSubscription<bool>? _connectivitySub;
 
   RadioBloc({
@@ -38,12 +39,11 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     on<SelectTabEvent>(_onSelectTab);
     on<SearchRadioEvent>(_onSearch);
     on<PlayItemEvent>(_onPlayItem);
-    on<_PlayerStateChangedEvent>(_onPlayerStateChanged);
+    on<_PlaybackChangedEvent>(_onPlaybackChanged);
 
-    _playerSub = audioPlayerService.onStateChanged.listen((s) {
-      if (!isClosed) {
-        add(_PlayerStateChangedEvent(s == PlayerState.playing));
-      }
+    _playback = PlaybackController(audioPlayerService: audioPlayerService);
+    _playbackSub = _playback.statusStream.listen((status) {
+      if (!isClosed) add(_PlaybackChangedEvent(status));
     });
 
     _connectivitySub = connectivityService.onConnectivityChanged.listen((online) {
@@ -143,12 +143,8 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     Emitter<RadioState> emit,
   ) async {
     // Tapping the currently playing item toggles pause/resume.
-    if (state.currentId == event.id) {
-      if (state.isPlaying) {
-        await audioPlayerService.pause();
-      } else {
-        await audioPlayerService.resume();
-      }
+    if (_playback.isCurrent(event.id)) {
+      await _playback.togglePause();
       return;
     }
     // Live streams are online-only; say so instead of failing silently.
@@ -159,22 +155,29 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
       ));
       return;
     }
+    // Highlight the row now; the controller reports the same id straight back
+    // through _PlaybackChangedEvent, which Equatable de-dupes.
     emit(state.copyWith(currentId: event.id));
-    await audioPlayerService.playUrl(event.url);
+    await _playback.play(event.id, () => audioPlayerService.playUrl(event.url));
   }
 
-  void _onPlayerStateChanged(
-    _PlayerStateChangedEvent event,
+  void _onPlaybackChanged(
+    _PlaybackChangedEvent event,
     Emitter<RadioState> emit,
   ) {
-    emit(state.copyWith(isPlaying: event.isPlaying));
+    emit(state.copyWith(
+      currentId: event.status.currentId,
+      isPlaying: event.status.isPlaying,
+    ));
   }
 
   @override
   Future<void> close() {
-    _playerSub?.cancel();
+    _playbackSub?.cancel();
     _connectivitySub?.cancel();
-    audioPlayerService.stop();
+    // Stops the audio only if this bloc started it, so closing the Radio tab
+    // never cuts off a sura playing from another screen.
+    _playback.close();
     return super.close();
   }
 }
