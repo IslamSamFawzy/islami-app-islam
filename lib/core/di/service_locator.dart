@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Azkar feature
@@ -48,6 +47,7 @@ import '../../features/time/domain/services/next_prayer_calculator.dart';
 import '../../features/time/domain/usecases/get_prayer_times.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
 import '../cache/cache_manager.dart';
+import '../network/api_client.dart';
 import '../services/adhan_scheduler.dart';
 import '../services/audio_player_service.dart';
 import '../services/compass_service.dart';
@@ -67,7 +67,9 @@ Future<void> init() async {
   // ---------------------------------------------------------------------------
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
-  sl.registerLazySingleton<http.Client>(() => http.Client());
+
+  // The one JSON client every remote data source talks through.
+  sl.registerLazySingleton<ApiClient>(() => DioApiClient());
 
   // Offline cache (thin wrapper over SharedPreferences).
   sl.registerLazySingleton<CacheManager>(
@@ -168,7 +170,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<PrayerRemoteDataSource>(
-    () => PrayerRemoteDataSourceImpl(client: sl()),
+    () => PrayerRemoteDataSourceImpl(apiClient: sl()),
   );
 
   sl.registerLazySingleton<PrayerLocalDataSource>(
@@ -195,7 +197,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<RadioRemoteDataSource>(
-    () => RadioRemoteDataSourceImpl(client: sl()),
+    () => RadioRemoteDataSourceImpl(apiClient: sl()),
   );
 
   sl.registerLazySingleton<RadioLocalDataSource>(

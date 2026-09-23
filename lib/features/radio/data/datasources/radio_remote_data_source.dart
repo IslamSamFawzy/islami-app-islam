@@ -1,8 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-
-import '../../../../core/error/exceptions.dart';
+import '../../../../core/network/api_client.dart';
 import '../models/radio_station_model.dart';
 import '../models/reciter_model.dart';
 
@@ -13,15 +9,19 @@ abstract class RadioRemoteDataSource {
 }
 
 class RadioRemoteDataSourceImpl implements RadioRemoteDataSource {
-  final http.Client client;
+  final ApiClient apiClient;
 
-  RadioRemoteDataSourceImpl({required this.client});
+  RadioRemoteDataSourceImpl({required this.apiClient});
 
   static const String _base = 'https://mp3quran.net/api/v3';
+  static const Duration _timeout = Duration(seconds: 15);
 
   @override
   Future<List<RadioStationModel>> getRadios() async {
-    final body = await _getJson('$_base/radios?language=ar');
+    final body = await apiClient.getJson(
+      '$_base/radios?language=ar',
+      timeout: _timeout,
+    );
     final list = (body['radios'] as List?) ?? const [];
     return list
         .map((e) => RadioStationModel.fromJson((e as Map).cast<String, dynamic>()))
@@ -30,27 +30,14 @@ class RadioRemoteDataSourceImpl implements RadioRemoteDataSource {
 
   @override
   Future<List<ReciterModel>> getReciters() async {
-    final body = await _getJson('$_base/reciters?language=ar');
+    final body = await apiClient.getJson(
+      '$_base/reciters?language=ar',
+      timeout: _timeout,
+    );
     final list = (body['reciters'] as List?) ?? const [];
     return list
         .map((e) => ReciterModel.fromApi((e as Map).cast<String, dynamic>()))
         .where((r) => r.moshafServer.isNotEmpty && r.surahList.isNotEmpty)
         .toList();
-  }
-
-  Future<Map<String, dynamic>> _getJson(String url) async {
-    try {
-      final response = await client
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) {
-        throw ServerException('Radio API error (${response.statusCode})');
-      }
-      return json.decode(response.body) as Map<String, dynamic>;
-    } on ServerException {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to load radio data: $e');
-    }
   }
 }

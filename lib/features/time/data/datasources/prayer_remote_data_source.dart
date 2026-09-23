@@ -1,8 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-
-import '../../../../core/error/exceptions.dart';
+import '../../../../core/network/api_client.dart';
 import '../models/prayer_times_model.dart';
 
 abstract class PrayerRemoteDataSource {
@@ -17,12 +13,13 @@ abstract class PrayerRemoteDataSource {
 }
 
 class PrayerRemoteDataSourceImpl implements PrayerRemoteDataSource {
-  final http.Client client;
+  final ApiClient apiClient;
 
-  PrayerRemoteDataSourceImpl({required this.client});
+  PrayerRemoteDataSourceImpl({required this.apiClient});
 
   /// Aladhan calculation method (5 = Egyptian General Authority of Survey).
   static const int _method = 5;
+  static const Duration _timeout = Duration(seconds: 20);
 
   @override
   Future<List<PrayerTimesModel>> getMonthlyPrayerTimes({
@@ -31,29 +28,15 @@ class PrayerRemoteDataSourceImpl implements PrayerRemoteDataSource {
     required int month,
     required int year,
   }) async {
-    final uri = Uri.parse(
+    final body = await apiClient.getJson(
       'https://api.aladhan.com/v1/calendar'
       '?latitude=$latitude&longitude=$longitude&method=$_method'
       '&month=$month&year=$year',
+      timeout: _timeout,
     );
-
-    try {
-      final response = await client.get(uri).timeout(
-            const Duration(seconds: 20),
-          );
-      if (response.statusCode != 200) {
-        throw ServerException('Prayer API error (${response.statusCode})');
-      }
-      final body = json.decode(response.body) as Map<String, dynamic>;
-      final data = (body['data'] as List?) ?? const [];
-      return data
-          .map((e) =>
-              PrayerTimesModel.fromApi((e as Map).cast<String, dynamic>()))
-          .toList();
-    } on ServerException {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to load prayer times: $e');
-    }
+    final data = (body['data'] as List?) ?? const [];
+    return data
+        .map((e) => PrayerTimesModel.fromApi((e as Map).cast<String, dynamic>()))
+        .toList();
   }
 }
