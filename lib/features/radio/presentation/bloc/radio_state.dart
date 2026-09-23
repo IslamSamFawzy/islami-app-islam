@@ -1,11 +1,9 @@
 part of 'radio_bloc.dart';
 
-enum RadioStatus { initial, loading, success, failure }
-
 enum RadioTab { radio, reciters }
 
 class RadioState extends Equatable {
-  final RadioStatus status;
+  final ViewStatus status;
   final List<RadioStation> radios;
   final List<Reciter> reciters;
   final RadioTab tab;
@@ -30,7 +28,7 @@ class RadioState extends Equatable {
   final int noticeSeq;
 
   const RadioState({
-    this.status = RadioStatus.initial,
+    this.status = ViewStatus.initial,
     this.radios = const [],
     this.reciters = const [],
     this.tab = RadioTab.radio,
@@ -61,7 +59,7 @@ class RadioState extends Equatable {
       isOffline && (radios.isNotEmpty || reciters.isNotEmpty);
 
   RadioState copyWith({
-    RadioStatus? status,
+    ViewStatus? status,
     List<RadioStation>? radios,
     List<Reciter>? reciters,
     RadioTab? tab,

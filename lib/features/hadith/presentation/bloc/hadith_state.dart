@@ -1,20 +1,18 @@
 part of 'hadith_bloc.dart';
 
-enum HadithStatus { initial, loading, success, failure }
-
 class HadithState extends Equatable {
-  final HadithStatus status;
+  final ViewStatus status;
   final List<Hadith> hadiths;
   final String errorMessage;
 
   const HadithState({
-    this.status = HadithStatus.initial,
+    this.status = ViewStatus.initial,
     this.hadiths = const [],
     this.errorMessage = '',
   });
 
   HadithState copyWith({
-    HadithStatus? status,
+    ViewStatus? status,
     List<Hadith>? hadiths,
     String? errorMessage,
   }) {

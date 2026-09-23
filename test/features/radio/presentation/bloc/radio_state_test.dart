@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:islami/core/presentation/view_status.dart';
 import 'package:islami/features/radio/domain/entities/radio_station.dart';
 import 'package:islami/features/radio/domain/entities/reciter.dart';
 import 'package:islami/features/radio/presentation/bloc/radio_bloc.dart';
@@ -14,7 +15,7 @@ void main() {
   ];
 
   const base = RadioState(
-    status: RadioStatus.success,
+    status: ViewStatus.success,
     radios: radios,
     reciters: reciters,
   );

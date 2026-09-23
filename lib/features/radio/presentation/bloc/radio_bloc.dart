@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/params.dart';
@@ -54,7 +55,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     LoadRadioDataEvent event,
     Emitter<RadioState> emit,
   ) async {
-    emit(state.copyWith(status: RadioStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
 
     // Phase 1 — prefer the cache; if none exists this falls through to the
     // network so first-time users still get data.
@@ -68,14 +69,14 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
 
     if (radios.isEmpty && reciters.isEmpty) {
       emit(state.copyWith(
-        status: RadioStatus.failure,
+        status: ViewStatus.failure,
         errorMessage: 'Failed to load radio data. Check your connection.',
       ));
       return;
     }
 
     emit(state.copyWith(
-      status: RadioStatus.success,
+      status: ViewStatus.success,
       radios: radios,
       reciters: reciters,
       isFromCache: fromCache,
@@ -96,7 +97,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     if (!event.online) return;
 
     // Back online: retry a failed load, otherwise refresh in the background.
-    if (state.status == RadioStatus.failure) {
+    if (state.status == ViewStatus.failure) {
       add(const LoadRadioDataEvent());
     } else {
       add(const _RefreshRadioDataEvent());
@@ -121,7 +122,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     // Equatable de-dupes: this only re-emits when the fresh data (or its
     // provenance) actually differs from what is on screen.
     emit(state.copyWith(
-      status: RadioStatus.success,
+      status: ViewStatus.success,
       radios: radios,
       reciters: reciters,
       isFromCache: fromCache,

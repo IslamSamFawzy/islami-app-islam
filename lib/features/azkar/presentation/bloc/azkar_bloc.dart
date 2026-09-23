@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../domain/entities/azkar.dart';
 import '../../domain/usecases/get_azkar.dart';
 
@@ -18,15 +19,15 @@ class AzkarBloc extends Bloc<AzkarEvent, AzkarState> {
     LoadAzkarEvent event,
     Emitter<AzkarState> emit,
   ) async {
-    emit(state.copyWith(status: AzkarStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await getAzkar(event.type);
     result.fold(
       (failure) => emit(state.copyWith(
-        status: AzkarStatus.failure,
+        status: ViewStatus.failure,
         errorMessage: failure.message,
       )),
       (collection) => emit(state.copyWith(
-        status: AzkarStatus.success,
+        status: ViewStatus.success,
         collection: collection,
       )),
     );

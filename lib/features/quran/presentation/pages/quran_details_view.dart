@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/sura.dart';
 import '../bloc/details/quran_details_bloc.dart';
@@ -51,8 +52,8 @@ class QuranDetailsView extends StatelessWidget {
             Expanded(
               child: BlocBuilder<QuranDetailsBloc, QuranDetailsState>(
                 builder: (context, state) {
-                  if (state.status == DetailsStatus.loading ||
-                      state.status == DetailsStatus.initial) {
+                  if (state.status == ViewStatus.loading ||
+                      state.status == ViewStatus.initial) {
                     return const Center(
                       child: CircularProgressIndicator(
                         color: AppColors.primaryColor,
@@ -60,7 +61,7 @@ class QuranDetailsView extends StatelessWidget {
                     );
                   }
 
-                  if (state.status == DetailsStatus.failure) {
+                  if (state.status == ViewStatus.failure) {
                     return Center(
                       child: Text(
                         state.errorMessage,

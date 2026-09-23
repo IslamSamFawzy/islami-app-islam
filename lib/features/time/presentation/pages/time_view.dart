@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../azkar/domain/entities/azkar.dart';
@@ -54,8 +55,8 @@ class _TimeViewBody extends StatelessWidget {
               const SizedBox(height: 10),
               BlocBuilder<TimeBloc, TimeState>(
                 builder: (context, state) {
-                  if (state.status == TimeStatus.loading ||
-                      state.status == TimeStatus.initial) {
+                  if (state.status == ViewStatus.loading ||
+                      state.status == ViewStatus.initial) {
                     return const Padding(
                       padding: EdgeInsets.all(40),
                       child: Center(
@@ -65,7 +66,7 @@ class _TimeViewBody extends StatelessWidget {
                       ),
                     );
                   }
-                  if (state.status == TimeStatus.failure ||
+                  if (state.status == ViewStatus.failure ||
                       state.prayerTimes == null) {
                     return Padding(
                       padding: const EdgeInsets.all(24),

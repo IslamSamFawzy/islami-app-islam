@@ -1,9 +1,7 @@
 part of 'quran_details_bloc.dart';
 
-enum DetailsStatus { initial, loading, success, failure }
-
 class QuranDetailsState extends Equatable {
-  final DetailsStatus status;
+  final ViewStatus status;
   final List<String> verses;
 
   /// Index of the ayah rendered filled-gold ("currently read"); -1 = none.
@@ -11,14 +9,14 @@ class QuranDetailsState extends Equatable {
   final String errorMessage;
 
   const QuranDetailsState({
-    this.status = DetailsStatus.initial,
+    this.status = ViewStatus.initial,
     this.verses = const [],
     this.selectedIndex = -1,
     this.errorMessage = '',
   });
 
   QuranDetailsState copyWith({
-    DetailsStatus? status,
+    ViewStatus? status,
     List<String>? verses,
     int? selectedIndex,
     String? errorMessage,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/adhan_scheduler.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/usecase.dart';
@@ -47,12 +48,12 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     LoadPrayerTimesEvent event,
     Emitter<TimeState> emit,
   ) async {
-    emit(state.copyWith(status: TimeStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await getPrayerTimes(const NoParams());
     await result.fold(
       (failure) async => emit(
         state.copyWith(
-          status: TimeStatus.failure,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
@@ -62,7 +63,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
         final next = nextPrayerCalculator.findNext(times);
         emit(
           state.copyWith(
-            status: TimeStatus.success,
+            status: ViewStatus.success,
             prayerTimes: times,
             isFromCache: cached.fromCache,
             // Seed the offline flag so a cold start with no connection shows the
@@ -86,7 +87,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     emit(state.copyWith(isOffline: !event.online));
     // Back online after failing to load (e.g. the month wasn't cached yet):
     // retry. If we already have a schedule, keep it — the month is still valid.
-    if (event.online && state.status == TimeStatus.failure) {
+    if (event.online && state.status == ViewStatus.failure) {
       add(const LoadPrayerTimesEvent());
     }
   }

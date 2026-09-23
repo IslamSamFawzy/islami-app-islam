@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/sura.dart';
 import '../../domain/services/sura_search_filter.dart';
@@ -33,19 +34,19 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     LoadSurasEvent event,
     Emitter<QuranState> emit,
   ) async {
-    emit(state.copyWith(status: QuranStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await getAllSuras(const NoParams());
     await result.fold(
       (failure) async => emit(
         state.copyWith(
-          status: QuranStatus.failure,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
       (suras) async {
         emit(
           state.copyWith(
-            status: QuranStatus.success,
+            status: ViewStatus.success,
             allSuras: suras,
             filteredSuras: suras,
           ),

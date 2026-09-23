@@ -1,9 +1,7 @@
 part of 'quran_bloc.dart';
 
-enum QuranStatus { initial, loading, success, failure }
-
 class QuranState extends Equatable {
-  final QuranStatus status;
+  final ViewStatus status;
   final List<Sura> allSuras;
   final List<Sura> filteredSuras;
   final List<Sura> recentSuras;
@@ -11,7 +9,7 @@ class QuranState extends Equatable {
   final String errorMessage;
 
   const QuranState({
-    this.status = QuranStatus.initial,
+    this.status = ViewStatus.initial,
     this.allSuras = const [],
     this.filteredSuras = const [],
     this.recentSuras = const [],
@@ -20,7 +18,7 @@ class QuranState extends Equatable {
   });
 
   QuranState copyWith({
-    QuranStatus? status,
+    ViewStatus? status,
     List<Sura>? allSuras,
     List<Sura>? filteredSuras,
     List<Sura>? recentSuras,

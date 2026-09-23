@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/hadith.dart';
 import '../../domain/usecases/get_all_hadiths.dart';
@@ -19,15 +20,15 @@ class HadithBloc extends Bloc<HadithEvent, HadithState> {
     LoadHadithsEvent event,
     Emitter<HadithState> emit,
   ) async {
-    emit(state.copyWith(status: HadithStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await getAllHadiths(const NoParams());
     result.fold(
       (failure) => emit(state.copyWith(
-        status: HadithStatus.failure,
+        status: ViewStatus.failure,
         errorMessage: failure.message,
       )),
       (hadiths) => emit(state.copyWith(
-        status: HadithStatus.success,
+        status: ViewStatus.success,
         hadiths: hadiths,
       )),
     );

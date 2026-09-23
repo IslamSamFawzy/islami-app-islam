@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/quran_bloc.dart';
 import 'sura_item.dart';
@@ -25,8 +26,8 @@ class SuraListView extends StatelessWidget {
           ),
           BlocBuilder<QuranBloc, QuranState>(
             builder: (context, state) {
-              if (state.status == QuranStatus.loading ||
-                  state.status == QuranStatus.initial) {
+              if (state.status == ViewStatus.loading ||
+                  state.status == ViewStatus.initial) {
                 return const Padding(
                   padding: EdgeInsets.all(20),
                   child: Center(
@@ -37,7 +38,7 @@ class SuraListView extends StatelessWidget {
                 );
               }
 
-              if (state.status == QuranStatus.failure) {
+              if (state.status == ViewStatus.failure) {
                 return Padding(
                   padding: const EdgeInsets.all(20),
                   child: Center(

@@ -1,20 +1,18 @@
 part of 'azkar_bloc.dart';
 
-enum AzkarStatus { initial, loading, success, failure }
-
 class AzkarState extends Equatable {
-  final AzkarStatus status;
+  final ViewStatus status;
   final AzkarCollection? collection;
   final String errorMessage;
 
   const AzkarState({
-    this.status = AzkarStatus.initial,
+    this.status = ViewStatus.initial,
     this.collection,
     this.errorMessage = '',
   });
 
   AzkarState copyWith({
-    AzkarStatus? status,
+    ViewStatus? status,
     AzkarCollection? collection,
     String? errorMessage,
   }) {

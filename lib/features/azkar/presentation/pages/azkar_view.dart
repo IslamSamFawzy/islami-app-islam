@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/azkar.dart';
 import '../bloc/azkar_bloc.dart';
@@ -53,15 +54,15 @@ class _AzkarViewBody extends StatelessWidget {
         ),
         body: BlocBuilder<AzkarBloc, AzkarState>(
           builder: (context, state) {
-            if (state.status == AzkarStatus.loading ||
-                state.status == AzkarStatus.initial) {
+            if (state.status == ViewStatus.loading ||
+                state.status == ViewStatus.initial) {
               return const Center(
                 child: CircularProgressIndicator(
                   color: AppColors.primaryColor,
                 ),
               );
             }
-            if (state.status == AzkarStatus.failure ||
+            if (state.status == ViewStatus.failure ||
                 state.collection == null) {
               return Center(
                 child: Text(

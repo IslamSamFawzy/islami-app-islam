@@ -1,9 +1,7 @@
 part of 'time_bloc.dart';
 
-enum TimeStatus { initial, loading, success, failure }
-
 class TimeState extends Equatable {
-  final TimeStatus status;
+  final ViewStatus status;
   final PrayerTimes? prayerTimes;
   final String nextPrayerName;
   final Duration countdown;
@@ -18,7 +16,7 @@ class TimeState extends Equatable {
   final bool isOffline;
 
   const TimeState({
-    this.status = TimeStatus.initial,
+    this.status = ViewStatus.initial,
     this.prayerTimes,
     this.nextPrayerName = '',
     this.countdown = Duration.zero,
@@ -33,7 +31,7 @@ class TimeState extends Equatable {
   bool get showOfflineBanner => isOffline && prayerTimes != null;
 
   TimeState copyWith({
-    TimeStatus? status,
+    ViewStatus? status,
     PrayerTimes? prayerTimes,
     String? nextPrayerName,
     Duration? countdown,

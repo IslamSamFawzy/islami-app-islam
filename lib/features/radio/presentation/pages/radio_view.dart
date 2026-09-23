@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../downloads/presentation/pages/downloads_view.dart';
@@ -89,15 +90,15 @@ class _RadioViewBody extends StatelessWidget {
               Expanded(
                 child: BlocBuilder<RadioBloc, RadioState>(
                   builder: (context, state) {
-                    if (state.status == RadioStatus.loading ||
-                        state.status == RadioStatus.initial) {
+                    if (state.status == ViewStatus.loading ||
+                        state.status == ViewStatus.initial) {
                       return const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.primaryColor,
                         ),
                       );
                     }
-                    if (state.status == RadioStatus.failure) {
+                    if (state.status == ViewStatus.failure) {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.all(24),
