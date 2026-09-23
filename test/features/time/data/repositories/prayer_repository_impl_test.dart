@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:islami/core/error/exceptions.dart';
 import 'package:islami/core/error/failures.dart';
 import 'package:islami/core/services/location_service.dart';
@@ -57,8 +56,8 @@ class _FakeLocal implements PrayerLocalDataSource {
 /// Forces the Cairo fallback so tests don't touch platform location services.
 class _FakeLocation implements LocationService {
   @override
-  Future<Position> getCurrentPosition() async {
-    throw const LocationException('denied');
+  Future<GeoPoint> getCurrentPosition() async {
+    throw const LocationPermissionDeniedException();
   }
 }
 

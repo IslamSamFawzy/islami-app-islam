@@ -87,7 +87,7 @@ class QiblaCubit extends Cubit<QiblaState> {
         usingCache = true;
       } else {
         emit(QiblaState(
-          status: e.message.toLowerCase().contains('disabled')
+          status: e is LocationServiceDisabledException
               ? QiblaStatus.serviceDisabled
               : QiblaStatus.permissionDenied,
           errorMessage: e.message,

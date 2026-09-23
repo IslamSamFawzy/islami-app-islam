@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:islami/core/cache/cache_manager.dart';
 import 'package:islami/core/error/exceptions.dart';
 import 'package:islami/core/services/compass_service.dart';
@@ -11,13 +10,13 @@ import 'package:islami/features/qibla/presentation/cubit/qibla_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeLocation implements LocationService {
-  final Position? position;
+  final GeoPoint? position;
   final LocationException? error;
 
   _FakeLocation({this.position, this.error});
 
   @override
-  Future<Position> getCurrentPosition() async {
+  Future<GeoPoint> getCurrentPosition() async {
     if (error != null) throw error!;
     return position!;
   }
@@ -47,18 +46,8 @@ class _FakeDeclination implements DeclinationService {
   }
 }
 
-Position _pos(double lat, double lng) => Position(
-      latitude: lat,
-      longitude: lng,
-      timestamp: DateTime(2026),
-      accuracy: 1,
-      altitude: 0,
-      altitudeAccuracy: 0,
-      heading: 0,
-      headingAccuracy: 0,
-      speed: 0,
-      speedAccuracy: 0,
-    );
+GeoPoint _pos(double lat, double lng) =>
+    GeoPoint(latitude: lat, longitude: lng);
 
 // Lets the broadcast compass reading propagate to the cubit's listener.
 Future<void> _settle() => Future<void>.delayed(const Duration(milliseconds: 1));
@@ -181,7 +170,7 @@ void main() {
     final declination = _FakeDeclination(999); // must NOT be used offline
     final cubit = build(
       location: _FakeLocation(
-          error: const LocationException('Location services are disabled')),
+          error: const LocationServiceDisabledException()),
       compass: compass,
       declination: declination,
     );
@@ -203,7 +192,7 @@ void main() {
   test('denied permission maps to permissionDenied (no cache)', () async {
     final cubit = build(
       location:
-          _FakeLocation(error: const LocationException('Location permission denied')),
+          _FakeLocation(error: const LocationPermissionDeniedException()),
     );
 
     await cubit.init();
@@ -215,12 +204,28 @@ void main() {
   test('disabled services map to serviceDisabled (no cache)', () async {
     final cubit = build(
       location: _FakeLocation(
-          error: const LocationException('Location services are disabled')),
+          error: const LocationServiceDisabledException()),
     );
 
     await cubit.init();
 
     expect(cubit.state.status, QiblaStatus.serviceDisabled);
+    await cubit.close();
+  });
+
+  test('the exception type decides the status, not its wording', () async {
+    // The message used to be searched for the word "disabled"; a differently
+    // worded (or localised) message must still land on serviceDisabled.
+    final cubit = build(
+      location: _FakeLocation(
+        error: const LocationServiceDisabledException('Ortung ist aus'),
+      ),
+    );
+
+    await cubit.init();
+
+    expect(cubit.state.status, QiblaStatus.serviceDisabled);
+    expect(cubit.state.errorMessage, 'Ortung ist aus');
     await cubit.close();
   });
 }

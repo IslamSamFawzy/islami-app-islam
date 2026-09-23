@@ -38,3 +38,17 @@ class LocationException implements Exception {
   @override
   String toString() => 'LocationException: $message';
 }
+
+/// Location services are switched off on the device.
+class LocationServiceDisabledException extends LocationException {
+  const LocationServiceDisabledException([
+    super.message = 'Location services are disabled',
+  ]);
+}
+
+/// The user has not granted the location permission.
+class LocationPermissionDeniedException extends LocationException {
+  const LocationPermissionDeniedException([
+    super.message = 'Location permission denied',
+  ]);
+}
