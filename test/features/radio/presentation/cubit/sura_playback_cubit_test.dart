@@ -184,8 +184,8 @@ void main() {
 
     expect(audio.playedFile, isNull);
     expect(audio.playedUrl, isNull);
-    expect(cubit.state.notice, isNotEmpty);
-    expect(cubit.state.noticeSeq, 1);
+    expect(cubit.state.notice.message, isNotEmpty);
+    expect(cubit.state.notice.id, 1);
     await cubit.close();
   });
 }

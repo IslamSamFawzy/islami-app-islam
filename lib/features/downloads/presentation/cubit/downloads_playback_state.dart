@@ -5,16 +5,13 @@ class DownloadsPlaybackState extends Equatable {
   final DownloadKey? currentKey;
   final bool isPlaying;
 
-  /// One-shot user message (e.g. a missing file). [noticeSeq] changes on every
-  /// new notice so the UI shows it exactly once.
-  final String notice;
-  final int noticeSeq;
+  /// One-shot user message (e.g. a missing file).
+  final UiNotice notice;
 
   const DownloadsPlaybackState({
     this.currentKey,
     this.isPlaying = false,
-    this.notice = '',
-    this.noticeSeq = 0,
+    this.notice = const UiNotice.none(),
   });
 
   bool isCurrent(DownloadEntry entry) => currentKey == entry.key;
@@ -25,17 +22,15 @@ class DownloadsPlaybackState extends Equatable {
     DownloadKey? currentKey,
     bool clearCurrentKey = false,
     bool? isPlaying,
-    String? notice,
-    int? noticeSeq,
+    UiNotice? notice,
   }) {
     return DownloadsPlaybackState(
       currentKey: clearCurrentKey ? null : (currentKey ?? this.currentKey),
       isPlaying: isPlaying ?? this.isPlaying,
       notice: notice ?? this.notice,
-      noticeSeq: noticeSeq ?? this.noticeSeq,
     );
   }
 
   @override
-  List<Object?> get props => [currentKey, isPlaying, notice, noticeSeq];
+  List<Object?> get props => [currentKey, isPlaying, notice];
 }

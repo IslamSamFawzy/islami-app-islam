@@ -23,9 +23,7 @@ class RadioState extends Equatable {
   final bool isOffline;
 
   /// A one-shot user message (e.g. tapping a live stream while offline).
-  /// [noticeSeq] changes on every new notice so the UI shows it exactly once.
-  final String notice;
-  final int noticeSeq;
+  final UiNotice notice;
 
   const RadioState({
     this.status = ViewStatus.initial,
@@ -38,8 +36,7 @@ class RadioState extends Equatable {
     this.errorMessage = '',
     this.isFromCache = false,
     this.isOffline = false,
-    this.notice = '',
-    this.noticeSeq = 0,
+    this.notice = const UiNotice.none(),
   });
 
   /// Radios matching [query] (all of them when the query is empty).
@@ -69,8 +66,7 @@ class RadioState extends Equatable {
     String? errorMessage,
     bool? isFromCache,
     bool? isOffline,
-    String? notice,
-    int? noticeSeq,
+    UiNotice? notice,
   }) {
     return RadioState(
       status: status ?? this.status,
@@ -84,7 +80,6 @@ class RadioState extends Equatable {
       isFromCache: isFromCache ?? this.isFromCache,
       isOffline: isOffline ?? this.isOffline,
       notice: notice ?? this.notice,
-      noticeSeq: noticeSeq ?? this.noticeSeq,
     );
   }
 
@@ -101,6 +96,5 @@ class RadioState extends Equatable {
         isFromCache,
         isOffline,
         notice,
-        noticeSeq,
       ];
 }

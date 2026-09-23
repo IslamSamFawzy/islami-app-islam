@@ -5,6 +5,7 @@ import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/notice_listener.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/empty_message.dart';
@@ -30,14 +31,8 @@ class DownloadsView extends StatelessWidget {
       child: AppBackground(
         image: Assets.images.radioBackground,
         title: 'Downloads',
-        child: BlocListener<DownloadsPlaybackCubit, DownloadsPlaybackState>(
-          listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
-          listener: (context, state) {
-            if (state.notice.isEmpty) return;
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(state.notice)));
-          },
+        child: NoticeListener<DownloadsPlaybackCubit, DownloadsPlaybackState>(
+          noticeOf: (state) => state.notice,
           child: BlocBuilder<DownloadsBloc, DownloadsState>(
             builder: (context, state) {
               if (state.entries.isEmpty) {

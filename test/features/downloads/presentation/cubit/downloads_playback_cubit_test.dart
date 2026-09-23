@@ -206,8 +206,8 @@ void main() {
     await cubit.toggle(_entry('1', '2', '/no/such/file.mp3'));
 
     expect(audio.playedFile, isNull);
-    expect(cubit.state.notice, isNotEmpty);
-    expect(cubit.state.noticeSeq, 1);
+    expect(cubit.state.notice.message, isNotEmpty);
+    expect(cubit.state.notice.id, 1);
 
     // The cubit asked DownloadsBloc to reconcile, which drops the stale entry.
     await _settle();

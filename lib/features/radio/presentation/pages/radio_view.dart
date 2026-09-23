@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/header_logo.dart';
 import '../../../../core/widgets/loading_view.dart';
+import '../../../../core/widgets/notice_listener.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../downloads/presentation/pages/downloads_view.dart';
 import '../bloc/radio_bloc.dart';
@@ -35,14 +36,8 @@ class _RadioViewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppBackground(
       image: Assets.images.radioBackground,
-      child: BlocListener<RadioBloc, RadioState>(
-        listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
-        listener: (context, state) {
-          if (state.notice.isEmpty) return;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(state.notice)));
-        },
+      child: NoticeListener<RadioBloc, RadioState>(
+        noticeOf: (state) => state.notice,
         child: Column(
           children: [
             Stack(

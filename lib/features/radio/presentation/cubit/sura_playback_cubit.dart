@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/presentation/playback_controller.dart';
+import '../../../../core/presentation/ui_notice.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../downloads/domain/entities/download_key.dart';
@@ -68,10 +69,10 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
 
     emit(
       state.copyWith(
-        notice:
-            "You're offline. Download this sura to play it without a "
-            'connection.',
-        noticeSeq: state.noticeSeq + 1,
+        notice: state.notice.next(
+          "You're offline. Download this sura to play it without a "
+          'connection.',
+        ),
       ),
     );
   }

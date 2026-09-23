@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/presentation/playback_controller.dart';
+import '../../../../core/presentation/ui_notice.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../domain/entities/download_entry.dart';
 import '../../domain/entities/download_key.dart';
@@ -60,8 +61,7 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
     if (path == null) {
       emit(
         state.copyWith(
-          notice: 'This download is missing and was removed.',
-          noticeSeq: state.noticeSeq + 1,
+          notice: state.notice.next('This download is missing and was removed.'),
         ),
       );
       // Reuse the startup reconciliation to drop the stale entry — don't

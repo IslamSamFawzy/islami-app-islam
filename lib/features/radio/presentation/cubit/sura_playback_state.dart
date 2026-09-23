@@ -5,16 +5,13 @@ class SuraPlaybackState extends Equatable {
   final String currentSuraId;
   final bool isPlaying;
 
-  /// A one-shot user message (e.g. "download to play offline"). [noticeSeq]
-  /// changes on every new notice so the UI can show it exactly once.
-  final String notice;
-  final int noticeSeq;
+  /// A one-shot user message (e.g. "download to play offline").
+  final UiNotice notice;
 
   const SuraPlaybackState({
     this.currentSuraId = '',
     this.isPlaying = false,
-    this.notice = '',
-    this.noticeSeq = 0,
+    this.notice = const UiNotice.none(),
   });
 
   bool isCurrent(int sura) => currentSuraId == sura.toString();
@@ -22,17 +19,15 @@ class SuraPlaybackState extends Equatable {
   SuraPlaybackState copyWith({
     String? currentSuraId,
     bool? isPlaying,
-    String? notice,
-    int? noticeSeq,
+    UiNotice? notice,
   }) {
     return SuraPlaybackState(
       currentSuraId: currentSuraId ?? this.currentSuraId,
       isPlaying: isPlaying ?? this.isPlaying,
       notice: notice ?? this.notice,
-      noticeSeq: noticeSeq ?? this.noticeSeq,
     );
   }
 
   @override
-  List<Object?> get props => [currentSuraId, isPlaying, notice, noticeSeq];
+  List<Object?> get props => [currentSuraId, isPlaying, notice];
 }

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/arabic_search.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/empty_message.dart';
+import '../../../../core/widgets/notice_listener.dart';
 import '../../../../core/widgets/search_field.dart';
 import '../../../downloads/presentation/widgets/sura_download_control.dart';
 import '../../domain/entities/reciter.dart';
@@ -72,14 +73,8 @@ class _ReciterSurasBodyState extends State<_ReciterSurasBody> {
     return AppBackground(
       image: Assets.images.radioBackground,
       title: reciter.name,
-      child: BlocListener<SuraPlaybackCubit, SuraPlaybackState>(
-        listenWhen: (a, b) => a.noticeSeq != b.noticeSeq,
-        listener: (context, state) {
-          if (state.notice.isEmpty) return;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(state.notice)));
-        },
+      child: NoticeListener<SuraPlaybackCubit, SuraPlaybackState>(
+        noticeOf: (state) => state.notice,
         child: Column(
           children: [
             Padding(

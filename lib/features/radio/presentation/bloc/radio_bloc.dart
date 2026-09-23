@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/presentation/playback_controller.dart';
+import '../../../../core/presentation/ui_notice.dart';
 import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/audio_player_service.dart';
 import '../../../../core/services/connectivity_service.dart';
@@ -150,8 +151,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     // Live streams are online-only; say so instead of failing silently.
     if (state.isOffline) {
       emit(state.copyWith(
-        notice: 'Live radio needs an internet connection.',
-        noticeSeq: state.noticeSeq + 1,
+        notice: state.notice.next('Live radio needs an internet connection.'),
       ));
       return;
     }
