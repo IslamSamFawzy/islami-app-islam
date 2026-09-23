@@ -5,6 +5,7 @@ import '../../../../core/constants/sura_names.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/empty_message.dart';
 import '../../domain/entities/download_entry.dart';
 import '../bloc/downloads_bloc.dart';
@@ -306,18 +307,4 @@ class _SuraTile extends StatelessWidget {
       },
     );
   }
-}
-
-/// Formats a byte count as a compact human-readable size.
-String formatBytes(int bytes) {
-  if (bytes <= 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  var size = bytes.toDouble();
-  var unit = 0;
-  while (size >= 1024 && unit < units.length - 1) {
-    size /= 1024;
-    unit++;
-  }
-  final decimals = (size < 10 && unit > 0) ? 1 : 0;
-  return '${size.toStringAsFixed(decimals)} ${units[unit]}';
 }

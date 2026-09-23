@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../cubit/qibla_cubit.dart';
@@ -137,7 +138,7 @@ class _ReadyState extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '${_thousands(state.distanceKm.round())} km to Mecca',
+                '${formatThousands(state.distanceKm.round())} km to Mecca',
                 style: theme.textTheme.bodyLarge!.copyWith(
                   color: AppColors.textColor,
                 ),
@@ -236,15 +237,4 @@ class _Hint extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Groups an integer with thin spaces/commas, e.g. `1234` → `1,234`.
-String _thousands(int value) {
-  final s = value.abs().toString();
-  final buf = StringBuffer(value < 0 ? '-' : '');
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
-    buf.write(s[i]);
-  }
-  return buf.toString();
 }

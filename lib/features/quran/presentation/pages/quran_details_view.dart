@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../domain/entities/sura.dart';
@@ -69,7 +70,7 @@ class QuranDetailsView extends StatelessWidget {
                     itemBuilder: (context, index) {
                       return _AyahCard(
                         text:
-                            "${state.verses[index]} ﴿${_toArabicNumber(index + 1)}﴾",
+                            "${state.verses[index]} ﴿${toArabicDigits(index + 1)}﴾",
                         selected: state.selectedIndex == index,
                         onTap: () => context
                             .read<QuranDetailsBloc>()
@@ -85,15 +86,6 @@ class QuranDetailsView extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _toArabicNumber(int number) {
-    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return number
-        .toString()
-        .split('')
-        .map((e) => arabicNumbers[int.parse(e)])
-        .join();
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/prayer_times.dart';
 
 /// A self-contained "Pray Time" card:
@@ -152,7 +153,7 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Next Pray - ${_formatCountdown(widget.countdown)}',
+                  'Next Pray - ${formatCountdown(widget.countdown)}',
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     color: AppColors.titleTextColor,
                     fontWeight: FontWeight.bold,
@@ -173,13 +174,6 @@ class _PrayerTimesCardState extends State<PrayerTimesCard> {
         ),
       ),
     );
-  }
-
-  String _formatCountdown(Duration d) {
-    final clamped = d.isNegative ? Duration.zero : d;
-    final h = clamped.inHours.toString().padLeft(2, '0');
-    final m = (clamped.inMinutes % 60).toString().padLeft(2, '0');
-    return '$h:$m';
   }
 }
 
