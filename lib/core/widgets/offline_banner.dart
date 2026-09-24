@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../presentation/connectivity_cubit.dart';
 import '../theme/app_colors.dart';
 
 /// A small, non-blocking strip shown under a screen's header when the visible
@@ -41,6 +43,33 @@ class OfflineBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Shows the [OfflineBanner] while the device is offline and [B]'s state has
+/// something saved worth labelling as such.
+///
+/// The "are we offline?" half comes from the app-wide [ConnectivityCubit]; the
+/// screen only says what counts as data it can still show.
+class OfflineBannerFor<B extends StateStreamable<S>, S>
+    extends StatelessWidget {
+  final bool Function(S state) hasData;
+
+  const OfflineBannerFor({super.key, required this.hasData});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ConnectivityCubit, bool>(
+      builder: (context, online) {
+        if (online) return const SizedBox.shrink();
+        return BlocBuilder<B, S>(
+          buildWhen: (previous, current) =>
+              hasData(previous) != hasData(current),
+          builder: (context, state) =>
+              hasData(state) ? const OfflineBanner() : const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

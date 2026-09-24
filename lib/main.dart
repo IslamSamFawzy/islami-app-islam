@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/service_locator.dart' as di;
+import 'core/presentation/connectivity_cubit.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/theme_manager.dart';
 import 'features/downloads/presentation/bloc/downloads_bloc.dart';
@@ -30,10 +31,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Provide the shared downloads bloc above the app so every screen (the
-    // reciter sura list, the Downloads screen) sees one queue and one index.
-    return BlocProvider<DownloadsBloc>.value(
-      value: di.sl<DownloadsBloc>(),
+    // Above the app: one downloads bloc, so every screen (the reciter sura
+    // list, the Downloads screen) sees one queue and one index, and one
+    // connectivity cubit, so every screen reads the same "are we online?".
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<DownloadsBloc>.value(value: di.sl<DownloadsBloc>()),
+        BlocProvider<ConnectivityCubit>.value(
+          value: di.sl<ConnectivityCubit>(),
+        ),
+      ],
       child: MaterialApp(
         theme: ThemeManager.darkTheme(),
         debugShowCheckedModeBanner: false,

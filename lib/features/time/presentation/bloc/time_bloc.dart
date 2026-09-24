@@ -66,9 +66,6 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
             status: ViewStatus.success,
             prayerTimes: times,
             isFromCache: cached.fromCache,
-            // Seed the offline flag so a cold start with no connection shows the
-            // strip immediately (the stream only fires on subsequent changes).
-            isOffline: !await connectivityService.isConnected,
             nextPrayerName: next.name,
             countdown: next.countdown,
           ),
@@ -82,9 +79,9 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     _ConnectivityChangedEvent event,
     Emitter<TimeState> emit,
   ) async {
-    emit(state.copyWith(isOffline: !event.online));
-    // Back online after failing to load (e.g. the month wasn't cached yet):
-    // retry. If we already have a schedule, keep it — the month is still valid.
+    // The offline strip is driven by ConnectivityCubit. Back online after
+    // failing to load (e.g. the month wasn't cached yet): retry. If we already
+    // have a schedule, keep it — the month is still valid.
     if (event.online && state.status == ViewStatus.failure) {
       add(const LoadPrayerTimesEvent());
     }

@@ -19,9 +19,6 @@ class RadioState extends Equatable {
   /// fresh network fetch.
   final bool isFromCache;
 
-  /// Whether the device currently has no network connection.
-  final bool isOffline;
-
   /// A one-shot user message (e.g. tapping a live stream while offline).
   final UiNotice notice;
 
@@ -35,7 +32,6 @@ class RadioState extends Equatable {
     this.isPlaying = false,
     this.errorMessage = '',
     this.isFromCache = false,
-    this.isOffline = false,
     this.notice = const UiNotice.none(),
   });
 
@@ -49,11 +45,9 @@ class RadioState extends Equatable {
       ? reciters
       : reciters.where((r) => ArabicSearch.matches(query, r.name)).toList();
 
-  /// Whether to surface the "showing saved data" strip: offline while saved
-  /// content is on screen (regardless of whether this exact render came
-  /// straight from disk — data shown while offline is saved data either way).
-  bool get showOfflineBanner =>
-      isOffline && (radios.isNotEmpty || reciters.isNotEmpty);
+  /// Whether there is saved content on screen — what the offline strip is
+  /// about (data shown while offline is saved data either way).
+  bool get hasSavedData => radios.isNotEmpty || reciters.isNotEmpty;
 
   RadioState copyWith({
     ViewStatus? status,
@@ -65,7 +59,6 @@ class RadioState extends Equatable {
     bool? isPlaying,
     String? errorMessage,
     bool? isFromCache,
-    bool? isOffline,
     UiNotice? notice,
   }) {
     return RadioState(
@@ -78,7 +71,6 @@ class RadioState extends Equatable {
       isPlaying: isPlaying ?? this.isPlaying,
       errorMessage: errorMessage ?? this.errorMessage,
       isFromCache: isFromCache ?? this.isFromCache,
-      isOffline: isOffline ?? this.isOffline,
       notice: notice ?? this.notice,
     );
   }
@@ -94,7 +86,6 @@ class RadioState extends Equatable {
         isPlaying,
         errorMessage,
         isFromCache,
-        isOffline,
         notice,
       ];
 }

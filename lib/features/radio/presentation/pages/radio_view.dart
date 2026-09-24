@@ -61,11 +61,8 @@ class _RadioViewBody extends StatelessWidget {
                 ),
               ],
             ),
-            BlocBuilder<RadioBloc, RadioState>(
-              buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
-              builder: (context, state) => state.showOfflineBanner
-                  ? const OfflineBanner()
-                  : const SizedBox.shrink(),
+            OfflineBannerFor<RadioBloc, RadioState>(
+              hasData: (state) => state.hasSavedData,
             ),
             const SizedBox(height: 10),
             const Padding(

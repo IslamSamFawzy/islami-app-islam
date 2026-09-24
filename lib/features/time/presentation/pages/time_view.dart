@@ -39,11 +39,8 @@ class _TimeViewBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const HeaderLogo(),
-            BlocBuilder<TimeBloc, TimeState>(
-              buildWhen: (a, b) => a.showOfflineBanner != b.showOfflineBanner,
-              builder: (context, state) => state.showOfflineBanner
-                  ? const OfflineBanner()
-                  : const SizedBox.shrink(),
+            OfflineBannerFor<TimeBloc, TimeState>(
+              hasData: (state) => state.hasSavedData,
             ),
             const SizedBox(height: 10),
             BlocBuilder<TimeBloc, TimeState>(

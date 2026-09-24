@@ -84,9 +84,6 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
       radios: radios,
       reciters: reciters,
       isFromCache: fromCache,
-      // Seed the offline flag so a cold start with no connection shows the
-      // strip immediately (the stream only fires on subsequent changes).
-      isOffline: !await connectivityService.isConnected,
     ));
 
     // Phase 2 — only worth refreshing if what we showed was cached.
@@ -97,7 +94,8 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     _ConnectivityChangedEvent event,
     Emitter<RadioState> emit,
   ) async {
-    emit(state.copyWith(isOffline: !event.online));
+    // The offline strip is driven by ConnectivityCubit; this bloc only reacts
+    // to coming back online.
     if (!event.online) return;
 
     // Back online: retry a failed load, otherwise refresh in the background.
@@ -148,7 +146,8 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
   ) async {
     // Live streams are online-only; say so instead of failing silently.
     // (Pausing the one that is already playing needs no connection.)
-    if (!_playback.isCurrent(event.id) && state.isOffline) {
+    if (!_playback.isCurrent(event.id) &&
+        !await connectivityService.isConnected) {
       emit(state.copyWith(
         notice: state.notice.next('Live radio needs an internet connection.'),
       ));

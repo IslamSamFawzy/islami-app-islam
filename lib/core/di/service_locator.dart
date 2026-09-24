@@ -58,6 +58,7 @@ import '../../features/time/domain/usecases/get_prayer_times.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
 import '../cache/cache_manager.dart';
 import '../cache/json_store.dart';
+import '../presentation/connectivity_cubit.dart';
 import '../network/api_client.dart';
 import '../services/audio_player_service.dart';
 import '../services/compass_service.dart';
@@ -103,6 +104,11 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ConnectivityService>(
     () => ConnectivityPlusService(),
+  );
+
+  // App-wide "are we online?", provided above the MaterialApp.
+  sl.registerLazySingleton<ConnectivityCubit>(
+    () => ConnectivityCubit(connectivityService: sl()),
   );
   sl.registerLazySingleton<DownloadService>(() => DownloadServiceImpl());
 
