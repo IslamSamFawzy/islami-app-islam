@@ -65,9 +65,13 @@ String _monthKey(DateTime when) =>
 
 /// Forces the Cairo fallback so tests don't touch platform location services.
 class _FakeLocation implements LocationService {
+  final LocationException error;
+
+  const _FakeLocation([this.error = const LocationPermissionDeniedException()]);
+
   @override
   Future<GeoPoint> getCurrentPosition() async {
-    throw const LocationPermissionDeniedException();
+    throw error;
   }
 }
 
@@ -86,6 +90,25 @@ void main() {
       localDataSource: local,
       locationService: _FakeLocation(),
     );
+  });
+
+  test('a location timeout falls back to Cairo instead of throwing', () async {
+    // The service now gives up after 15s rather than hanging; the repository
+    // must treat that like any other missing location.
+    repo = PrayerRepositoryImpl(
+      remoteDataSource: remote,
+      localDataSource: local,
+      locationService: const _FakeLocation(LocationTimeoutException()),
+    );
+    remote.month = [_dayFor(now)];
+
+    final result = await repo.getPrayerTimes();
+
+    result.fold((f) => fail('expected Right, got $f'), (r) {
+      expect(r.data.prayers.first.time.day, now.day);
+    });
+    // Cairo's key: proof the fallback coordinates were used.
+    expect(local.writtenKeys, [_monthKey(now)]);
   });
 
   test('serves today from a cached month with no network call', () async {

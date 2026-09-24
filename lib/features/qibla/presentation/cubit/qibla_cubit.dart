@@ -81,8 +81,9 @@ class QiblaCubit extends Cubit<QiblaState> {
         ),
       );
     } on LocationException catch (e) {
-      // Offline / denied / disabled — Qibla needs no network, so fall back to
-      // the last known coordinates (and their declination) if we have them.
+      // Offline / denied / disabled / no fix in time — Qibla needs no network,
+      // so fall back to the last known coordinates (and their declination) if
+      // we have them.
       final saved = lastLocationRepository.read();
       if (saved != null) {
         lat = saved.latitude;
@@ -91,9 +92,13 @@ class QiblaCubit extends Cubit<QiblaState> {
         usingCache = true;
       } else {
         emit(QiblaState(
-          status: e is LocationServiceDisabledException
-              ? QiblaStatus.serviceDisabled
-              : QiblaStatus.permissionDenied,
+          // A timeout is neither a denial nor a switched-off service: it gets
+          // the plain error state, which offers the same Retry button.
+          status: switch (e) {
+            LocationServiceDisabledException() => QiblaStatus.serviceDisabled,
+            LocationTimeoutException() => QiblaStatus.error,
+            _ => QiblaStatus.permissionDenied,
+          },
           errorMessage: e.message,
         ));
         return;

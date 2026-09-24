@@ -216,6 +216,34 @@ void main() {
     await cubit.close();
   });
 
+  test('a timeout maps to the plain error state, which offers Retry',
+      () async {
+    final cubit = build(
+      location: _FakeLocation(error: const LocationTimeoutException()),
+    );
+
+    await cubit.init();
+
+    // Not permissionDenied: nothing was refused, the fix just never arrived.
+    expect(cubit.state.status, QiblaStatus.error);
+    expect(cubit.state.errorMessage, isNotEmpty);
+    await cubit.close();
+  });
+
+  test('a timeout still uses the saved location when there is one', () async {
+    await cache.write('qibla_last_location',
+        {'lat': 30.0444, 'lng': 31.2357, 'declination': 5.0});
+    final cubit = build(
+      location: _FakeLocation(error: const LocationTimeoutException()),
+    );
+
+    await cubit.init();
+
+    expect(cubit.state.status, QiblaStatus.ready);
+    expect(cubit.state.usingCachedLocation, isTrue);
+    await cubit.close();
+  });
+
   test('the exception type decides the status, not its wording', () async {
     // The message used to be searched for the word "disabled"; a differently
     // worded (or localised) message must still land on serviceDisabled.

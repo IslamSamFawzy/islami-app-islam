@@ -52,3 +52,11 @@ class LocationPermissionDeniedException extends LocationException {
     super.message = 'Location permission denied',
   ]);
 }
+
+/// No fix arrived before the deadline — the device is indoors, has no GPS
+/// signal, or the provider is simply slow.
+class LocationTimeoutException extends LocationException {
+  const LocationTimeoutException([
+    super.message = 'Could not get your location in time',
+  ]);
+}
