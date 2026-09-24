@@ -2,23 +2,24 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../intro/presentation/cubit/intro_cubit.dart' show onboardingSeenKey;
+import '../../../onboarding/domain/repositories/onboarding_repository.dart';
 
 part 'splash_state.dart';
 
 class SplashCubit extends Cubit<SplashState> {
-  final SharedPreferences _prefs;
+  final OnboardingRepository onboardingRepository;
+
   Timer? _timer;
 
-  SplashCubit(this._prefs) : super(const SplashState());
+  SplashCubit(this.onboardingRepository) : super(const SplashState());
 
   /// Waits out the splash delay, then reports whether onboarding was already
   /// seen so the view can route to Intro (first launch) or Home.
   void startTimer({Duration duration = const Duration(seconds: 3)}) {
-    _timer = Timer(duration, () {
-      final seen = _prefs.getBool(onboardingSeenKey) ?? false;
+    _timer = Timer(duration, () async {
+      final seen = await onboardingRepository.hasSeenOnboarding();
+      if (isClosed) return;
       emit(SplashState(status: SplashStatus.navigate, onboardingSeen: seen));
     });
   }

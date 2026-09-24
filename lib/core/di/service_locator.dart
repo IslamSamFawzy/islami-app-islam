@@ -24,6 +24,9 @@ import '../../features/hadith/data/repositories/hadith_repository_impl.dart';
 import '../../features/hadith/domain/repositories/hadith_repository.dart';
 import '../../features/hadith/domain/usecases/get_all_hadiths.dart';
 import '../../features/hadith/presentation/bloc/hadith_bloc.dart';
+// Onboarding (shared by Intro and Splash)
+import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
 // Qibla feature
 import '../../features/qibla/data/repositories/last_location_repository_impl.dart';
 import '../../features/qibla/domain/repositories/last_location_repository.dart';
@@ -92,6 +95,10 @@ Future<void> init() async {
   // Plain JSON storage for state the app owns (e.g. the downloads index).
   sl.registerLazySingleton<JsonStore>(
     () => JsonStore(sharedPreferences: sl()),
+  );
+
+  sl.registerLazySingleton<OnboardingRepository>(
+    () => OnboardingRepositoryImpl(sharedPreferences: sl()),
   );
 
   // Core services
