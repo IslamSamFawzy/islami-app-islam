@@ -5,6 +5,9 @@ class QuranState extends Equatable {
   final List<Sura> allSuras;
   final List<Sura> filteredSuras;
   final List<Sura> recentSuras;
+
+  /// Where the reader stopped in each recent sura, by sura number.
+  final Map<int, ReadingProgress> recentProgress;
   final String query;
   final String errorMessage;
 
@@ -13,6 +16,7 @@ class QuranState extends Equatable {
     this.allSuras = const [],
     this.filteredSuras = const [],
     this.recentSuras = const [],
+    this.recentProgress = const {},
     this.query = '',
     this.errorMessage = '',
   });
@@ -22,6 +26,7 @@ class QuranState extends Equatable {
     List<Sura>? allSuras,
     List<Sura>? filteredSuras,
     List<Sura>? recentSuras,
+    Map<int, ReadingProgress>? recentProgress,
     String? query,
     String? errorMessage,
   }) {
@@ -30,12 +35,20 @@ class QuranState extends Equatable {
       allSuras: allSuras ?? this.allSuras,
       filteredSuras: filteredSuras ?? this.filteredSuras,
       recentSuras: recentSuras ?? this.recentSuras,
+      recentProgress: recentProgress ?? this.recentProgress,
       query: query ?? this.query,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [status, allSuras, filteredSuras, recentSuras, query, errorMessage];
+  List<Object?> get props => [
+    status,
+    allSuras,
+    filteredSuras,
+    recentSuras,
+    recentProgress,
+    query,
+    errorMessage,
+  ];
 }

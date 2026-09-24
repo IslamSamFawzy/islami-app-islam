@@ -1,8 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/cache/json_store.dart';
 import '../../../../core/constants/sura_names.dart';
 import '../../../../core/error/exceptions.dart';
+import '../models/reading_progress_model.dart';
 import '../models/sura_model.dart';
 
 /// Contract for the local Quran data source.
@@ -18,15 +20,29 @@ abstract class QuranLocalDataSource {
 
   /// Records [suraId] as the most recently read sura (deduped, capped).
   Future<void> addRecentSuraId(int suraId);
+
+  /// How far the reader got in [suraId], or `null` if they never read it.
+  Future<ReadingProgressModel?> getProgress(int suraId);
+
+  /// Stores how far the reader got.
+  Future<void> saveProgress(ReadingProgressModel progress);
 }
 
 class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   final SharedPreferences sharedPreferences;
+  final JsonStore jsonStore;
 
-  QuranLocalDataSourceImpl({required this.sharedPreferences});
+  QuranLocalDataSourceImpl({
+    required this.sharedPreferences,
+    required this.jsonStore,
+  });
 
   /// Key under which the recent sura IDs are stored.
   static const String _recentKey = 'recent_sura_ids';
+
+  /// Key for the `suraId -> {ayahIndex, updatedAt}` map. Separate from the
+  /// recents, which keep their own order and their own key.
+  static const String _progressKey = 'reading_progress';
 
   /// Maximum number of recent suras kept.
   static const int _recentLimit = 10;
@@ -74,6 +90,31 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       await sharedPreferences.setStringList(_recentKey, capped);
     } catch (e) {
       throw LocalDataException('Failed to save recent sura: $e');
+    }
+  }
+
+  @override
+  Future<ReadingProgressModel?> getProgress(int suraId) async {
+    try {
+      final stored = jsonStore.readMap(_progressKey)['$suraId'];
+      if (stored is! Map) return null;
+      return ReadingProgressModel.fromEntry(
+        suraId,
+        stored.cast<String, dynamic>(),
+      );
+    } catch (e) {
+      throw LocalDataException('Failed to load reading progress: $e');
+    }
+  }
+
+  @override
+  Future<void> saveProgress(ReadingProgressModel progress) async {
+    try {
+      final all = jsonStore.readMap(_progressKey);
+      all['${progress.suraId}'] = progress.toJson();
+      await jsonStore.writeMap(_progressKey, all);
+    } catch (e) {
+      throw LocalDataException('Failed to save reading progress: $e');
     }
   }
 

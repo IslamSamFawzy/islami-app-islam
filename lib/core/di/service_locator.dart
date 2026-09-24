@@ -39,7 +39,9 @@ import '../../features/quran/domain/services/sura_search_filter.dart';
 import '../../features/quran/domain/usecases/add_recent_sura.dart';
 import '../../features/quran/domain/usecases/get_all_suras.dart';
 import '../../features/quran/domain/usecases/get_recent_suras.dart';
+import '../../features/quran/domain/usecases/get_reading_progress.dart';
 import '../../features/quran/domain/usecases/get_sura_verses.dart';
+import '../../features/quran/domain/usecases/save_reading_progress.dart';
 import '../../features/quran/presentation/bloc/details/quran_details_bloc.dart';
 import '../../features/quran/presentation/bloc/quran_bloc.dart';
 // Radio feature
@@ -149,16 +151,25 @@ Future<void> init() async {
       getAllSuras: sl(),
       getRecentSuras: sl(),
       addRecentSura: sl(),
+      getReadingProgress: sl(),
       suraSearchFilter: sl(),
     ),
   );
-  sl.registerFactory(() => QuranDetailsBloc(getSuraVerses: sl()));
+  sl.registerFactory(
+    () => QuranDetailsBloc(
+      getSuraVerses: sl(),
+      getReadingProgress: sl(),
+      saveReadingProgress: sl(),
+    ),
+  );
 
   // Use cases (singleton: created once, reused)
   sl.registerLazySingleton(() => GetAllSuras(sl()));
   sl.registerLazySingleton(() => GetSuraVerses(sl()));
   sl.registerLazySingleton(() => GetRecentSuras(sl()));
   sl.registerLazySingleton(() => AddRecentSura(sl()));
+  sl.registerLazySingleton(() => GetReadingProgress(sl()));
+  sl.registerLazySingleton(() => SaveReadingProgress(sl()));
 
   // Repository
   sl.registerLazySingleton<QuranRepository>(
@@ -167,7 +178,7 @@ Future<void> init() async {
 
   // Data source
   sl.registerLazySingleton<QuranLocalDataSource>(
-    () => QuranLocalDataSourceImpl(sharedPreferences: sl()),
+    () => QuranLocalDataSourceImpl(sharedPreferences: sl(), jsonStore: sl()),
   );
 
   // ---------------------------------------------------------------------------

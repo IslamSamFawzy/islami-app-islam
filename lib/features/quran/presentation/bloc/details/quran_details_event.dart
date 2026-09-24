@@ -7,18 +7,19 @@ abstract class QuranDetailsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Loads the verses for the sura identified by [suraId].
+/// Loads the verses for the sura identified by [suraId]. With [resume] the
+/// list opens where the reader left off instead of at the top.
 class LoadVersesEvent extends QuranDetailsEvent {
   final int suraId;
+  final bool resume;
 
-  const LoadVersesEvent(this.suraId);
+  const LoadVersesEvent(this.suraId, {this.resume = false});
 
   @override
-  List<Object?> get props => [suraId];
+  List<Object?> get props => [suraId, resume];
 }
 
-/// Selects (or, if already selected, deselects) the ayah at [index] so it is
-/// rendered filled gold with dark text — the "currently read" state (spec §2.4).
+/// Taps an ayah, which highlights it (or clears the highlight).
 class SelectVerseEvent extends QuranDetailsEvent {
   final int index;
 
@@ -26,4 +27,25 @@ class SelectVerseEvent extends QuranDetailsEvent {
 
   @override
   List<Object?> get props => [index];
+}
+
+/// The first fully visible ayah changed as the reader scrolled.
+class VerseVisibleEvent extends QuranDetailsEvent {
+  final int index;
+
+  const VerseVisibleEvent(this.index);
+
+  @override
+  List<Object?> get props => [index];
+}
+
+/// Writes the position now rather than waiting out the debounce — used when
+/// the app goes to the background.
+class SaveProgressNowEvent extends QuranDetailsEvent {
+  const SaveProgressNowEvent();
+}
+
+/// Internal: the resumed ayah has been highlighted long enough.
+class _ClearHighlightEvent extends QuranDetailsEvent {
+  const _ClearHighlightEvent();
 }

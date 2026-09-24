@@ -6,12 +6,17 @@ class QuranDetailsState extends Equatable {
 
   /// Index of the ayah rendered filled-gold ("currently read"); -1 = none.
   final int selectedIndex;
+
+  /// Where the list should open; -1 = at the top.
+  final int initialIndex;
+
   final String errorMessage;
 
   const QuranDetailsState({
     this.status = ViewStatus.initial,
     this.verses = const [],
     this.selectedIndex = -1,
+    this.initialIndex = -1,
     this.errorMessage = '',
   });
 
@@ -19,16 +24,24 @@ class QuranDetailsState extends Equatable {
     ViewStatus? status,
     List<String>? verses,
     int? selectedIndex,
+    int? initialIndex,
     String? errorMessage,
   }) {
     return QuranDetailsState(
       status: status ?? this.status,
       verses: verses ?? this.verses,
       selectedIndex: selectedIndex ?? this.selectedIndex,
+      initialIndex: initialIndex ?? this.initialIndex,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [status, verses, selectedIndex, errorMessage];
+  List<Object?> get props => [
+    status,
+    verses,
+    selectedIndex,
+    initialIndex,
+    errorMessage,
+  ];
 }

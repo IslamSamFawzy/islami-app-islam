@@ -52,8 +52,11 @@ class MostRecentlyWidget extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   itemBuilder: (context, index) {
                     final sura = recent[index];
+                    final progress = state.recentProgress[sura.id];
                     return GestureDetector(
-                      onTap: () => openSura(context, sura),
+                      // Recents pick up where the reader stopped; the list
+                      // below always opens at the top.
+                      onTap: () => openSura(context, sura, resume: true),
                       child: Container(
                         height: 145,
                         padding: const EdgeInsets.all(12),
@@ -88,6 +91,17 @@ class MostRecentlyWidget extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.bodyMedium,
                                   ),
+                                  if (progress != null)
+                                    Text(
+                                      'Ayah ${progress.ayahNumber}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyMedium!
+                                          .copyWith(
+                                            color: AppColors.backgroundColor
+                                                .withValues(alpha: 0.7),
+                                          ),
+                                    ),
                                 ],
                               ),
                             ),
