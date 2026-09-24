@@ -1,5 +1,5 @@
 name: islami
-description: "A new Flutter project."
+description: "Islami: prayer times and adhan, Quran, azkar, hadith, tasbeh, qibla and Quran radio - offline-first."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -36,11 +36,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.2.3
   carousel_slider: ^5.1.2
-  flutter_native_splash: ^2.4.7
 
   # State management & architecture
   flutter_bloc: ^9.0.0
-  bloc: ^9.0.0
   get_it: ^8.0.3
   equatable: ^2.0.7
   dartz: ^0.10.1
@@ -64,6 +62,9 @@ dev_dependencies:
     sdk: flutter
   build_runner:
   flutter_gen_runner:
+  # Generates the splash screen assets (build-time only - see
+  # flutter_native_splash.yaml).
+  flutter_native_splash: ^2.4.7
   # Generates the Android launcher/adaptive icons from assets/icon/ (build-time
   # only — see flutter_launcher_icons.yaml).
   flutter_launcher_icons: ^0.14.3

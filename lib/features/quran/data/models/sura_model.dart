@@ -1,6 +1,7 @@
 import '../../domain/entities/sura.dart';
 
-/// Data-layer representation of [Sura] with (de)serialization helpers.
+/// Data-layer representation of [Sura]. The list is built from the bundled
+/// SuraNames constants, so there is no JSON to (de)serialise.
 class SuraModel extends Sura {
   const SuraModel({
     required super.id,
@@ -8,22 +9,4 @@ class SuraModel extends Sura {
     required super.nameAr,
     required super.ayaCount,
   });
-
-  factory SuraModel.fromJson(Map<String, dynamic> json) {
-    return SuraModel(
-      id: json['id'] as int,
-      nameEn: json['nameEn'] as String,
-      nameAr: json['nameAr'] as String,
-      ayaCount: json['ayaCount'] as int,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nameEn': nameEn,
-      'nameAr': nameAr,
-      'ayaCount': ayaCount,
-    };
-  }
 }
