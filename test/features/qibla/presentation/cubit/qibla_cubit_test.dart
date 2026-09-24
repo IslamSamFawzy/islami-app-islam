@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/cache/cache_manager.dart';
+import 'package:islami/features/qibla/data/repositories/last_location_repository_impl.dart';
 import 'package:islami/core/error/exceptions.dart';
 import 'package:islami/core/services/compass_service.dart';
 import 'package:islami/core/services/declination_service.dart';
@@ -75,7 +76,9 @@ void main() {
         locationService: location ?? _FakeLocation(position: _pos(30.0444, 31.2357)),
         compassService: compass ?? _FakeCompass(),
         declinationService: declination ?? _FakeDeclination(),
-        cacheManager: cache,
+        lastLocationRepository: LastLocationRepositoryImpl(
+          cacheManager: cache,
+        ),
       );
 
   test('resolves location, computes the Qibla, and caches the coordinates',

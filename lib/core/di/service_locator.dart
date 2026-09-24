@@ -25,6 +25,8 @@ import '../../features/hadith/domain/repositories/hadith_repository.dart';
 import '../../features/hadith/domain/usecases/get_all_hadiths.dart';
 import '../../features/hadith/presentation/bloc/hadith_bloc.dart';
 // Qibla feature
+import '../../features/qibla/data/repositories/last_location_repository_impl.dart';
+import '../../features/qibla/domain/repositories/last_location_repository.dart';
 import '../../features/qibla/presentation/cubit/qibla_cubit.dart';
 // Quran feature
 import '../../features/quran/data/datasources/quran_local_data_source.dart';
@@ -282,7 +284,11 @@ Future<void> init() async {
       locationService: sl(),
       compassService: sl(),
       declinationService: sl(),
-      cacheManager: sl(),
+      lastLocationRepository: sl(),
     ),
+  );
+
+  sl.registerLazySingleton<LastLocationRepository>(
+    () => LastLocationRepositoryImpl(cacheManager: sl()),
   );
 }

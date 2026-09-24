@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/cache/cache_manager.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/services/compass_service.dart';
 import '../../../../core/services/declination_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/qibla_calculator.dart';
+import '../../domain/entities/saved_location.dart';
+import '../../domain/repositories/last_location_repository.dart';
 
 part 'qibla_state.dart';
 
@@ -22,7 +23,7 @@ class QiblaCubit extends Cubit<QiblaState> {
   final LocationService locationService;
   final CompassService compassService;
   final DeclinationService declinationService;
-  final CacheManager cacheManager;
+  final LastLocationRepository lastLocationRepository;
 
   StreamSubscription<CompassReading>? _compassSub;
   Timer? _sensorTimeout;
@@ -31,11 +32,8 @@ class QiblaCubit extends Cubit<QiblaState> {
     required this.locationService,
     required this.compassService,
     required this.declinationService,
-    required this.cacheManager,
+    required this.lastLocationRepository,
   }) : super(const QiblaState());
-
-  /// Cache key for the last known coordinates (offline fallback).
-  static const String _cacheKey = 'qibla_last_location';
 
   /// The needle counts as "on the Qibla" within this many degrees.
   static const double alignmentThresholdDeg = 5.0;
@@ -75,15 +73,21 @@ class QiblaCubit extends Cubit<QiblaState> {
       lat = position.latitude;
       lng = position.longitude;
       _declination = await _resolveDeclination(lat, lng, position.altitude);
-      await _cacheLocation(lat, lng, _declination);
+      await lastLocationRepository.save(
+        SavedLocation(
+          latitude: lat,
+          longitude: lng,
+          declination: _declination,
+        ),
+      );
     } on LocationException catch (e) {
       // Offline / denied / disabled — Qibla needs no network, so fall back to
       // the last known coordinates (and their declination) if we have them.
-      final saved = _readCachedLocation();
+      final saved = lastLocationRepository.read();
       if (saved != null) {
-        lat = saved.$1;
-        lng = saved.$2;
-        _declination = saved.$3;
+        lat = saved.latitude;
+        lng = saved.longitude;
+        _declination = saved.declination;
         usingCache = true;
       } else {
         emit(QiblaState(
@@ -178,36 +182,6 @@ class QiblaCubit extends Cubit<QiblaState> {
     } catch (_) {
       return 0;
     }
-  }
-
-  Future<void> _cacheLocation(
-      double lat, double lng, double declination) async {
-    try {
-      await cacheManager.write(_cacheKey, {
-        'lat': lat,
-        'lng': lng,
-        'declination': declination,
-      });
-    } catch (_) {
-      // Best-effort — the screen still works this session without the cache.
-    }
-  }
-
-  (double, double, double)? _readCachedLocation() {
-    final data = cacheManager.read(_cacheKey)?['data'];
-    if (data is Map) {
-      final lat = data['lat'];
-      final lng = data['lng'];
-      final declination = data['declination'];
-      if (lat is num && lng is num) {
-        return (
-          lat.toDouble(),
-          lng.toDouble(),
-          declination is num ? declination.toDouble() : 0.0,
-        );
-      }
-    }
-    return null;
   }
 
   /// Wraps [deg] into `[0, 360)`.
