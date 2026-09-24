@@ -6,10 +6,11 @@
 
 ## App name (≤30 characters)
 
-* English: **Islami — Prayer Times & Quran** (29)
-* Arabic: **إسلامي — مواقيت الصلاة والقرآن** (30)
+* English: **Islami: Quran, Adhan & Qibla** (28)
+* Arabic: **إسلامي: قرآن وأذان وقبلة** (24)
 
-If the name is taken, `Islami: Salah & Quran` (22) is the fallback.
+The launcher label on the phone stays `Islami` — Play's listing name and the
+app's own label are separate, and the short one is what fits under the icon.
 
 ## Short description (≤80 characters)
 
@@ -33,6 +34,10 @@ offline.
 **The Quran**
 All 114 suras, with search that understands both English and Arabic (type
 "بقره" or "Baqarah" or just "2"). Recently read suras open where you stopped.
+
+**Fifty hadiths**
+Fifty hadiths in Arabic, each with the narration it comes from, one card at a
+time in a carousel you can swipe through.
 
 **Recitations and radio**
 Listen to Quran radio stations, or pick a reciter and play any sura. Download
@@ -62,6 +67,9 @@ No account, no adverts, no tracking. What the app keeps, it keeps on your phone.
 السور الـ114 كاملة، مع بحث يفهم العربية والإنجليزية (اكتب «بقره» أو «Baqarah» أو
 «2»). والسور التي قرأتها تُفتح من حيث توقفت.
 
+**خمسون حديثًا**
+خمسون حديثًا بالعربية مع تخريج كلٍّ منها، حديثًا حديثًا في عرض تتنقَّل بينه.
+
 **التلاوات والإذاعات**
 إذاعات قرآنية، أو اختر قارئًا واستمع لأي سورة. حمِّل ما تريد ليعمل بدون إنترنت.
 
@@ -74,20 +82,22 @@ No account, no adverts, no tracking. What the app keeps, it keeps on your phone.
 
 بلا حسابات، بلا إعلانات، وبلا تتبُّع. وما يحفظه التطبيق يبقى على هاتفك.
 
-## Screenshots to capture (phone, at least 4, up to 8)
+## Screenshots (8, in this order)
 
-Capture on a 1080×1920-or-larger phone, app in its normal dark theme:
+Captured on the `Pixel_9_Pro_XL` emulator at 1344×2992 (well over Play's
+1080×1920 minimum), release build, normal dark theme. Files live in
+`docs/release/screenshots/`; upload them to Play in this order.
 
-1. **Prayer times** — Time tab with the card showing today's prayers and the
-   countdown, taken at a time of day when the next prayer is a few hours off.
-2. **Adhan settings** — the gear screen, master switch on, all five prayers on.
-3. **Quran list** — the suras list with a couple of entries in Most Recently,
-   one of them showing "Ayah N".
-4. **Reading a sura** — the details screen mid-sura, one ayah highlighted.
-5. **Reciters / radio** — the Radio tab on the Reciters list.
-6. **Downloads** — the library with two or three saved suras and the total size.
-7. **How to pray** — the Salah tab, overview page, figure mid-posture.
-8. **Qibla** — the compass aligned, showing the distance to Mecca.
+| # | File | Exact state to capture |
+|---|---|---|
+| 1 | `01-prayer-times.png` | Time tab, prayer card showing today's date (Gregorian + Hijri), the three prayers with the next one raised, and the "Next Pray" countdown running. No offline banner. |
+| 2 | `02-adhan-settings.png` | The gear screen: "Adhan notifications" on, all five prayer switches on, exact-alarm row absent (permission already granted). |
+| 3 | `03-quran-list.png` | Quran tab with the "Most Recently" card showing Al-Baqarah and its "Ayah N" line, and the suras list beneath it. |
+| 4 | `04-sura-reading.png` | Al-Baqarah open, scrolled a little way in, so several ayah cards and the sura header are visible. |
+| 5 | `05-reciters.png` | Radio tab on the Reciters toggle, the reciter list loaded. |
+| 6 | `06-downloads.png` | Downloads screen with at least two saved suras under one reciter and the "Total on device" line. |
+| 7 | `07-prayer-guide.png` | Salah tab, overview card with the figure mid-posture (not standing still). |
+| 8 | `08-qibla.png` | Qibla compass resolved, needle drawn, with the bearing and "km to Mecca" beneath it. |
 
 ## Category and contact
 
@@ -95,5 +105,7 @@ Capture on a 1080×1920-or-larger phone, app in its normal dark theme:
   is where comparable prayer-time apps sit).
 * Content rating questionnaire: no user-generated content, no ads, no
   purchases — expect "Everyone".
-* Contact email, website and privacy-policy URL: **owner to provide** (the
-  privacy policy in this folder needs a public URL before submission).
+* Contact email: **admin@thecofounderstudio.com**
+* Privacy-policy URL: **https://islamsamfawzy.github.io/islami-app-islam/privacy/**
+  (served by GitHub Pages from `docs/privacy/index.html` in this repository).
+* Website: none — the privacy-policy page is the only public page.

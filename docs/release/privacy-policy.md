@@ -1,8 +1,10 @@
-# Privacy policy (draft)
+# Privacy policy
 
-> Draft for review, not final legal text. Everything below is taken from what
-> the code actually does; the owner should confirm the contact address and the
-> effective date before publishing it.
+> This is the source text. The published page is `docs/privacy/index.html`
+> (Arabic first, then English), served at https://islamsamfawzy.github.io/islami-app-islam/privacy/.
+>
+> **Effective date: 24 September 2026.** Everything below is taken from what the code
+> actually does.
 
 **Islami** does not have accounts, does not show adverts, and does not use
 analytics or any tracking SDK. There is no server of ours: what the app keeps,
@@ -53,6 +55,6 @@ The app is suitable for all ages and collects nothing that identifies anyone.
 ## Changes and contact
 
 If this policy changes, the new version will be published at the same address
-and the app's store listing will point at it.
+(https://islamsamfawzy.github.io/islami-app-islam/privacy/) and the app's store listing will point at it.
 
-Contact: **<owner to fill in — the address the store listing will show>**
+Contact: **admin@thecofounderstudio.com**

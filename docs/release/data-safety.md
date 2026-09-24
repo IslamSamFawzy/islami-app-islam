@@ -44,6 +44,11 @@ position, the "seen the intro" flag). Uninstalling removes all of it.
 | Can users request deletion? | **Yes — by uninstalling** | Nothing is held anywhere else; there is nothing for us to delete. |
 | Has your app been independently validated? | No | No such review has been done. |
 
+## Privacy policy
+
+The URL Play asks for: **https://islamsamfawzy.github.io/islami-app-islam/privacy/**
+(source text in `privacy-policy.md`, published page in `docs/privacy/`).
+
 ## To confirm before submitting
 
 * Nothing outstanding for the security answers. The recitation audio URLs come
