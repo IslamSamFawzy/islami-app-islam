@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/sura.dart';
-import '../bloc/quran_bloc.dart';
-import '../pages/quran_details_view.dart';
+import '../open_sura.dart';
 
 class SuraItem extends StatelessWidget {
   final Sura sura;
@@ -17,15 +15,7 @@ class SuraItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: () {
-        // Record this sura as recently read, then open it.
-        context.read<QuranBloc>().add(MarkSuraAsReadEvent(sura));
-        Navigator.pushNamed(
-          context,
-          QuranDetailsView.routeName,
-          arguments: sura,
-        );
-      },
+      onTap: () => openSura(context, sura),
       child: Row(
         children: [
           Stack(

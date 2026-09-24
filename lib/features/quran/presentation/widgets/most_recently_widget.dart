@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/quran_bloc.dart';
-import '../pages/quran_details_view.dart';
+import '../open_sura.dart';
 
 class MostRecentlyWidget extends StatelessWidget {
   const MostRecentlyWidget({super.key});
@@ -53,16 +53,7 @@ class MostRecentlyWidget extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final sura = recent[index];
                     return GestureDetector(
-                      onTap: () {
-                        context
-                            .read<QuranBloc>()
-                            .add(MarkSuraAsReadEvent(sura));
-                        Navigator.pushNamed(
-                          context,
-                          QuranDetailsView.routeName,
-                          arguments: sura,
-                        );
-                      },
+                      onTap: () => openSura(context, sura),
                       child: Container(
                         height: 145,
                         padding: const EdgeInsets.all(12),
