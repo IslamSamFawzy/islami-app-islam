@@ -1,3 +1,4 @@
+import '../../../../core/network/secure_url.dart';
 import '../../domain/entities/radio_station.dart';
 
 class RadioStationModel extends RadioStation {
@@ -13,7 +14,9 @@ class RadioStationModel extends RadioStation {
     return RadioStationModel(
       id: (json['id'] as num?)?.toInt() ?? 0,
       name: (json['name'] as String?) ?? '',
-      url: (json['url'] as String?) ?? '',
+      // Covers both paths: a cleartext stream URL from the API, and one a
+      // previous build cached before this.
+      url: secureUrl((json['url'] as String?) ?? ''),
     );
   }
 

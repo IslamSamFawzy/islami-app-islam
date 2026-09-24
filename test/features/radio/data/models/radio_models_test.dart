@@ -12,6 +12,28 @@ void main() {
       );
       expect(RadioStationModel.fromJson(model.toJson()), model);
     });
+
+    test('a cleartext stream URL is upgraded to https', () {
+      // One factory serves both the API and the cache, so this covers a
+      // cleartext URL from either.
+      final model = RadioStationModel.fromJson({
+        'id': 7,
+        'name': 'إذاعة القرآن الكريم',
+        'url': 'http://stream.radiojar.com/8s5u5tpdtwzuv',
+      });
+
+      expect(model.url, 'https://stream.radiojar.com/8s5u5tpdtwzuv');
+    });
+
+    test('an https stream URL is left exactly as it is', () {
+      final model = RadioStationModel.fromJson({
+        'id': 7,
+        'name': 'x',
+        'url': 'https://stream.radiojar.com/8s5u5tpdtwzuv',
+      });
+
+      expect(model.url, 'https://stream.radiojar.com/8s5u5tpdtwzuv');
+    });
   });
 
   group('ReciterModel', () {
