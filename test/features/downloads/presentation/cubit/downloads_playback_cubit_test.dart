@@ -19,36 +19,54 @@ import 'package:islami/features/downloads/presentation/bloc/downloads_bloc.dart'
 import 'package:islami/features/downloads/presentation/cubit/downloads_playback_cubit.dart';
 
 class _FakeAudio implements AudioPlayerService {
-  final _controller = StreamController<bool>.broadcast();
+  final _controller = StreamController<AudioStatus>.broadcast(sync: true);
+  AudioStatus _status = const AudioStatus();
   String? playedFile;
   int stops = 0;
   int pauses = 0;
   int resumes = 0;
-  bool _playing = false;
 
   @override
-  Stream<bool> get isPlayingStream => _controller.stream;
+  Stream<AudioStatus> get statusStream => _controller.stream;
   @override
-  bool get isPlaying => _playing;
+  AudioStatus get status => _status;
   @override
-  Future<void> playFile(String path) async => playedFile = path;
+  bool get isPlaying => _status.isPlaying;
   @override
-  Future<void> playUrl(String url) async {}
+  Future<void> playFile(String path, {required String tag}) async {
+    playedFile = path;
+    _emit(AudioStatus(tag: tag, isPlaying: true));
+  }
+
   @override
-  Future<void> pause() async => pauses++;
+  Future<void> playUrl(String url, {required String tag}) async =>
+      _emit(AudioStatus(tag: tag, isPlaying: true));
   @override
-  Future<void> resume() async => resumes++;
+  Future<void> pause() async {
+    pauses++;
+    _emit(AudioStatus(tag: _status.tag));
+  }
+
+  @override
+  Future<void> resume() async {
+    resumes++;
+    _emit(AudioStatus(tag: _status.tag, isPlaying: true));
+  }
+
   @override
   Future<void> togglePause() => isPlaying ? pause() : resume();
   @override
-  Future<void> stop() async => stops++;
+  Future<void> stop() async {
+    stops++;
+    _emit(const AudioStatus());
+  }
+
   @override
   Future<void> dispose() async => _controller.close();
 
-  /// Mimics the player reporting that it started or stopped playing.
-  void emitPlaying(bool playing) {
-    _playing = playing;
-    _controller.add(playing);
+  void _emit(AudioStatus status) {
+    _status = status;
+    _controller.add(status);
   }
 }
 
@@ -176,14 +194,12 @@ void main() {
 
     final cubit = build();
     await cubit.toggle(entry); // start
-    audio.emitPlaying(true);
-    await _settle();
+    expect(cubit.state.isPlaying, isTrue);
 
     await cubit.toggle(entry); // same → pause
     expect(audio.pauses, 1);
+    expect(cubit.state.isPlaying, isFalse);
 
-    audio.emitPlaying(false);
-    await _settle();
     await cubit.toggle(entry); // same → resume
     expect(audio.resumes, 1);
 

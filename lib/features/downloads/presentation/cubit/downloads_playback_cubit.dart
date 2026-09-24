@@ -35,7 +35,10 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
     required this.findDownloadedFile,
     required this.downloadsBloc,
   }) : super(const DownloadsPlaybackState()) {
-    _playback = PlaybackController(audioPlayerService: audioPlayerService);
+    _playback = PlaybackController(
+      audioPlayerService: audioPlayerService,
+      owner: 'downloads',
+    );
     _sub = _playback.statusStream.listen((status) {
       if (isClosed) return;
       final id = status.currentId;
@@ -70,7 +73,7 @@ class DownloadsPlaybackCubit extends Cubit<DownloadsPlaybackState> {
       return;
     }
 
-    await _playback.play(id, () => audioPlayerService.playFile(path));
+    await _playback.toggleFile(id: id, path: path);
   }
 
   /// Stops playback if [entry] is the one playing — call before deleting it so

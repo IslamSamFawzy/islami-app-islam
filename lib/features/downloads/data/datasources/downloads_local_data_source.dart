@@ -61,7 +61,8 @@ class DownloadsLocalDataSourceImpl implements DownloadsLocalDataSource {
 
   @override
   Future<void> removeReciter(String reciterId) async {
-    final map = _read()..removeWhere((k, _) => k.startsWith('$reciterId/'));
+    final map = _read()
+      ..removeWhere((key, _) => DownloadKey.parse(key).reciterId == reciterId);
     await _write(map);
   }
 }

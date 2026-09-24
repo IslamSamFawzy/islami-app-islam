@@ -42,7 +42,10 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     on<PlayItemEvent>(_onPlayItem);
     on<_PlaybackChangedEvent>(_onPlaybackChanged);
 
-    _playback = PlaybackController(audioPlayerService: audioPlayerService);
+    _playback = PlaybackController(
+      audioPlayerService: audioPlayerService,
+      owner: 'radio',
+    );
     _playbackSub = _playback.statusStream.listen((status) {
       if (!isClosed) add(_PlaybackChangedEvent(status));
     });
@@ -143,13 +146,9 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     PlayItemEvent event,
     Emitter<RadioState> emit,
   ) async {
-    // Tapping the currently playing item toggles pause/resume.
-    if (_playback.isCurrent(event.id)) {
-      await _playback.togglePause();
-      return;
-    }
     // Live streams are online-only; say so instead of failing silently.
-    if (state.isOffline) {
+    // (Pausing the one that is already playing needs no connection.)
+    if (!_playback.isCurrent(event.id) && state.isOffline) {
       emit(state.copyWith(
         notice: state.notice.next('Live radio needs an internet connection.'),
       ));
@@ -158,7 +157,7 @@ class RadioBloc extends Bloc<RadioEvent, RadioState> {
     // Highlight the row now; the controller reports the same id straight back
     // through _PlaybackChangedEvent, which Equatable de-dupes.
     emit(state.copyWith(currentId: event.id));
-    await _playback.play(event.id, () => audioPlayerService.playUrl(event.url));
+    await _playback.toggleUrl(id: event.id, url: event.url);
   }
 
   void _onPlaybackChanged(

@@ -31,7 +31,11 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     required this.findDownloadedFile,
     required this.connectivityService,
   }) : super(const SuraPlaybackState()) {
-    _playback = PlaybackController(audioPlayerService: audioPlayerService);
+    _playback = PlaybackController(
+      audioPlayerService: audioPlayerService,
+      // Per reciter: two reciters both have a sura 2.
+      owner: 'reciter_${reciter.id}',
+    );
     _sub = _playback.statusStream.listen((status) {
       if (!isClosed) {
         emit(
@@ -56,14 +60,14 @@ class SuraPlaybackCubit extends Cubit<SuraPlaybackState> {
     );
     final path = downloaded.getOrElse(() => null);
     if (path != null) {
-      return _playback.play(suraId, () => audioPlayerService.playFile(path));
+      return _playback.toggleFile(id: suraId, path: path);
     }
 
     // Otherwise stream, but only if there is a connection.
     if (await connectivityService.isConnected) {
-      return _playback.play(
-        suraId,
-        () => audioPlayerService.playUrl(reciter.audioUrlFor(sura)),
+      return _playback.toggleUrl(
+        id: suraId,
+        url: reciter.audioUrlFor(sura),
       );
     }
 

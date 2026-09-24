@@ -1,13 +1,11 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
 
 import '../services/audio_player_service.dart';
 
-/// What the player is on: the id its caller gave it, and whether that item is
-/// playing rather than paused.
+/// What one screen's player row should show: which of *its* items is loaded,
+/// and whether that item is playing.
 class PlaybackStatus extends Equatable {
-  /// Empty when this controller has not started anything.
+  /// Empty when the shared player is on nothing, or on another screen's item.
   final String currentId;
 
   final bool isPlaying;
@@ -20,74 +18,79 @@ class PlaybackStatus extends Equatable {
   List<Object?> get props => [currentId, isPlaying];
 }
 
-/// The playback rules every audio screen shares: tapping the item that is
-/// already loaded pauses it (and tapping again resumes), tapping a different
-/// one starts that instead, and leaving the screen stops only the audio this
-/// screen started.
+/// One screen's view of the shared player: the "tap the current item to pause,
+/// tap another to start it" rule, and the rule that a screen only ever stops
+/// audio it started.
 ///
-/// Radio, the reciter sura list and Downloads each kept their own copy of
-/// those rules, along with their own subscription to the player.
+/// It keeps no state of its own. [AudioPlayerService] holds the single tag
+/// saying what is loaded, and this derives everything from it, so when another
+/// screen takes the player over, this one stops claiming it at once.
+///
+/// [owner] namespaces the tag. It must identify the screen *and* what it is
+/// listing — a reciter's sura list passes its reciter id, or two reciters
+/// would each think sura 2 was theirs.
 class PlaybackController {
   final AudioPlayerService audioPlayerService;
+  final String owner;
 
-  // Synchronous so a bloc or cubit mirrors the change in the same turn it is
-  // made — the row highlights the moment playback is asked for, not a
-  // microtask later.
-  final _statusController = StreamController<PlaybackStatus>.broadcast(
-    sync: true,
-  );
-  late final StreamSubscription<bool> _playingSub;
+  PlaybackController({required this.audioPlayerService, required this.owner});
 
-  PlaybackStatus _status = const PlaybackStatus();
+  /// The shared player's view, narrowed to this screen.
+  PlaybackStatus get status => _statusOf(audioPlayerService.status);
 
-  PlaybackController({required this.audioPlayerService}) {
-    _playingSub = audioPlayerService.isPlayingStream.listen((playing) {
-      _emit(PlaybackStatus(currentId: _status.currentId, isPlaying: playing));
-    });
-  }
+  /// Every change, already narrowed — for a bloc or cubit to mirror into its
+  /// own state. Losing the player to another screen arrives as an empty status.
+  Stream<PlaybackStatus> get statusStream =>
+      audioPlayerService.statusStream.map(_statusOf).distinct();
 
-  /// Every change, for the caller to mirror into its own state.
-  Stream<PlaybackStatus> get statusStream => _statusController.stream;
-
-  PlaybackStatus get status => _status;
-
-  bool isCurrent(String id) => _status.isCurrent(id);
+  bool isCurrent(String id) => audioPlayerService.status.tag == _tagFor(id);
 
   /// Pauses or resumes whatever is loaded.
   Future<void> togglePause() => audioPlayerService.togglePause();
 
-  /// Makes [id] the current item, then runs [start] — the call that actually
-  /// hands a URL or a file to the player.
-  Future<void> play(String id, Future<void> Function() start) async {
-    _emit(PlaybackStatus(currentId: id, isPlaying: _status.isPlaying));
-    await start();
+  /// A tap on a streamed item: pause/resume when it is already current, start
+  /// streaming it otherwise.
+  Future<void> toggleUrl({required String id, required String url}) {
+    return isCurrent(id)
+        ? togglePause()
+        : audioPlayerService.playUrl(url, tag: _tagFor(id));
   }
 
-  /// A tap on [id]: pause/resume when it is already current, start it
-  /// otherwise.
-  Future<void> toggle(String id, Future<void> Function() start) {
-    return isCurrent(id) ? togglePause() : play(id, start);
+  /// A tap on a local file.
+  Future<void> toggleFile({required String id, required String path}) {
+    return isCurrent(id)
+        ? togglePause()
+        : audioPlayerService.playFile(path, tag: _tagFor(id));
   }
 
-  /// Stops when the current item matches [test] — before deleting the file
-  /// that is playing, say. Returns whether it stopped anything.
+  /// Stops when one of *this screen's* items is loaded and matches [test] —
+  /// before deleting the file that is playing, say. Returns whether it stopped
+  /// anything.
   Future<bool> stopWhere(bool Function(String id) test) async {
-    if (_status.currentId.isEmpty || !test(_status.currentId)) return false;
+    final id = _idIn(audioPlayerService.status.tag);
+    if (id == null || !test(id)) return false;
     await audioPlayerService.stop();
-    _emit(const PlaybackStatus());
     return true;
   }
 
-  /// Drops the subscription and stops the audio **only if this controller
-  /// started it**, so leaving a screen never cuts off playback owned elsewhere.
+  /// Stops the audio only if the player is still on something this screen
+  /// started, so leaving a screen never cuts off playback owned elsewhere.
   Future<void> close() async {
-    await _playingSub.cancel();
-    if (_status.currentId.isNotEmpty) await audioPlayerService.stop();
-    await _statusController.close();
+    if (_idIn(audioPlayerService.status.tag) != null) {
+      await audioPlayerService.stop();
+    }
   }
 
-  void _emit(PlaybackStatus status) {
-    _status = status;
-    if (!_statusController.isClosed) _statusController.add(status);
+  String _tagFor(String id) => '$owner#$id';
+
+  /// The item id inside [tag] when this screen started it, else `null`.
+  String? _idIn(String tag) =>
+      tag.startsWith('$owner#') ? tag.substring(owner.length + 1) : null;
+
+  PlaybackStatus _statusOf(AudioStatus status) {
+    final id = _idIn(status.tag);
+    return id == null
+        ? const PlaybackStatus()
+        : PlaybackStatus(currentId: id, isPlaying: status.isPlaying);
   }
 }

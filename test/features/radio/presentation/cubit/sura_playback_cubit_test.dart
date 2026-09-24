@@ -14,36 +14,56 @@ import 'package:islami/features/radio/domain/entities/reciter.dart';
 import 'package:islami/features/radio/presentation/cubit/sura_playback_cubit.dart';
 
 class _FakeAudio implements AudioPlayerService {
+  final _controller = StreamController<AudioStatus>.broadcast(sync: true);
+  AudioStatus _status = const AudioStatus();
   String? playedFile;
   String? playedUrl;
   int stops = 0;
 
   @override
-  Stream<bool> get isPlayingStream => const Stream.empty();
+  Stream<AudioStatus> get statusStream => _controller.stream;
 
   @override
-  bool get isPlaying => false;
+  AudioStatus get status => _status;
 
   @override
-  Future<void> playFile(String path) async => playedFile = path;
+  bool get isPlaying => _status.isPlaying;
 
   @override
-  Future<void> playUrl(String url) async => playedUrl = url;
+  Future<void> playFile(String path, {required String tag}) async {
+    playedFile = path;
+    _emit(AudioStatus(tag: tag, isPlaying: true));
+  }
 
   @override
-  Future<void> pause() async {}
+  Future<void> playUrl(String url, {required String tag}) async {
+    playedUrl = url;
+    _emit(AudioStatus(tag: tag, isPlaying: true));
+  }
 
   @override
-  Future<void> resume() async {}
+  Future<void> pause() async => _emit(AudioStatus(tag: _status.tag));
 
   @override
-  Future<void> togglePause() async {}
+  Future<void> resume() async =>
+      _emit(AudioStatus(tag: _status.tag, isPlaying: true));
 
   @override
-  Future<void> stop() async => stops++;
+  Future<void> togglePause() => isPlaying ? pause() : resume();
 
   @override
-  Future<void> dispose() async {}
+  Future<void> stop() async {
+    stops++;
+    _emit(const AudioStatus());
+  }
+
+  @override
+  Future<void> dispose() async => _controller.close();
+
+  void _emit(AudioStatus status) {
+    _status = status;
+    _controller.add(status);
+  }
 }
 
 class _FakeLocal implements DownloadsLocalDataSource {

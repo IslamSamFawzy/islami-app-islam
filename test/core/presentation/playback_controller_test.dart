@@ -4,35 +4,62 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/presentation/playback_controller.dart';
 import 'package:islami/core/services/audio_player_service.dart';
 
+/// Behaves like the real service: one tag at a time, and starting something
+/// new takes the player over from whoever had it.
 class _FakeAudio implements AudioPlayerService {
-  final _controller = StreamController<bool>.broadcast();
-  bool _playing = false;
+  final _controller = StreamController<AudioStatus>.broadcast(sync: true);
+  final List<String> played = [];
+  AudioStatus _status = const AudioStatus();
   int pauses = 0;
   int resumes = 0;
   int stops = 0;
 
   @override
-  Stream<bool> get isPlayingStream => _controller.stream;
+  Stream<AudioStatus> get statusStream => _controller.stream;
   @override
-  bool get isPlaying => _playing;
+  AudioStatus get status => _status;
   @override
-  Future<void> playUrl(String url) async {}
+  bool get isPlaying => _status.isPlaying;
+
   @override
-  Future<void> playFile(String path) async {}
+  Future<void> playUrl(String url, {required String tag}) async {
+    played.add(url);
+    _emit(AudioStatus(tag: tag, isPlaying: true));
+  }
+
   @override
-  Future<void> pause() async => pauses++;
+  Future<void> playFile(String path, {required String tag}) async {
+    played.add(path);
+    _emit(AudioStatus(tag: tag, isPlaying: true));
+  }
+
   @override
-  Future<void> resume() async => resumes++;
+  Future<void> pause() async {
+    pauses++;
+    _emit(AudioStatus(tag: _status.tag));
+  }
+
+  @override
+  Future<void> resume() async {
+    resumes++;
+    _emit(AudioStatus(tag: _status.tag, isPlaying: true));
+  }
+
   @override
   Future<void> togglePause() => isPlaying ? pause() : resume();
+
   @override
-  Future<void> stop() async => stops++;
+  Future<void> stop() async {
+    stops++;
+    _emit(const AudioStatus());
+  }
+
   @override
   Future<void> dispose() async => _controller.close();
 
-  void emitPlaying(bool playing) {
-    _playing = playing;
-    _controller.add(playing);
+  void _emit(AudioStatus status) {
+    _status = status;
+    _controller.add(status);
   }
 }
 
@@ -42,59 +69,53 @@ void main() {
 
   setUp(() {
     audio = _FakeAudio();
-    controller = PlaybackController(audioPlayerService: audio);
+    controller = PlaybackController(
+      audioPlayerService: audio,
+      owner: 'radio',
+    );
   });
 
-  test('play marks the item current and runs the starter', () async {
-    var started = 0;
+  test('starting an item makes it this screen\'s current one', () async {
+    await controller.toggleUrl(id: 'radio_1', url: 'stream');
 
-    await controller.play('radio_1', () async => started++);
-
-    expect(started, 1);
-    expect(controller.status.currentId, 'radio_1');
+    expect(audio.played, ['stream']);
     expect(controller.isCurrent('radio_1'), isTrue);
+    expect(controller.status.currentId, 'radio_1');
+    expect(controller.status.isPlaying, isTrue);
   });
 
-  test('toggle pauses the current item instead of restarting it', () async {
-    var started = 0;
-    await controller.toggle('radio_1', () async => started++);
-    audio.emitPlaying(true);
+  test('tapping the current item pauses it, then resumes it', () async {
+    await controller.toggleUrl(id: 'radio_1', url: 'stream');
 
-    await controller.toggle('radio_1', () async => started++);
-
-    expect(started, 1, reason: 'the same item must not start twice');
+    await controller.toggleUrl(id: 'radio_1', url: 'stream');
     expect(audio.pauses, 1);
+    expect(audio.played, ['stream'], reason: 'must not restart the stream');
 
-    audio.emitPlaying(false);
-    await controller.toggle('radio_1', () async => started++);
+    await controller.toggleUrl(id: 'radio_1', url: 'stream');
     expect(audio.resumes, 1);
   });
 
-  test('toggle on a different item starts that one', () async {
-    final started = <String>[];
-    await controller.toggle('radio_1', () async => started.add('radio_1'));
-    await controller.toggle('radio_2', () async => started.add('radio_2'));
+  test('tapping a different item starts that one instead', () async {
+    await controller.toggleUrl(id: 'radio_1', url: 'one');
+    await controller.toggleUrl(id: 'radio_2', url: 'two');
 
-    expect(started, ['radio_1', 'radio_2']);
+    expect(audio.played, ['one', 'two']);
     expect(controller.status.currentId, 'radio_2');
   });
 
-  test('the status stream reports what the player is doing', () async {
+  test('the status stream follows the player', () async {
     final seen = <PlaybackStatus>[];
     controller.statusStream.listen(seen.add);
 
-    await controller.play('1', () async {});
-    audio.emitPlaying(true);
-    audio.emitPlaying(false);
-    // The player's own stream is asynchronous; let it reach the controller.
-    await pumpEventQueue();
+    await controller.toggleUrl(id: '1', url: 'stream');
+    await controller.togglePause();
 
-    expect(seen.map((s) => s.currentId), ['1', '1', '1']);
-    expect(seen.map((s) => s.isPlaying), [false, true, false]);
+    expect(seen.map((s) => s.currentId), ['1', '1']);
+    expect(seen.map((s) => s.isPlaying), [true, false]);
   });
 
   test('stopWhere only stops a matching item', () async {
-    await controller.play('1/2', () async {});
+    await controller.toggleFile(id: '1/2', path: 'file');
 
     expect(await controller.stopWhere((id) => id == '9/9'), isFalse);
     expect(audio.stops, 0);
@@ -104,13 +125,69 @@ void main() {
     expect(controller.status.currentId, isEmpty);
   });
 
-  test('close stops the audio only when this controller started it', () async {
+  test('close stops the audio only when this screen still owns it', () async {
     await controller.close();
     expect(audio.stops, 0);
 
-    final owner = PlaybackController(audioPlayerService: audio);
-    await owner.play('1', () async {});
-    await owner.close();
+    await controller.toggleUrl(id: 'radio_1', url: 'stream');
+    await controller.close();
     expect(audio.stops, 1);
+  });
+
+  group('two screens sharing the one player', twoScreensGroup);
+}
+
+// The bug this design exists to prevent: one player, two screens.
+void twoScreensGroup() {
+  late _FakeAudio audio;
+  late PlaybackController radio;
+  late PlaybackController reciter;
+
+  setUp(() {
+    audio = _FakeAudio();
+    radio = PlaybackController(audioPlayerService: audio, owner: 'radio');
+    reciter = PlaybackController(
+      audioPlayerService: audio,
+      owner: 'reciter_1',
+    );
+  });
+
+  test('a screen stops claiming the player once another takes it', () async {
+    await radio.toggleUrl(id: 'radio_1', url: 'stream');
+    expect(radio.status.isPlaying, isTrue);
+
+    // Open a reciter and play a sura: same player, new owner.
+    await reciter.toggleFile(id: '2', path: '/audio/1/2.mp3');
+
+    expect(reciter.status.currentId, '2');
+    expect(reciter.status.isPlaying, isTrue);
+    // Going back to Radio must not show the station as still playing.
+    expect(radio.status.currentId, isEmpty);
+    expect(radio.status.isPlaying, isFalse);
+    expect(radio.isCurrent('radio_1'), isFalse);
+  });
+
+  test('closing a screen never stops audio another one started', () async {
+    await radio.toggleUrl(id: 'radio_1', url: 'stream');
+    await reciter.toggleFile(id: '2', path: '/audio/1/2.mp3');
+
+    // Radio's bloc is closed while the sura plays.
+    await radio.close();
+    expect(audio.stops, 0);
+    expect(reciter.status.currentId, '2');
+
+    await reciter.close();
+    expect(audio.stops, 1);
+  });
+
+  test('the loser of a handover reports it through its stream', () async {
+    final seen = <PlaybackStatus>[];
+    radio.statusStream.listen(seen.add);
+
+    await radio.toggleUrl(id: 'radio_1', url: 'stream');
+    await reciter.toggleFile(id: '2', path: '/audio/1/2.mp3');
+
+    expect(seen.last.currentId, isEmpty);
+    expect(seen.last.isPlaying, isFalse);
   });
 }
