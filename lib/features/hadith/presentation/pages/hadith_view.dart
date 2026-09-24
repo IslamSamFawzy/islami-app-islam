@@ -52,8 +52,13 @@ class _HadithViewBody extends StatelessWidget {
                     height: double.infinity,
                     viewportFraction: 0.8,
                     enlargeCenterPage: true,
-                    enableInfiniteScroll: false,
+                    // The last hadith is followed by the first, and swiping
+                    // back from the first reaches the last.
+                    enableInfiniteScroll: true,
                   ),
+                  // [index] is the hadith's place in the list; realIndex keeps
+                  // counting as the carousel wraps, so the number shown on the
+                  // details screen comes from index.
                   itemBuilder: (context, index, realIndex) {
                     final hadith = state.hadiths[index];
                     return GestureDetector(
