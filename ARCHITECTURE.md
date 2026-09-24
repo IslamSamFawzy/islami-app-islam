@@ -130,3 +130,15 @@ one rule.
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs   # regenerates core/gen
 ```
+
+## Release
+
+The application id is `com.thecofounderstudio.islami` (the Kotlin package
+matches; the MethodChannel names, `islami/adhan` and `islami/geomagnetic`, are
+internal and unchanged).
+
+A release build needs `android/key.properties` and fails without it rather
+than falling back to the debug key. `docs/release/` holds the signing
+instructions, the permission list with reasons, and the Play paperwork drafts
+(privacy policy, data safety, foreground service, exact alarms, store
+listing).
