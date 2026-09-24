@@ -76,17 +76,17 @@ class $AssetsIconsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
-  /// File path: assets/images/azkar_evening.png
+  /// File path: assets/images/azkar_evening.webp
   AssetGenImage get azkarEvening =>
-      const AssetGenImage('assets/images/azkar_evening.png');
+      const AssetGenImage('assets/images/azkar_evening.webp');
 
-  /// File path: assets/images/azkar_morning.png
+  /// File path: assets/images/azkar_morning.webp
   AssetGenImage get azkarMorning =>
-      const AssetGenImage('assets/images/azkar_morning.png');
+      const AssetGenImage('assets/images/azkar_morning.webp');
 
-  /// File path: assets/images/hadeth_background.png
+  /// File path: assets/images/hadeth_background.webp
   AssetGenImage get hadethBackground =>
-      const AssetGenImage('assets/images/hadeth_background.png');
+      const AssetGenImage('assets/images/hadeth_background.webp');
 
   /// File path: assets/images/img_bottom_decoration.png
   AssetGenImage get imgBottomDecoration =>
@@ -120,17 +120,17 @@ class $AssetsImagesGen {
   AssetGenImage get intro1Calligraphy =>
       const AssetGenImage('assets/images/intro_1_calligraphy.png');
 
-  /// File path: assets/images/intro_2_mosque.png
+  /// File path: assets/images/intro_2_mosque.webp
   AssetGenImage get intro2Mosque =>
-      const AssetGenImage('assets/images/intro_2_mosque.png');
+      const AssetGenImage('assets/images/intro_2_mosque.webp');
 
-  /// File path: assets/images/intro_3_quran.png
+  /// File path: assets/images/intro_3_quran.webp
   AssetGenImage get intro3Quran =>
-      const AssetGenImage('assets/images/intro_3_quran.png');
+      const AssetGenImage('assets/images/intro_3_quran.webp');
 
-  /// File path: assets/images/intro_4_tasbeh.png
+  /// File path: assets/images/intro_4_tasbeh.webp
   AssetGenImage get intro4Tasbeh =>
-      const AssetGenImage('assets/images/intro_4_tasbeh.png');
+      const AssetGenImage('assets/images/intro_4_tasbeh.webp');
 
   /// File path: assets/images/intro_5_radio.png
   AssetGenImage get intro5Radio =>
@@ -148,13 +148,13 @@ class $AssetsImagesGen {
   AssetGenImage get logoSplsh =>
       const AssetGenImage('assets/images/logo_splsh.png');
 
-  /// File path: assets/images/quran_background.png
+  /// File path: assets/images/quran_background.webp
   AssetGenImage get quranBackground =>
-      const AssetGenImage('assets/images/quran_background.png');
+      const AssetGenImage('assets/images/quran_background.webp');
 
-  /// File path: assets/images/radio_background.png
+  /// File path: assets/images/radio_background.webp
   AssetGenImage get radioBackground =>
-      const AssetGenImage('assets/images/radio_background.png');
+      const AssetGenImage('assets/images/radio_background.webp');
 
   /// File path: assets/images/splash_glow.png
   AssetGenImage get splashGlow =>
@@ -176,13 +176,13 @@ class $AssetsImagesGen {
   AssetGenImage get splashScreen =>
       const AssetGenImage('assets/images/splash_screen.png');
 
-  /// File path: assets/images/taspeh_background.png
+  /// File path: assets/images/taspeh_background.webp
   AssetGenImage get taspehBackground =>
-      const AssetGenImage('assets/images/taspeh_background.png');
+      const AssetGenImage('assets/images/taspeh_background.webp');
 
-  /// File path: assets/images/time_background.png
+  /// File path: assets/images/time_background.webp
   AssetGenImage get timeBackground =>
-      const AssetGenImage('assets/images/time_background.png');
+      const AssetGenImage('assets/images/time_background.webp');
 
   /// List of all assets
   List<AssetGenImage> get values => [
