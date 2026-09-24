@@ -263,6 +263,76 @@ The feature is already in the repo; it was built separately:
    skeleton, cubit and widget tests). Run it on a device. The overview page
    loops a full rak'ah, and each step page loops its own postures.
 
+## Phase 8 — Release preparation (Google Play)
+
+Decisions already made by the owner: the store ID is our own (below), the UI
+language stays as it is (English chrome, Arabic content), the design and
+assets are our own, and the app ships from a **new personal** Play developer
+account (so it will go through a closed test first).
+
+1. **Application ID.** Change `applicationId` **and** the Kotlin
+   `namespace`/package from `com.route.islami` to
+   `com.thecofounderstudio.islami`. Move the Kotlin files, update the
+   manifest and any class references. Keep the MethodChannel names
+   (`islami/adhan`, `islami/geomagnetic`) as they are. Uninstall/reinstall
+   on the emulator and check that the adhan, the downloads and the Qibla
+   still work.
+2. **Signing must never fall back to debug.** Today a release build without
+   `android/key.properties` is quietly signed with the debug key. Make
+   `assembleRelease`/`bundleRelease` **fail** with a clear message when the
+   keystore is missing. Debug builds are unaffected. Add
+   `docs/release/signing.md`: how to create the upload keystore with
+   `keytool`, the `key.properties` format, where to back it up, and a note
+   that Play App Signing will hold the app signing key. Confirm that the
+   keystore and `key.properties` are git-ignored (they are listed today) and
+   were never committed (`git log --all -- '*.jks' 'android/key.properties'`).
+3. **Target API.** Google Play requires `targetSdk` 36 (Android 16) for new
+   apps. Check what `flutter.targetSdkVersion` / `compileSdkVersion` resolve
+   to. If either is below 36, set it to 36 explicitly and fix whatever that
+   surfaces. Retest on the Android 16 emulator: notification permission, the
+   exact-alarm row, and one adhan firing (set a prayer a couple of minutes
+   ahead through a debug-only hook or by adjusting the clock).
+4. **Permissions.** Location is requested with `LocationAccuracy.low`, so
+   remove `ACCESS_FINE_LOCATION` and keep `ACCESS_COARSE_LOCATION`. Verify
+   that prayer times and the Qibla still resolve. The manifest still
+   declares `flutter_local_notifications`' *scheduled* and *boot* receivers,
+   but nothing schedules through that plugin any more. Remove those two
+   receiver entries if the plugin doesn't need them for the reminder
+   notification (check the merged manifest). List every remaining permission
+   with a one-line reason in `docs/release/permissions.md`.
+5. **R8 / release behaviour.** The release build minifies. On the release
+   build, walk through: radio stream, reciter stream, download + offline
+   playback, Downloads screen, prayer times offline, Qibla, hadith loop,
+   resume reading, Salah tab, adhan settings. Add keep rules only if
+   something breaks.
+6. **App Bundle + size.** Build `flutter build appbundle --release` and
+   report the size. The APK is ~62 MB: list the 10 largest assets. Where it
+   loses nothing visible, re-encode big PNG backgrounds to WebP (check
+   `flutter_gen` still generates the same getters). Report before/after.
+7. **Store paperwork drafts** in `docs/release/` (drafts for the owner to
+   review, not final legal text):
+   - `privacy-policy.md`: what is used and why. Approximate location is used
+     on-device and its coordinates are sent to api.aladhan.com to fetch
+     prayer times. Radio lists come from mp3quran.net. There are no
+     accounts, no analytics and no ads (verify that is true). Everything is
+     stored locally.
+   - `data-safety.md`: suggested answers for the Play Data safety form,
+     with reasoning, based on the actual code.
+   - `foreground-service.md`: the justification for
+     `FOREGROUND_SERVICE_MEDIA_PLAYBACK` (the adhan plays at prayer time,
+     user-initiated by enabling it, stoppable from the notification), and
+     the short screen recording Play asks for (what to show).
+   - `exact-alarms.md`: why `SCHEDULE_EXACT_ALARM` is needed and how the
+     app behaves without it.
+   - `store-listing.md`: app name, short description (≤80 chars) and full
+     description, in Arabic and English, plus the screenshot list (which
+     screens, which states).
+8. **Version.** Keep `1.0.0+1` for the first upload. Document in
+   `docs/release/signing.md` that every upload needs a higher build number.
+
+Report back as usual, plus: AAB size, the asset size table, and anything in
+the paperwork you could not determine from the code.
+
 ## Final check before release prep
 
 - `flutter analyze`: no issues. `flutter test`: all green.

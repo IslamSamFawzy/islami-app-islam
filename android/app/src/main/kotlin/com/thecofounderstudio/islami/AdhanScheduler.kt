@@ -1,4 +1,4 @@
-package com.route.islami
+package com.thecofounderstudio.islami
 
 import android.app.AlarmManager
 import android.app.PendingIntent

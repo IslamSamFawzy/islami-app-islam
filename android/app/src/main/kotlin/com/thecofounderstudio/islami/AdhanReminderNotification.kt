@@ -1,4 +1,4 @@
-package com.route.islami
+package com.thecofounderstudio.islami
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

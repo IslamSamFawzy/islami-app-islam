@@ -1,4 +1,4 @@
-package com.route.islami
+package com.thecofounderstudio.islami
 
 import android.content.Intent
 import android.hardware.GeomagneticField

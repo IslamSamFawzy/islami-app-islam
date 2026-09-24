@@ -1,4 +1,4 @@
-package com.route.islami
+package com.thecofounderstudio.islami
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -29,7 +29,7 @@ class AdhanService : Service() {
     private var player: MediaPlayer? = null
 
     companion object {
-        const val ACTION_STOP = "com.route.islami.ACTION_STOP_ADHAN"
+        const val ACTION_STOP = "com.thecofounderstudio.islami.ACTION_STOP_ADHAN"
         private const val CHANNEL_REGULAR = "adhan_regular_v2"
         private const val CHANNEL_FAJR = "adhan_fajr_v2"
         private const val OLD_CHANNEL = "adhan_channel"
