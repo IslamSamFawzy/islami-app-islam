@@ -60,7 +60,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
       (cached) async {
         final times = cached.data;
         await _syncAdhans(times);
-        final next = nextPrayerCalculator.findNext(times);
+        final next = _nextPrayer(times);
         emit(
           state.copyWith(
             status: ViewStatus.success,
@@ -69,10 +69,8 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
             // Seed the offline flag so a cold start with no connection shows the
             // strip immediately (the stream only fires on subsequent changes).
             isOffline: !await connectivityService.isConnected,
-            nextPrayerName: next?.name ?? '',
-            countdown: next == null
-                ? Duration.zero
-                : next.time.difference(DateTime.now()),
+            nextPrayerName: next.name,
+            countdown: next.countdown,
           ),
         );
         _startTicker();
@@ -96,13 +94,11 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     final times = state.prayerTimes;
     if (times == null) return;
 
-    final next = nextPrayerCalculator.findNext(times);
+    final next = _nextPrayer(times);
     emit(
       state.copyWith(
-        nextPrayerName: next?.name ?? '',
-        countdown: next == null
-            ? Duration.zero
-            : next.time.difference(DateTime.now()),
+        nextPrayerName: next.name,
+        countdown: next.countdown,
       ),
     );
   }
@@ -114,17 +110,9 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     final muted = !state.muted;
     emit(state.copyWith(muted: muted));
 
-    if (muted) {
-      // Muted must mean nothing fires — cancel the alarms and stop any adhan
-      // currently playing.
-      await adhanScheduler.cancel();
-      await adhanScheduler.stopNow();
-    } else {
-      final times = state.prayerTimes;
-      if (times != null) {
-        await adhanScheduler.schedule(adhanPrayerPolicy.adhanTimes(times));
-      }
-    }
+    await _syncAdhans(state.prayerTimes);
+    // Muted must also mean nothing is heard right now.
+    if (muted) await adhanScheduler.stopNow();
   }
 
   void _startTicker() {
@@ -134,11 +122,27 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     });
   }
 
-  /// Arms (or clears, when muted) the native adhan alarms for [times].
-  Future<void> _syncAdhans(PrayerTimes times) async {
+  /// The next prayer's name and how long until it — the pair both the first
+  /// load and every tick put on screen.
+  ({String name, Duration countdown}) _nextPrayer(PrayerTimes times) {
+    final next = nextPrayerCalculator.findNext(times);
+    if (next == null) return (name: '', countdown: Duration.zero);
+    return (
+      name: next.name,
+      countdown: next.time.difference(DateTime.now()),
+    );
+  }
+
+  /// Arms the native adhan alarms for [times], or clears them when muted.
+  ///
+  /// With no schedule yet there is nothing to arm, and yesterday's alarms
+  /// repeat daily, so they are left alone rather than cancelled.
+  Future<void> _syncAdhans(PrayerTimes? times) async {
     if (state.muted) {
       await adhanScheduler.cancel();
-    } else {
+      return;
+    }
+    if (times != null) {
       await adhanScheduler.schedule(adhanPrayerPolicy.adhanTimes(times));
     }
   }
