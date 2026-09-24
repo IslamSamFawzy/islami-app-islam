@@ -4,11 +4,11 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/presentation/view_status.dart';
-import '../../../../core/services/adhan_scheduler.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/prayer_times.dart';
 import '../../domain/services/adhan_prayer_policy.dart';
+import '../../domain/services/adhan_scheduler.dart';
 import '../../domain/services/next_prayer_calculator.dart';
 import '../../domain/usecases/get_prayer_times.dart';
 

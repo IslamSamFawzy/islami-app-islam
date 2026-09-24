@@ -47,17 +47,18 @@ import '../../features/radio/domain/usecases/get_reciters.dart';
 import '../../features/radio/presentation/bloc/radio_bloc.dart';
 // Time feature
 import '../../features/time/data/datasources/prayer_local_data_source.dart';
+import '../../features/time/data/services/method_channel_adhan_scheduler.dart';
 import '../../features/time/data/datasources/prayer_remote_data_source.dart';
 import '../../features/time/data/repositories/prayer_repository_impl.dart';
 import '../../features/time/domain/repositories/prayer_repository.dart';
 import '../../features/time/domain/services/adhan_prayer_policy.dart';
+import '../../features/time/domain/services/adhan_scheduler.dart';
 import '../../features/time/domain/services/next_prayer_calculator.dart';
 import '../../features/time/domain/usecases/get_prayer_times.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
 import '../cache/cache_manager.dart';
 import '../cache/json_store.dart';
 import '../network/api_client.dart';
-import '../services/adhan_scheduler.dart';
 import '../services/audio_player_service.dart';
 import '../services/compass_service.dart';
 import '../services/connectivity_service.dart';
@@ -97,13 +98,15 @@ Future<void> init() async {
   sl.registerLazySingleton<DeclinationService>(
     () => MethodChannelDeclinationService(),
   );
-  sl.registerLazySingleton<AdhanScheduler>(() => AdhanScheduler());
+  sl.registerLazySingleton<AdhanScheduler>(
+    () => MethodChannelAdhanScheduler(),
+  );
   sl.registerLazySingleton<ConnectivityService>(
     () => ConnectivityPlusService(),
   );
   sl.registerLazySingleton<DownloadService>(() => DownloadServiceImpl());
 
-  final notificationService = NotificationService();
+  final notificationService = LocalNotificationService();
   await notificationService.init();
   await notificationService.requestPermissions();
   sl.registerLazySingleton<NotificationService>(() => notificationService);

@@ -1,27 +1,18 @@
 import 'package:flutter/services.dart';
 
-/// One prayer whose adhan should fire.
-class AdhanTime {
-  final String name;
-  final DateTime time;
-  final bool isFajr;
+import '../../domain/entities/adhan_time.dart';
+import '../../domain/services/adhan_scheduler.dart';
 
-  const AdhanTime({
-    required this.name,
-    required this.time,
-    required this.isFajr,
-  });
-}
-
-/// Bridges to the native adhan scheduler (`AdhanScheduler.kt`), which sets exact
-/// alarms that play the full adhan through a foreground service even when the
-/// app is closed. Fajr uses the Fajr adhan; other prayers use the regular one.
+/// Bridges to the native adhan scheduler (`AdhanScheduler.kt`), which sets
+/// exact alarms that play the full adhan through a foreground service even
+/// when the app is closed. Fajr uses the Fajr adhan; other prayers use the
+/// regular one.
 ///
 /// No-ops on platforms without the channel (e.g. iOS) — the calls are guarded.
-class AdhanScheduler {
+class MethodChannelAdhanScheduler implements AdhanScheduler {
   static const MethodChannel _channel = MethodChannel('islami/adhan');
 
-  /// Arms an exact daily alarm for each prayer (replaces any previous set).
+  @override
   Future<void> schedule(List<AdhanTime> adhans) async {
     try {
       await _channel.invokeMethod('schedule', {
@@ -40,14 +31,14 @@ class AdhanScheduler {
     }
   }
 
-  /// Cancels every scheduled adhan (used when muted).
+  @override
   Future<void> cancel() async {
     try {
       await _channel.invokeMethod('cancel');
     } catch (_) {}
   }
 
-  /// Stops an adhan that is currently playing (used when muting mid-adhan).
+  @override
   Future<void> stopNow() async {
     try {
       await _channel.invokeMethod('stopNow');

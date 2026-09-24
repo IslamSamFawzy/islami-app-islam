@@ -1,4 +1,4 @@
-import '../../../../core/services/adhan_scheduler.dart';
+import '../entities/adhan_time.dart';
 import '../entities/prayer_name.dart';
 import '../entities/prayer_times.dart';
 
