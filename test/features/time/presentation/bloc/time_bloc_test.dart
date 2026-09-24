@@ -260,6 +260,29 @@ void main() {
     expect(scheduler.lastNames, ['Dhuhr']);
   });
 
+  test('switching every prayer off clears the alarms', () async {
+    bloc = build();
+    await load();
+
+    await settings.saveAdhanSettings(
+      AdhanSettings(enabled: true, prayers: const {}),
+    );
+    await bloc.stream.firstWhere((s) => s.settings.prayers.isEmpty);
+    await pumpEventQueue();
+
+    // Armed with nothing, rather than left holding the previous set.
+    expect(scheduler.scheduled.last, isEmpty);
+  });
+
+  test('with nothing downloaded it leaves the armed alarms alone', () async {
+    prayers.upcoming = const [];
+    bloc = build();
+
+    await load();
+
+    expect(scheduler.scheduled, isEmpty);
+  });
+
   test('near the end of the month it fetches the next one', () async {
     // The 28th of a 30-day month: three days of alarms left.
     bloc = build(clock: () => DateTime(2026, 9, 28, 10));

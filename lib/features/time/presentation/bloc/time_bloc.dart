@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../../domain/entities/adhan_schedule.dart';
 import '../../domain/entities/adhan_settings.dart';
 import '../../domain/entities/prayer_times.dart';
 import '../../domain/services/adhan_prayer_policy.dart';
@@ -206,12 +205,17 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
 
     await _prefetchIfMonthIsEnding();
 
-    final days = await getUpcomingPrayerDays(const NoParams());
-    final schedules = days.fold(
-      (_) => const <AdhanSchedule>[],
-      (days) => adhanPrayerPolicy.schedulesFor(days, settings),
+    final result = await getUpcomingPrayerDays(const NoParams());
+    final days = result.getOrElse(() => const []);
+    // Nothing downloaded yet (first run offline): the alarms already set are
+    // the best guess there is, so leave them be.
+    if (days.isEmpty) return;
+
+    // An empty result here means something else: every prayer is switched off,
+    // which has to clear the alarms rather than leave the old set armed.
+    await adhanScheduler.schedule(
+      adhanPrayerPolicy.schedulesFor(days, settings),
     );
-    if (schedules.isNotEmpty) await adhanScheduler.schedule(schedules);
   }
 
   /// Near the end of the month the cached days are about to run out, so fetch
