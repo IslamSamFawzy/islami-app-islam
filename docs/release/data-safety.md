@@ -40,12 +40,14 @@ position, the "seen the intro" flag). Uninstalling removes all of it.
 
 | Question | Answer | Why |
 |---|---|---|
-| Is data encrypted in transit? | **Yes** | Every request is HTTPS (api.aladhan.com, mp3quran.net and the recitation servers those lists give). |
+| Is data encrypted in transit? | **Yes** | Every request is HTTPS. The two APIs (api.aladhan.com, mp3quran.net) are HTTPS, and any `http://` recitation server the reciters API hands out is rewritten to `https://` before it is used — see `ReciterModel` in `lib/features/radio/data/models/reciter_model.dart`. Cleartext traffic is not enabled in the manifest, so nothing can fall back to HTTP. |
 | Can users request deletion? | **Yes — by uninstalling** | Nothing is held anywhere else; there is nothing for us to delete. |
 | Has your app been independently validated? | No | No such review has been done. |
 
 ## To confirm before submitting
 
-* The recitation audio URLs come from the mp3quran.net API at runtime; they
-  have all been HTTPS in what we have seen, but if any reciter's server is
-  plain HTTP, the "encrypted in transit" answer needs a caveat.
+* Nothing outstanding for the security answers. The recitation audio URLs come
+  from the mp3quran.net API at runtime; all 287 servers in today's response
+  were already HTTPS, all ten `serverN.mp3quran.net` hosts were checked to
+  serve audio over TLS, and the app upgrades a cleartext server to HTTPS
+  anyway.
