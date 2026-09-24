@@ -68,11 +68,16 @@ name users see, the part after is the build number Play tracks.
 
 ## Note for this repository's state
 
-There is a local `android/app/dev-upload-test.jks` (with a matching
-`key.properties`) that was generated only to prove the signing gate works and
-to measure the release artifacts. It is git-ignored, it is **not** an upload
-key, and it should be deleted once you create the real one:
+There is no keystore in this checkout. A throwaway one existed briefly, only
+to prove the signing gate works and to measure the release artifacts; it has
+been deleted along with its `key.properties`, and it was never an upload key.
 
-```bash
-rm android/app/dev-upload-test.jks android/key.properties
+Until you create the real one with the steps above, a release build stops with:
+
 ```
+Release builds need android/key.properties, which is missing.
+See docs/release/signing.md for how to create the upload keystore and what to
+put in that file.
+```
+
+Debug builds (`flutter run`, `flutter build apk --debug`) are unaffected.
