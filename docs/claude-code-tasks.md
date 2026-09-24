@@ -338,6 +338,46 @@ account (so it will go through a closed test first).
 Report back as usual, plus: AAB size, the asset size table, and anything in
 the paperwork you could not determine from the code.
 
+## Phase 9 — Store details + hosted privacy policy
+
+Decisions from the owner:
+- Play store name: **Islami: Quran, Adhan & Qibla** (English listing) and
+  **إسلامي: قرآن وأذان وقبلة** (Arabic listing). The launcher label stays
+  `Islami`.
+- Contact email: **admin@thecofounderstudio.com**
+- Privacy policy hosting: **GitHub Pages**.
+
+1. **Fill the release docs.** Replace every placeholder/TODO in
+   `docs/release/*.md` with the name and email above. Check
+   `store-listing.md`: name ≤ 30 characters, short description ≤ 80
+   characters, both languages. Make sure the full description only claims
+   what the app really does (Quran text, 50 hadiths, azkar, tasbeeh, radio
+   and reciters with offline downloads, prayer times with a configurable
+   adhan, Qibla, the prayer guide).
+2. **Privacy policy page.** Turn `docs/release/privacy-policy.md` into one
+   self-contained, mobile-friendly HTML page (no external scripts, fonts or
+   trackers): Arabic first, then English, in the app's dark/gold style,
+   with the contact email and an "effective date".
+3. **Host it on GitHub Pages.** GitHub Pages on a *private* repo needs a
+   paid plan, so first check whether `IslamSamFawzy/islami-app-islam` is
+   public (`gh repo view --json visibility`).
+   - If it is public: publish from `/docs` on the main branch (put the
+     page at `docs/privacy/index.html`).
+   - If it is private: **don't make the app repo public.** Propose a
+     separate public repo (e.g. `IslamSamFawzy/islami-privacy`) that holds
+     only the page, and **ask me before creating anything on GitHub**.
+   Once published, open the URL, confirm it loads over HTTPS, and put the
+   final URL into `privacy-policy.md`, `data-safety.md` and
+   `store-listing.md`.
+4. **Screenshots list.** In `store-listing.md`, list 6–8 screenshots in
+   order, each with the exact state to capture (e.g. prayer times with the
+   next-prayer countdown, the Salah guide mid-animation, the Qibla aligned,
+   the reciters list with a downloaded sura). Take them on the emulator at
+   1080×1920 or larger, save them to `docs/release/screenshots/`, and
+   commit them. Only use the emulator.
+
+Report back as usual, plus the privacy-policy URL.
+
 ## Final check before release prep
 
 - `flutter analyze`: no issues. `flutter test`: all green.
