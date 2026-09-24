@@ -7,6 +7,10 @@ import 'package:equatable/equatable.dart';
 class AdhanSchedule extends Equatable {
   final String name;
 
+  /// What the notification calls this prayer (Arabic, like the rest of its
+  /// text).
+  final String displayName;
+
   /// Fajr has its own adhan.
   final bool isFajr;
 
@@ -16,10 +20,11 @@ class AdhanSchedule extends Equatable {
 
   const AdhanSchedule({
     required this.name,
+    required this.displayName,
     required this.isFajr,
     required this.times,
   });
 
   @override
-  List<Object?> get props => [name, isFajr, times];
+  List<Object?> get props => [name, displayName, isFajr, times];
 }

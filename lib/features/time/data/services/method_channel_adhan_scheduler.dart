@@ -23,6 +23,7 @@ class MethodChannelAdhanScheduler implements AdhanScheduler {
           for (final adhan in adhans)
             {
               'name': adhan.name,
+              'displayName': adhan.displayName,
               'fajr': adhan.isFajr,
               'times': [
                 for (final time in adhan.times) time.millisecondsSinceEpoch,

@@ -36,6 +36,14 @@ void main() {
       ]);
     });
 
+    test('each carries the Arabic name the notification shows', () {
+      expect(PrayerName.fajr.arabicLabel, 'الفجر');
+      expect(PrayerName.dhuhr.arabicLabel, 'الظهر');
+      expect(PrayerName.asr.arabicLabel, 'العصر');
+      expect(PrayerName.maghrib.arabicLabel, 'المغرب');
+      expect(PrayerName.isha.arabicLabel, 'العشاء');
+    });
+
     test('a schedule lists them in order, with Sunrise after Fajr', () {
       expect(PrayerName.scheduleLabels, [
         'Fajr',
@@ -77,6 +85,14 @@ void main() {
         'Isha',
       ]);
       expect(adhans.where((a) => a.isFajr).map((a) => a.name), ['Fajr']);
+      // The notification text is Arabic, so the name in it is too.
+      expect(adhans.map((a) => a.displayName), [
+        'الفجر',
+        'الظهر',
+        'العصر',
+        'المغرب',
+        'العشاء',
+      ]);
     });
 
     test('schedules only the prayers that are switched on', () {

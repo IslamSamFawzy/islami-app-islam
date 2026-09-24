@@ -28,9 +28,15 @@ object AdhanScheduler {
     private const val KEY_SCHEDULE = "schedule"
     private val ONE_DAY_MS = TimeUnit.DAYS.toMillis(1)
 
-    /** One prayer and every instant it is due, in ascending order. */
+    /**
+     * One prayer and every instant it is due, in ascending order.
+     *
+     * [name] identifies it in the saved schedule; [displayName] is what the
+     * notifications show, which is Arabic like the rest of their text.
+     */
     data class Adhan(
         val name: String,
+        val displayName: String,
         val isFajr: Boolean,
         val times: List<Long>,
     ) {
@@ -134,17 +140,26 @@ object AdhanScheduler {
      */
     private fun parse(o: JSONObject): Adhan {
         val name = o.getString("name")
+        // Older saved schedules have no display name; the plain one will do
+        // until the app next writes the schedule.
+        val displayName = o.optString("displayName", name).ifEmpty { name }
         val isFajr = o.optBoolean("fajr", false)
 
         val stored = o.optJSONArray("times")
         if (stored != null) {
             return Adhan(
                 name,
+                displayName,
                 isFajr,
                 (0 until stored.length()).map { stored.getLong(it) },
             )
         }
-        return Adhan(name, isFajr, listOf(nextTrigger(o.getInt("hour"), o.getInt("minute"))))
+        return Adhan(
+            name,
+            displayName,
+            isFajr,
+            listOf(nextTrigger(o.getInt("hour"), o.getInt("minute"))),
+        )
     }
 
     private fun persist(context: Context, adhans: List<Adhan>) {
@@ -155,6 +170,7 @@ object AdhanScheduler {
             arr.put(
                 JSONObject()
                     .put("name", adhan.name)
+                    .put("displayName", adhan.displayName)
                     .put("fajr", adhan.isFajr)
                     .put("times", times),
             )
@@ -181,7 +197,9 @@ object AdhanScheduler {
 
     private fun pendingIntent(context: Context, requestCode: Int, adhan: Adhan): PendingIntent {
         val intent = Intent(context, AdhanReceiver::class.java).apply {
-            putExtra(EXTRA_PRAYER, adhan.name)
+            // The receiver and the service only ever show this, so it carries
+            // the name as the user should read it.
+            putExtra(EXTRA_PRAYER, adhan.displayName)
             putExtra(EXTRA_IS_FAJR, adhan.isFajr)
             putExtra(EXTRA_REQUEST_CODE, requestCode)
         }

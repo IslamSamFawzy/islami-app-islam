@@ -52,8 +52,10 @@ class MainActivity : FlutterActivity() {
                             @Suppress("UNCHECKED_CAST")
                             val times = (it["times"] as? List<Number> ?: emptyList())
                                 .map { time -> time.toLong() }
+                            val name = it["name"] as String
                             AdhanScheduler.Adhan(
-                                it["name"] as String,
+                                name,
+                                it["displayName"] as? String ?: name,
                                 it["fajr"] as Boolean,
                                 times,
                             )

@@ -5,16 +5,20 @@
 /// `PrayerName.of(name) != null` rather than a list of five strings copied
 /// into every service that asks.
 enum PrayerName {
-  fajr('Fajr'),
-  dhuhr('Dhuhr'),
-  asr('Asr'),
-  maghrib('Maghrib'),
-  isha('Isha');
+  fajr('Fajr', 'الفجر'),
+  dhuhr('Dhuhr', 'الظهر'),
+  asr('Asr', 'العصر'),
+  maghrib('Maghrib', 'المغرب'),
+  isha('Isha', 'العشاء');
 
   /// The name the prayer goes by in the API, the cache and on screen.
   final String label;
 
-  const PrayerName(this.label);
+  /// What the adhan notification calls it — its text is Arabic, so the name
+  /// in it has to be too.
+  final String arabicLabel;
+
+  const PrayerName(this.label, this.arabicLabel);
 
   /// The prayer [label] names, or `null` for anything else (Sunrise, …).
   static PrayerName? of(String label) {

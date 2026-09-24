@@ -38,6 +38,7 @@ class DefaultAdhanPrayerPolicy implements AdhanPrayerPolicy {
         if (byPrayer[name] case final times?)
           AdhanSchedule(
             name: name.label,
+            displayName: name.arabicLabel,
             isFajr: name == PrayerName.fajr,
             times: times..sort(),
           ),
