@@ -27,16 +27,7 @@ class PrayerRepositoryImpl implements PrayerRepository {
 
   @override
   Future<Either<Failure, CacheResult<PrayerTimes>>> getPrayerTimes() async {
-    double latitude = _fallbackLat;
-    double longitude = _fallbackLng;
-
-    try {
-      final position = await locationService.getCurrentPosition();
-      latitude = position.latitude;
-      longitude = position.longitude;
-    } on LocationException {
-      // Keep the Cairo fallback.
-    }
+    final (latitude, longitude) = await _coordinates();
 
     final now = DateTime.now();
     final key = _monthKey(latitude, longitude, now);
@@ -78,6 +69,61 @@ class PrayerRepositoryImpl implements PrayerRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, List<PrayerTimes>>> getUpcomingDays() async {
+    final (latitude, longitude) = await _coordinates();
+    final now = DateTime.now();
+
+    final days = <PrayerTimesModel>[
+      ...?localDataSource.getCachedMonth(_monthKey(latitude, longitude, now)),
+      // Next month is only there once it has been prefetched; without it the
+      // alarms simply run out at the end of this month.
+      ...?localDataSource.getCachedMonth(
+        _monthKey(latitude, longitude, _nextMonth(now)),
+      ),
+    ];
+
+    return Right(
+      days.where((day) => day.prayers.any((p) => p.time.isAfter(now))).toList(),
+    );
+  }
+
+  @override
+  Future<Either<Failure, Unit>> prefetchNextMonth() async {
+    final (latitude, longitude) = await _coordinates();
+    final next = _nextMonth(DateTime.now());
+    final key = _monthKey(latitude, longitude, next);
+
+    if (localDataSource.getCachedMonth(key) != null) return const Right(unit);
+
+    try {
+      final month = await remoteDataSource.getMonthlyPrayerTimes(
+        latitude: latitude,
+        longitude: longitude,
+        month: next.month,
+        year: next.year,
+      );
+      await localDataSource.cacheMonth(key, month);
+      return const Right(unit);
+    } on ServerException catch (e) {
+      // Nothing is lost: the alarms keep this month's instants and the app
+      // tries again next time it is opened online.
+      return Left(ServerFailure(e.message));
+    }
+  }
+
+  /// The device's coordinates, or Cairo when they cannot be had.
+  Future<(double, double)> _coordinates() async {
+    try {
+      final position = await locationService.getCurrentPosition();
+      return (position.latitude, position.longitude);
+    } on LocationException {
+      return (_fallbackLat, _fallbackLng);
+    }
+  }
+
+  DateTime _nextMonth(DateTime from) => DateTime(from.year, from.month + 1);
 
   /// Cache key: rounded coordinates (2 dp ≈ 1.1 km) + `YYYY-MM`. Moving more
   /// than ~1 km or crossing into a new month produces a new key, which forces

@@ -66,6 +66,8 @@ import '../../features/time/domain/services/next_prayer_calculator.dart';
 import '../../features/time/domain/usecases/ensure_adhan_permitted.dart';
 import '../../features/time/domain/usecases/get_adhan_settings.dart';
 import '../../features/time/domain/usecases/get_prayer_times.dart';
+import '../../features/time/domain/usecases/get_upcoming_prayer_days.dart';
+import '../../features/time/domain/usecases/prefetch_next_month.dart';
 import '../../features/time/domain/usecases/save_adhan_settings.dart';
 import '../../features/time/domain/usecases/watch_adhan_settings.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
@@ -194,6 +196,8 @@ Future<void> init() async {
   sl.registerFactory(
     () => TimeBloc(
       getPrayerTimes: sl(),
+      getUpcomingPrayerDays: sl(),
+      prefetchNextMonth: sl(),
       adhanScheduler: sl(),
       adhanPrayerPolicy: sl(),
       nextPrayerCalculator: sl(),
@@ -209,10 +213,13 @@ Future<void> init() async {
       getAdhanSettings: sl(),
       saveAdhanSettings: sl(),
       ensureAdhanPermitted: sl(),
+      adhanScheduler: sl(),
     ),
   );
 
   sl.registerLazySingleton(() => GetPrayerTimes(sl()));
+  sl.registerLazySingleton(() => GetUpcomingPrayerDays(sl()));
+  sl.registerLazySingleton(() => PrefetchNextMonth(sl()));
   sl.registerLazySingleton(() => GetAdhanSettings(sl()));
   sl.registerLazySingleton(() => SaveAdhanSettings(sl()));
   sl.registerLazySingleton(() => WatchAdhanSettings(sl()));

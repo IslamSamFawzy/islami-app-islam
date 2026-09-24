@@ -16,8 +16,10 @@ PrayerTimes _schedule(List<Prayer> prayers) => PrayerTimes(
 
 void main() {
   final today = DateTime.now();
-  Prayer at(String name, int hour) =>
-      Prayer(name: name, time: DateTime(today.year, today.month, today.day, hour));
+  Prayer at(String name, int hour, {int dayOffset = 0}) => Prayer(
+        name: name,
+        time: DateTime(today.year, today.month, today.day + dayOffset, hour),
+      );
 
   group('PrayerName', () {
     test('knows the five prayers and nothing else', () {
@@ -57,8 +59,15 @@ void main() {
     ]);
     final policy = DefaultAdhanPrayerPolicy();
 
+    // Midnight, so every prayer of the day is still ahead.
+    final midnight = DateTime(today.year, today.month, today.day);
+
     test('schedules the five prayers, skipping Sunrise', () {
-      final adhans = policy.adhanTimes(fullDay, AdhanSettings.defaults);
+      final adhans = policy.schedulesFor(
+        [fullDay],
+        AdhanSettings.defaults,
+        now: midnight,
+      );
 
       expect(adhans.map((a) => a.name), [
         'Fajr',
@@ -71,24 +80,56 @@ void main() {
     });
 
     test('schedules only the prayers that are switched on', () {
-      final adhans = policy.adhanTimes(
-        fullDay,
+      final adhans = policy.schedulesFor(
+        [fullDay],
         AdhanSettings(
           enabled: true,
           prayers: {PrayerName.fajr, PrayerName.maghrib},
         ),
+        now: midnight,
       );
 
       expect(adhans.map((a) => a.name), ['Fajr', 'Maghrib']);
     });
 
     test('schedules nothing while the master switch is off', () {
-      final adhans = policy.adhanTimes(
-        fullDay,
+      final adhans = policy.schedulesFor(
+        [fullDay],
         AdhanSettings(enabled: false, prayers: PrayerName.values.toSet()),
+        now: midnight,
       );
 
       expect(adhans, isEmpty);
+    });
+
+    test('carries every day it is given, per prayer, in order', () {
+      final tomorrow = _schedule([
+        at('Fajr', 4, dayOffset: 1),
+        at('Dhuhr', 12, dayOffset: 1),
+      ]);
+
+      final adhans = policy.schedulesFor(
+        [fullDay, tomorrow],
+        AdhanSettings.defaults,
+        now: midnight,
+      );
+
+      final fajr = adhans.firstWhere((a) => a.name == 'Fajr');
+      expect(fajr.times.length, 2);
+      expect(fajr.times.first.isBefore(fajr.times.last), isTrue);
+      expect(fajr.times.last.day, midnight.add(const Duration(days: 1)).day);
+    });
+
+    test('leaves out times that have already passed', () {
+      final noon = DateTime(today.year, today.month, today.day, 13);
+
+      final adhans = policy.schedulesFor(
+        [fullDay],
+        AdhanSettings.defaults,
+        now: noon,
+      );
+
+      expect(adhans.map((a) => a.name), ['Asr', 'Maghrib', 'Isha']);
     });
   });
 

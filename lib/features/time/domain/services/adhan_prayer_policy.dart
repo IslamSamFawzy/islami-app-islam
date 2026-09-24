@@ -1,27 +1,46 @@
+import '../entities/adhan_schedule.dart';
 import '../entities/adhan_settings.dart';
-import '../entities/adhan_time.dart';
 import '../entities/prayer_name.dart';
 import '../entities/prayer_times.dart';
 
-/// Decides which prayers in a [PrayerTimes] schedule should trigger an adhan
-/// and how they map to [AdhanTime] values.
+/// Turns the days the app knows about into the adhans to arm.
 abstract class AdhanPrayerPolicy {
-  /// The adhans to arm for [times], given what the user asked for.
-  List<AdhanTime> adhanTimes(PrayerTimes times, AdhanSettings settings);
+  /// One entry per prayer that should sound, carrying every future instant
+  /// found in [days] (today first). An empty list means "nothing to arm".
+  List<AdhanSchedule> schedulesFor(List<PrayerTimes> days, AdhanSettings settings);
 }
 
-/// Default policy: a prayer is armed when the user has it switched on. Sunrise
-/// is informational only, so it is never one of them — see [PrayerName].
+/// Default policy: a prayer is armed when the user has it switched on, for
+/// every day already downloaded. Sunrise is informational only, so it is never
+/// one of them — see [PrayerName].
 class DefaultAdhanPrayerPolicy implements AdhanPrayerPolicy {
   @override
-  List<AdhanTime> adhanTimes(PrayerTimes times, AdhanSettings settings) => [
-    for (final prayer in times.prayers)
-      if (PrayerName.of(prayer.name) case final name?)
-        if (settings.callsAdhanFor(name))
-          AdhanTime(
-            name: prayer.name,
-            time: prayer.time,
+  List<AdhanSchedule> schedulesFor(
+    List<PrayerTimes> days,
+    AdhanSettings settings, {
+    DateTime? now,
+  }) {
+    final from = now ?? DateTime.now();
+    final byPrayer = <PrayerName, List<DateTime>>{};
+
+    for (final day in days) {
+      for (final prayer in day.prayers) {
+        final name = PrayerName.of(prayer.name);
+        if (name == null || !settings.callsAdhanFor(name)) continue;
+        // A time already past would fire the moment it is armed.
+        if (!prayer.time.isAfter(from)) continue;
+        byPrayer.putIfAbsent(name, () => []).add(prayer.time);
+      }
+    }
+
+    return [
+      for (final name in PrayerName.values)
+        if (byPrayer[name] case final times?)
+          AdhanSchedule(
+            name: name.label,
             isFajr: name == PrayerName.fajr,
+            times: times..sort(),
           ),
-  ];
+    ];
+  }
 }

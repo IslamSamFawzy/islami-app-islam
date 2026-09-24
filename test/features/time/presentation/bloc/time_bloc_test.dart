@@ -6,7 +6,7 @@ import 'package:islami/core/cache/cache_result.dart';
 import 'package:islami/core/error/failures.dart';
 import 'package:islami/core/services/connectivity_service.dart';
 import 'package:islami/features/time/domain/entities/adhan_settings.dart';
-import 'package:islami/features/time/domain/entities/adhan_time.dart';
+import 'package:islami/features/time/domain/entities/adhan_schedule.dart';
 import 'package:islami/features/time/domain/entities/prayer_name.dart';
 import 'package:islami/features/time/domain/entities/prayer_times.dart';
 import 'package:islami/features/time/domain/repositories/adhan_settings_repository.dart';
@@ -17,21 +17,30 @@ import 'package:islami/features/time/domain/services/next_prayer_calculator.dart
 import 'package:islami/features/time/domain/services/notification_permission.dart';
 import 'package:islami/features/time/domain/usecases/ensure_adhan_permitted.dart';
 import 'package:islami/features/time/domain/usecases/get_prayer_times.dart';
+import 'package:islami/features/time/domain/usecases/get_upcoming_prayer_days.dart';
+import 'package:islami/features/time/domain/usecases/prefetch_next_month.dart';
 import 'package:islami/features/time/domain/usecases/save_adhan_settings.dart';
 import 'package:islami/features/time/domain/usecases/watch_adhan_settings.dart';
 import 'package:islami/features/time/presentation/bloc/time_bloc.dart';
 
 class _FakeScheduler implements AdhanScheduler {
-  final List<List<AdhanTime>> scheduled = [];
+  final List<List<AdhanSchedule>> scheduled = [];
   int cancels = 0;
   int stops = 0;
+  bool exactAllowed = true;
+  int exactRequests = 0;
 
   @override
-  Future<void> schedule(List<AdhanTime> adhans) async => scheduled.add(adhans);
+  Future<void> schedule(List<AdhanSchedule> adhans) async =>
+      scheduled.add(adhans);
   @override
   Future<void> cancel() async => cancels++;
   @override
   Future<void> stopNow() async => stops++;
+  @override
+  Future<bool> canScheduleExactAlarms() async => exactAllowed;
+  @override
+  Future<void> requestExactAlarms() async => exactRequests++;
 
   List<String> get lastNames =>
       scheduled.isEmpty ? const [] : scheduled.last.map((a) => a.name).toList();
@@ -77,11 +86,26 @@ class _FakePermission implements NotificationPermission {
 class _FakeRepository implements PrayerRepository {
   final PrayerTimes times;
 
-  _FakeRepository(this.times);
+  /// Days the app has downloaded, today first.
+  List<PrayerTimes> upcoming;
+  int prefetches = 0;
+
+  _FakeRepository(this.times, {List<PrayerTimes>? upcoming})
+      : upcoming = upcoming ?? [times];
 
   @override
   Future<Either<Failure, CacheResult<PrayerTimes>>> getPrayerTimes() async =>
       Right(CacheResult(times, fromCache: true));
+
+  @override
+  Future<Either<Failure, List<PrayerTimes>>> getUpcomingDays() async =>
+      Right(upcoming);
+
+  @override
+  Future<Either<Failure, Unit>> prefetchNextMonth() async {
+    prefetches++;
+    return const Right(unit);
+  }
 }
 
 class _FakeConnectivity implements ConnectivityService {
@@ -93,28 +117,40 @@ class _FakeConnectivity implements ConnectivityService {
 
 void main() {
   final now = DateTime.now();
-  final times = PrayerTimes(
-    weekday: 'Monday',
-    gregorianDate: '24 Sep',
-    gregorianYear: '2026',
-    hijriDate: '12 Rab',
-    hijriYear: '1448',
-    prayers: [
-      Prayer(name: 'Fajr', time: now.subtract(const Duration(hours: 4))),
-      Prayer(name: 'Sunrise', time: now.subtract(const Duration(hours: 3))),
-      Prayer(name: 'Dhuhr', time: now.add(const Duration(hours: 2))),
-      Prayer(name: 'Isha', time: now.add(const Duration(hours: 8))),
-    ],
-  );
+
+  PrayerTimes day(Duration offset) => PrayerTimes(
+        weekday: 'Monday',
+        gregorianDate: '24 Sep',
+        gregorianYear: '2026',
+        hijriDate: '12 Rab',
+        hijriYear: '1448',
+        prayers: [
+          Prayer(name: 'Fajr', time: now.add(offset - const Duration(hours: 4))),
+          Prayer(
+            name: 'Sunrise',
+            time: now.add(offset - const Duration(hours: 3)),
+          ),
+          Prayer(name: 'Dhuhr', time: now.add(offset + const Duration(hours: 2))),
+          Prayer(name: 'Isha', time: now.add(offset + const Duration(hours: 8))),
+        ],
+      );
+
+  // Today (its Fajr already passed) and tomorrow, as the cache would hold them.
+  final times = day(Duration.zero);
+  final tomorrow = day(const Duration(days: 1));
 
   late _FakeScheduler scheduler;
   late _FakeSettingsRepository settings;
   late _FakePermission permission;
+  late _FakeRepository prayers;
   late TimeBloc bloc;
 
-  TimeBloc build() {
+  TimeBloc build({DateTime Function()? clock}) {
     return TimeBloc(
-      getPrayerTimes: GetPrayerTimes(_FakeRepository(times)),
+      clock: clock ?? DateTime.now,
+      getPrayerTimes: GetPrayerTimes(prayers),
+      getUpcomingPrayerDays: GetUpcomingPrayerDays(prayers),
+      prefetchNextMonth: PrefetchNextMonth(prayers),
       adhanScheduler: scheduler,
       adhanPrayerPolicy: DefaultAdhanPrayerPolicy(),
       nextPrayerCalculator: AdhanNextPrayerCalculator(),
@@ -137,7 +173,7 @@ void main() {
   setUp(() {
     scheduler = _FakeScheduler();
     permission = _FakePermission();
-
+    prayers = _FakeRepository(times, upcoming: [times, tomorrow]);
     settings = _FakeSettingsRepository(AdhanSettings.defaults);
   });
 
@@ -157,6 +193,28 @@ void main() {
 
     expect(scheduler.lastNames, ['Fajr', 'Isha']);
     expect(bloc.state.muted, isFalse);
+  });
+
+  test('sends each prayer its real instants, not one time per day', () async {
+    bloc = build();
+
+    await load();
+
+    final armed = scheduler.scheduled.single;
+    final isha = armed.firstWhere((a) => a.name == 'Isha');
+    // Today's Isha and tomorrow's, as the cached month gives them — a day
+    // apart only by coincidence of this fixture, but each its own instant.
+    expect(isha.times.length, 2);
+    expect(isha.times.first.isAfter(DateTime.now()), isTrue);
+    expect(isha.times.first.isBefore(isha.times.last), isTrue);
+
+    // Today's Fajr has passed, so only tomorrow's is armed.
+    final fajr = armed.firstWhere((a) => a.name == 'Fajr');
+    expect(fajr.times.length, 1);
+    expect(fajr.isFajr, isTrue);
+
+    // Sunrise never sounds.
+    expect(armed.map((a) => a.name), isNot(contains('Sunrise')));
   });
 
   test('the master switch off cancels the alarms and silences the adhan',
@@ -200,6 +258,23 @@ void main() {
     await pumpEventQueue();
 
     expect(scheduler.lastNames, ['Dhuhr']);
+  });
+
+  test('near the end of the month it fetches the next one', () async {
+    // The 28th of a 30-day month: three days of alarms left.
+    bloc = build(clock: () => DateTime(2026, 9, 28, 10));
+
+    await load();
+
+    expect(prayers.prefetches, 1);
+  });
+
+  test('mid-month it leaves the network alone', () async {
+    bloc = build(clock: () => DateTime(2026, 9, 10, 10));
+
+    await load();
+
+    expect(prayers.prefetches, 0);
   });
 
   test('a refused notification permission turns the adhan off', () async {

@@ -2,6 +2,8 @@ package com.route.islami
 
 import android.content.Intent
 import android.hardware.GeomagneticField
+import android.net.Uri
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -47,14 +49,36 @@ class MainActivity : FlutterActivity() {
                         val list = call.argument<List<Map<String, Any>>>("adhans")
                             ?: emptyList()
                         val adhans = list.map {
+                            @Suppress("UNCHECKED_CAST")
+                            val times = (it["times"] as? List<Number> ?: emptyList())
+                                .map { time -> time.toLong() }
                             AdhanScheduler.Adhan(
                                 it["name"] as String,
-                                (it["hour"] as Number).toInt(),
-                                (it["minute"] as Number).toInt(),
                                 it["fajr"] as Boolean,
+                                times,
                             )
                         }
                         AdhanScheduler.schedule(applicationContext, adhans)
+                        result.success(null)
+                    }
+                    "canScheduleExact" -> {
+                        result.success(
+                            AdhanScheduler.canScheduleExact(applicationContext),
+                        )
+                    }
+                    "requestExactAlarms" -> {
+                        // Opens the system screen for this app; there is no
+                        // in-app dialog for this permission.
+                        if (android.os.Build.VERSION.SDK_INT >=
+                            android.os.Build.VERSION_CODES.S
+                        ) {
+                            startActivity(
+                                Intent(
+                                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:$packageName"),
+                                ),
+                            )
+                        }
                         result.success(null)
                     }
                     "cancel" -> {

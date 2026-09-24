@@ -6,6 +6,8 @@ import 'package:islami/core/error/failures.dart';
 import 'package:islami/features/time/domain/entities/adhan_settings.dart';
 import 'package:islami/features/time/domain/entities/prayer_name.dart';
 import 'package:islami/features/time/domain/repositories/adhan_settings_repository.dart';
+import 'package:islami/features/time/domain/entities/adhan_schedule.dart';
+import 'package:islami/features/time/domain/services/adhan_scheduler.dart';
 import 'package:islami/features/time/domain/services/notification_permission.dart';
 import 'package:islami/features/time/domain/usecases/ensure_adhan_permitted.dart';
 import 'package:islami/features/time/domain/usecases/get_adhan_settings.dart';
@@ -45,9 +47,27 @@ class _FakePermission implements NotificationPermission {
   Future<bool> request() async => granted;
 }
 
+/// Only the exact-alarm answers matter here; nothing else is called.
+class _FakeScheduler implements AdhanScheduler {
+  bool exactAllowed = true;
+  int exactRequests = 0;
+
+  @override
+  Future<void> schedule(List<AdhanSchedule> adhans) async {}
+  @override
+  Future<void> cancel() async {}
+  @override
+  Future<void> stopNow() async {}
+  @override
+  Future<bool> canScheduleExactAlarms() async => exactAllowed;
+  @override
+  Future<void> requestExactAlarms() async => exactRequests++;
+}
+
 void main() {
   late _FakeSettingsRepository repository;
   late _FakePermission permission;
+  late _FakeScheduler scheduler;
 
   AdhanSettingsCubit build() => AdhanSettingsCubit(
     getAdhanSettings: GetAdhanSettings(repository),
@@ -56,10 +76,12 @@ void main() {
       repository: repository,
       notificationPermission: permission,
     ),
+    adhanScheduler: scheduler,
   );
 
   setUp(() {
     permission = _FakePermission();
+    scheduler = _FakeScheduler();
     repository = _FakeSettingsRepository(AdhanSettings.defaults);
   });
 
@@ -113,6 +135,23 @@ void main() {
     expect(cubit.state.permissionDenied, isTrue);
     expect(repository.settings.enabled, isFalse, reason: 'not persisted as on');
     await cubit.close();
+  });
+
+  test('offers the exact-alarm row only when the device withholds it',
+      () async {
+    final allowed = build();
+    await allowed.load();
+    expect(allowed.state.exactAlarmsAllowed, isTrue);
+    await allowed.close();
+
+    scheduler.exactAllowed = false;
+    final restricted = build();
+    await restricted.load();
+    expect(restricted.state.exactAlarmsAllowed, isFalse);
+
+    await restricted.requestExactAlarms();
+    expect(scheduler.exactRequests, 1);
+    await restricted.close();
   });
 
   test('granting the permission keeps the switch on', () async {

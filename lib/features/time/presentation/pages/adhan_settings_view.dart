@@ -48,6 +48,36 @@ class _AdhanSettingsBody extends StatelessWidget {
                 ),
               ),
               if (state.permissionDenied) const _PermissionHint(),
+              if (!state.exactAlarmsAllowed) ...[
+                const SizedBox(height: 12),
+                _SettingsCard(
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    leading: const Icon(
+                      Icons.alarm_outlined,
+                      color: AppColors.primaryColor,
+                    ),
+                    title: Text(
+                      'Allow exact alarms for on-time adhan',
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        color: AppColors.white,
+                        fontSize: 15,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Without this the adhan may play a few minutes late.',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: AppColors.textColor.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.primaryColor,
+                    ),
+                    onTap: cubit.requestExactAlarms,
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 8),

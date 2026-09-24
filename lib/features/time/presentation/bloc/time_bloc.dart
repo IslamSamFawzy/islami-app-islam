@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../domain/entities/adhan_schedule.dart';
 import '../../domain/entities/adhan_settings.dart';
 import '../../domain/entities/prayer_times.dart';
 import '../../domain/services/adhan_prayer_policy.dart';
@@ -13,6 +14,8 @@ import '../../domain/services/adhan_scheduler.dart';
 import '../../domain/services/next_prayer_calculator.dart';
 import '../../domain/usecases/ensure_adhan_permitted.dart';
 import '../../domain/usecases/get_prayer_times.dart';
+import '../../domain/usecases/get_upcoming_prayer_days.dart';
+import '../../domain/usecases/prefetch_next_month.dart';
 import '../../domain/usecases/save_adhan_settings.dart';
 import '../../domain/usecases/watch_adhan_settings.dart';
 
@@ -21,6 +24,12 @@ part 'time_state.dart';
 
 class TimeBloc extends Bloc<TimeEvent, TimeState> {
   final GetPrayerTimes getPrayerTimes;
+
+  /// Every downloaded day, so the alarms carry each prayer's real instant
+  /// rather than one clock time repeated daily.
+  final GetUpcomingPrayerDays getUpcomingPrayerDays;
+  final PrefetchNextMonth prefetchNextMonth;
+
   final AdhanScheduler adhanScheduler;
   final AdhanPrayerPolicy adhanPrayerPolicy;
   final NextPrayerCalculator nextPrayerCalculator;
@@ -32,12 +41,20 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
   final SaveAdhanSettings saveAdhanSettings;
   final WatchAdhanSettings watchAdhanSettings;
 
+  /// Reads the current time; injectable so a test can sit at a month's end.
+  final DateTime Function() clock;
+
+  /// How close to the end of the month counts as "about to run out".
+  static const int _prefetchWindowDays = 5;
+
   Timer? _ticker;
   StreamSubscription<bool>? _connectivitySub;
   StreamSubscription<AdhanSettings>? _settingsSub;
 
   TimeBloc({
     required this.getPrayerTimes,
+    required this.getUpcomingPrayerDays,
+    required this.prefetchNextMonth,
     required this.adhanScheduler,
     required this.adhanPrayerPolicy,
     required this.nextPrayerCalculator,
@@ -45,6 +62,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     required this.ensureAdhanPermitted,
     required this.saveAdhanSettings,
     required this.watchAdhanSettings,
+    this.clock = DateTime.now,
   }) : super(TimeState(settings: AdhanSettings.defaults)) {
     on<LoadPrayerTimesEvent>(_onLoad);
     on<_TickEvent>(_onTick);
@@ -88,7 +106,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
       ),
       (cached) async {
         final times = cached.data;
-        await _syncAdhans(times, state.settings);
+        await _syncAdhans(state.settings);
         final next = _nextPrayer(times);
         emit(
           state.copyWith(
@@ -149,7 +167,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     final wasEnabled = state.settings.enabled;
     emit(state.copyWith(settings: event.settings));
 
-    await _syncAdhans(state.prayerTimes, event.settings);
+    await _syncAdhans(event.settings);
     // Switching the adhan off must also silence one that is playing.
     if (wasEnabled && !event.settings.enabled) {
       await adhanScheduler.stopNow();
@@ -177,18 +195,34 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
   /// Arms the native adhan alarms for the prayers [settings] asks for, or
   /// clears them when the master switch is off.
   ///
-  /// With no schedule yet there is nothing to arm, and yesterday's alarms
-  /// repeat daily, so they are left alone rather than cancelled.
-  Future<void> _syncAdhans(PrayerTimes? times, AdhanSettings settings) async {
+  /// Every downloaded day is sent, so the device keeps firing at the right
+  /// minute for weeks without the app being opened. With nothing downloaded
+  /// yet there is nothing to arm, and the alarms already set keep running.
+  Future<void> _syncAdhans(AdhanSettings settings) async {
     if (!settings.enabled) {
       await adhanScheduler.cancel();
       return;
     }
-    if (times != null) {
-      await adhanScheduler.schedule(
-        adhanPrayerPolicy.adhanTimes(times, settings),
-      );
-    }
+
+    await _prefetchIfMonthIsEnding();
+
+    final days = await getUpcomingPrayerDays(const NoParams());
+    final schedules = days.fold(
+      (_) => const <AdhanSchedule>[],
+      (days) => adhanPrayerPolicy.schedulesFor(days, settings),
+    );
+    if (schedules.isNotEmpty) await adhanScheduler.schedule(schedules);
+  }
+
+  /// Near the end of the month the cached days are about to run out, so fetch
+  /// the next one while there is a connection.
+  Future<void> _prefetchIfMonthIsEnding() async {
+    final now = clock();
+    final daysLeft = DateTime(now.year, now.month + 1, 0).day - now.day;
+    if (daysLeft > _prefetchWindowDays) return;
+    if (!await connectivityService.isConnected) return;
+
+    await prefetchNextMonth(const NoParams());
   }
 
   @override

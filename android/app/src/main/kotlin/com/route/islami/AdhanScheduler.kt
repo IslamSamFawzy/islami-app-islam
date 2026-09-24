@@ -7,71 +7,113 @@ import android.content.Intent
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 /**
  * Sets and cancels the exact daily alarms that fire the adhan, and persists the
  * schedule in the app's own prefs (separate from Flutter's SharedPreferences)
- * so [AdhanBootReceiver] can restore it after a reboot.
+ * so it survives a reboot.
+ *
+ * Each prayer carries the real instant of every day the app has downloaded
+ * (prayer times move by up to a minute a day). An alarm that fires arms the
+ * same prayer's next instant from that list; only once the list runs out does
+ * it fall back to "same time tomorrow".
  */
 object AdhanScheduler {
     const val EXTRA_PRAYER = "prayer"
     const val EXTRA_IS_FAJR = "is_fajr"
     const val EXTRA_REQUEST_CODE = "request_code"
-    const val EXTRA_HOUR = "hour"
-    const val EXTRA_MINUTE = "minute"
 
     private const val PREFS = "adhan_prefs"
     private const val KEY_SCHEDULE = "schedule"
+    private val ONE_DAY_MS = TimeUnit.DAYS.toMillis(1)
 
+    /** One prayer and every instant it is due, in ascending order. */
     data class Adhan(
         val name: String,
-        val hour: Int,
-        val minute: Int,
         val isFajr: Boolean,
-    )
+        val times: List<Long>,
+    ) {
+        /** The first instant after [from], or null when the list is used up. */
+        fun nextAfter(from: Long): Long? = times.firstOrNull { it > from }
 
-    /** Persists [adhans] and arms each at its next occurrence. */
+        /**
+         * What to arm when the list is used up: the last known instant moved
+         * forward a day at a time until it is in the future. Keeps the adhan
+         * roughly right if the app is never opened again.
+         */
+        fun fallbackAfter(from: Long): Long? {
+            var time = times.lastOrNull() ?: return null
+            while (time <= from) time += ONE_DAY_MS
+            return time
+        }
+    }
+
+    /** Persists [adhans] and arms each at its next instant. */
     fun schedule(context: Context, adhans: List<Adhan>) {
         // Cancel whatever was armed before so a changed prayer set leaves no
         // orphaned alarms.
         cancelArmed(context)
         persist(context, adhans)
-        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        adhans.forEachIndexed { i, a ->
-            am.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                nextTrigger(a.hour, a.minute),
-                pendingIntent(context, i, a),
-            )
-        }
+        adhans.forEachIndexed { i, adhan -> arm(context, i, adhan) }
     }
 
-    /** Re-arms every saved prayer for its next occurrence (used after boot). */
+    /**
+     * Re-arms every saved prayer at its next instant. Used after a reboot, a
+     * clock or time-zone change, and when the exact-alarm permission changes.
+     */
     fun rescheduleAll(context: Context) {
-        schedule(context, read(context))
+        read(context).forEachIndexed { i, adhan -> arm(context, i, adhan) }
     }
 
-    /** Re-arms a single prayer for tomorrow (called right after it fires). */
-    fun rescheduleNextDay(context: Context, requestCode: Int, a: Adhan) {
-        val cal = atClock(a.hour, a.minute).apply { add(Calendar.DAY_OF_YEAR, 1) }
-        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        am.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            cal.timeInMillis,
-            pendingIntent(context, requestCode, a),
-        )
+    /** Arms the prayer that just fired at its following instant. */
+    fun rescheduleAfterFiring(context: Context, requestCode: Int) {
+        val adhans = read(context)
+        adhans.getOrNull(requestCode)?.let { arm(context, requestCode, it) }
     }
 
-    /** Cancels all pending alarms and forgets the saved schedule (mute). */
+    /** Cancels all pending alarms and forgets the saved schedule. */
     fun cancel(context: Context) {
         cancelArmed(context)
         prefs(context).edit().remove(KEY_SCHEDULE).apply()
     }
 
+    /**
+     * Whether the device lets this app set exact alarms. Android 12 introduced
+     * the permission; Android 14 stopped granting it to new installs.
+     */
+    fun canScheduleExact(context: Context): Boolean {
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            am.canScheduleExactAlarms()
+        } else {
+            true
+        }
+    }
+
+    private fun arm(context: Context, requestCode: Int, adhan: Adhan) {
+        val now = System.currentTimeMillis()
+        val at = adhan.nextAfter(now) ?: adhan.fallbackAfter(now) ?: return
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = pendingIntent(context, requestCode, adhan)
+
+        // Without the exact-alarm permission an inexact alarm still plays the
+        // adhan, just not to the minute — far better than crashing.
+        try {
+            if (canScheduleExact(context)) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, intent)
+            } else {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, intent)
+            }
+        } catch (e: SecurityException) {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, intent)
+        }
+    }
+
     private fun cancelArmed(context: Context) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        read(context).forEachIndexed { i, a ->
-            am.cancel(pendingIntent(context, i, a))
+        read(context).forEachIndexed { i, adhan ->
+            am.cancel(pendingIntent(context, i, adhan))
         }
     }
 
@@ -79,29 +121,42 @@ object AdhanScheduler {
         val raw = prefs(context).getString(KEY_SCHEDULE, null) ?: return emptyList()
         return try {
             val arr = JSONArray(raw)
-            (0 until arr.length()).map { i ->
-                val o = arr.getJSONObject(i)
-                Adhan(
-                    o.getString("name"),
-                    o.getInt("hour"),
-                    o.getInt("minute"),
-                    o.getBoolean("fajr"),
-                )
-            }
+            (0 until arr.length()).map { i -> parse(arr.getJSONObject(i)) }
         } catch (e: Exception) {
             emptyList()
         }
     }
 
+    /**
+     * Reads one saved prayer. Entries written before the app stored instants
+     * carry an hour and a minute instead, so those are turned into today's (or
+     * tomorrow's) instant — an update must not silence the adhan.
+     */
+    private fun parse(o: JSONObject): Adhan {
+        val name = o.getString("name")
+        val isFajr = o.optBoolean("fajr", false)
+
+        val stored = o.optJSONArray("times")
+        if (stored != null) {
+            return Adhan(
+                name,
+                isFajr,
+                (0 until stored.length()).map { stored.getLong(it) },
+            )
+        }
+        return Adhan(name, isFajr, listOf(nextTrigger(o.getInt("hour"), o.getInt("minute"))))
+    }
+
     private fun persist(context: Context, adhans: List<Adhan>) {
         val arr = JSONArray()
-        adhans.forEach { a ->
+        adhans.forEach { adhan ->
+            val times = JSONArray()
+            adhan.times.forEach { times.put(it) }
             arr.put(
                 JSONObject()
-                    .put("name", a.name)
-                    .put("hour", a.hour)
-                    .put("minute", a.minute)
-                    .put("fajr", a.isFajr),
+                    .put("name", adhan.name)
+                    .put("fajr", adhan.isFajr)
+                    .put("times", times),
             )
         }
         prefs(context).edit().putString(KEY_SCHEDULE, arr.toString()).apply()
@@ -110,29 +165,25 @@ object AdhanScheduler {
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    private fun atClock(hour: Int, minute: Int): Calendar =
-        Calendar.getInstance().apply {
+    /** Only used to migrate a schedule saved as an hour and a minute. */
+    private fun nextTrigger(hour: Int, minute: Int): Long {
+        val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-
-    private fun nextTrigger(hour: Int, minute: Int): Long {
-        val cal = atClock(hour, minute)
         if (cal.timeInMillis <= System.currentTimeMillis()) {
             cal.add(Calendar.DAY_OF_YEAR, 1)
         }
         return cal.timeInMillis
     }
 
-    private fun pendingIntent(context: Context, requestCode: Int, a: Adhan): PendingIntent {
+    private fun pendingIntent(context: Context, requestCode: Int, adhan: Adhan): PendingIntent {
         val intent = Intent(context, AdhanReceiver::class.java).apply {
-            putExtra(EXTRA_PRAYER, a.name)
-            putExtra(EXTRA_IS_FAJR, a.isFajr)
+            putExtra(EXTRA_PRAYER, adhan.name)
+            putExtra(EXTRA_IS_FAJR, adhan.isFajr)
             putExtra(EXTRA_REQUEST_CODE, requestCode)
-            putExtra(EXTRA_HOUR, a.hour)
-            putExtra(EXTRA_MINUTE, a.minute)
         }
         return PendingIntent.getBroadcast(
             context,

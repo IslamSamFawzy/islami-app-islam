@@ -14,4 +14,13 @@ abstract class PrayerRepository {
   /// [CacheFailure] with a user-facing message is returned. The [CacheResult]
   /// reports whether the data came from cache.
   Future<Either<Failure, CacheResult<PrayerTimes>>> getPrayerTimes();
+
+  /// Every day from now on that has already been downloaded: the rest of this
+  /// month, plus next month when it has been fetched. This is what the alarms
+  /// are armed from, so they stay accurate while the app is unopened.
+  Future<Either<Failure, List<PrayerTimes>>> getUpcomingDays();
+
+  /// Downloads next month if it is not cached yet, so the alarms do not run
+  /// out at the turn of the month. Does nothing when it is already there.
+  Future<Either<Failure, Unit>> prefetchNextMonth();
 }
