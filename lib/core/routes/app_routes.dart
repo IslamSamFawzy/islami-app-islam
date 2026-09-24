@@ -9,6 +9,7 @@ import '../../features/qibla/presentation/pages/qibla_view.dart';
 import '../../features/quran/presentation/pages/quran_details_view.dart';
 import '../../features/radio/presentation/pages/reciter_suras_view.dart';
 import '../../features/splash/presentation/pages/splash_view.dart';
+import '../../features/time/presentation/pages/adhan_settings_view.dart';
 
 abstract class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
@@ -21,5 +22,6 @@ abstract class AppRoutes {
     ReciterSurasView.routeName: (context) => const ReciterSurasView(),
     DownloadsView.routeName: (context) => const DownloadsView(),
     QiblaView.routeName: (context) => const QiblaView(),
+    AdhanSettingsView.routeName: (context) => const AdhanSettingsView(),
   };
 }

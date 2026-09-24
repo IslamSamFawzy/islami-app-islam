@@ -5,7 +5,10 @@ class TimeState extends Equatable {
   final PrayerTimes? prayerTimes;
   final String nextPrayerName;
   final Duration countdown;
-  final bool muted;
+
+  /// Which adhans the user has asked for; persisted, so it survives a restart.
+  final AdhanSettings settings;
+
   final String errorMessage;
 
   /// Whether the displayed schedule came from the cached month rather than a
@@ -17,10 +20,13 @@ class TimeState extends Equatable {
     this.prayerTimes,
     this.nextPrayerName = '',
     this.countdown = Duration.zero,
-    this.muted = false,
+    required this.settings,
     this.errorMessage = '',
     this.isFromCache = false,
   });
+
+  /// What the volume icon on the prayer card shows.
+  bool get muted => !settings.enabled;
 
   /// Whether a saved schedule is on screen — what the offline strip is about
   /// (data shown while offline is saved data either way).
@@ -31,7 +37,7 @@ class TimeState extends Equatable {
     PrayerTimes? prayerTimes,
     String? nextPrayerName,
     Duration? countdown,
-    bool? muted,
+    AdhanSettings? settings,
     String? errorMessage,
     bool? isFromCache,
   }) {
@@ -40,7 +46,7 @@ class TimeState extends Equatable {
       prayerTimes: prayerTimes ?? this.prayerTimes,
       nextPrayerName: nextPrayerName ?? this.nextPrayerName,
       countdown: countdown ?? this.countdown,
-      muted: muted ?? this.muted,
+      settings: settings ?? this.settings,
       errorMessage: errorMessage ?? this.errorMessage,
       isFromCache: isFromCache ?? this.isFromCache,
     );
@@ -52,7 +58,7 @@ class TimeState extends Equatable {
         prayerTimes,
         nextPrayerName,
         countdown,
-        muted,
+        settings,
         errorMessage,
         isFromCache,
       ];

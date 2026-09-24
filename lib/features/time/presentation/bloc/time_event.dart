@@ -17,9 +17,19 @@ class _TickEvent extends TimeEvent {
   const _TickEvent();
 }
 
-/// Mutes/unmutes the in-app adhan sound.
-class ToggleMuteEvent extends TimeEvent {
-  const ToggleMuteEvent();
+/// Turns every adhan on or off — the volume icon on the prayer card.
+class ToggleAdhanEvent extends TimeEvent {
+  const ToggleAdhanEvent();
+}
+
+/// Internal: the adhan settings changed (here or on the settings screen).
+class _SettingsChangedEvent extends TimeEvent {
+  final AdhanSettings settings;
+
+  const _SettingsChangedEvent(this.settings);
+
+  @override
+  List<Object?> get props => [settings];
 }
 
 /// Internal: forwards connectivity changes (drives the offline strip and

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:islami/features/time/domain/entities/adhan_settings.dart';
 import 'package:islami/features/time/domain/entities/prayer_name.dart';
 import 'package:islami/features/time/domain/entities/prayer_times.dart';
 import 'package:islami/features/time/domain/services/adhan_prayer_policy.dart';
@@ -46,17 +47,18 @@ void main() {
   });
 
   group('DefaultAdhanPrayerPolicy', () {
-    test('schedules the five prayers, skipping Sunrise', () {
-      final times = _schedule([
-        at('Fajr', 4),
-        at('Sunrise', 6),
-        at('Dhuhr', 12),
-        at('Asr', 15),
-        at('Maghrib', 18),
-        at('Isha', 20),
-      ]);
+    final fullDay = _schedule([
+      at('Fajr', 4),
+      at('Sunrise', 6),
+      at('Dhuhr', 12),
+      at('Asr', 15),
+      at('Maghrib', 18),
+      at('Isha', 20),
+    ]);
+    final policy = DefaultAdhanPrayerPolicy();
 
-      final adhans = DefaultAdhanPrayerPolicy().adhanTimes(times);
+    test('schedules the five prayers, skipping Sunrise', () {
+      final adhans = policy.adhanTimes(fullDay, AdhanSettings.defaults);
 
       expect(adhans.map((a) => a.name), [
         'Fajr',
@@ -66,6 +68,27 @@ void main() {
         'Isha',
       ]);
       expect(adhans.where((a) => a.isFajr).map((a) => a.name), ['Fajr']);
+    });
+
+    test('schedules only the prayers that are switched on', () {
+      final adhans = policy.adhanTimes(
+        fullDay,
+        AdhanSettings(
+          enabled: true,
+          prayers: {PrayerName.fajr, PrayerName.maghrib},
+        ),
+      );
+
+      expect(adhans.map((a) => a.name), ['Fajr', 'Maghrib']);
+    });
+
+    test('schedules nothing while the master switch is off', () {
+      final adhans = policy.adhanTimes(
+        fullDay,
+        AdhanSettings(enabled: false, prayers: PrayerName.values.toSet()),
+      );
+
+      expect(adhans, isEmpty);
     });
   });
 

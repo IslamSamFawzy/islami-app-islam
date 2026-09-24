@@ -52,15 +52,24 @@ import '../../features/radio/domain/usecases/get_reciters.dart';
 import '../../features/radio/presentation/bloc/radio_bloc.dart';
 // Time feature
 import '../../features/time/data/datasources/prayer_local_data_source.dart';
+import '../../features/time/data/repositories/adhan_settings_repository_impl.dart';
 import '../../features/time/data/services/method_channel_adhan_scheduler.dart';
+import '../../features/time/data/services/plugin_notification_permission.dart';
+import '../../features/time/domain/repositories/adhan_settings_repository.dart';
 import '../../features/time/data/datasources/prayer_remote_data_source.dart';
 import '../../features/time/data/repositories/prayer_repository_impl.dart';
 import '../../features/time/domain/repositories/prayer_repository.dart';
 import '../../features/time/domain/services/adhan_prayer_policy.dart';
 import '../../features/time/domain/services/adhan_scheduler.dart';
+import '../../features/time/domain/services/notification_permission.dart';
 import '../../features/time/domain/services/next_prayer_calculator.dart';
+import '../../features/time/domain/usecases/ensure_adhan_permitted.dart';
+import '../../features/time/domain/usecases/get_adhan_settings.dart';
 import '../../features/time/domain/usecases/get_prayer_times.dart';
+import '../../features/time/domain/usecases/save_adhan_settings.dart';
+import '../../features/time/domain/usecases/watch_adhan_settings.dart';
 import '../../features/time/presentation/bloc/time_bloc.dart';
+import '../../features/time/presentation/cubit/adhan_settings_cubit.dart';
 import '../cache/cache_manager.dart';
 import '../cache/json_store.dart';
 import '../presentation/connectivity_cubit.dart';
@@ -121,9 +130,10 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<DownloadService>(() => DownloadServiceImpl());
 
+  // Set the plugin up now; the permission is asked for when the user turns
+  // the adhan on, not on launch.
   final notificationService = LocalNotificationService();
   await notificationService.init();
-  await notificationService.requestPermissions();
   sl.registerLazySingleton<NotificationService>(() => notificationService);
 
   // ---------------------------------------------------------------------------
@@ -188,10 +198,40 @@ Future<void> init() async {
       adhanPrayerPolicy: sl(),
       nextPrayerCalculator: sl(),
       connectivityService: sl(),
+      ensureAdhanPermitted: sl(),
+      saveAdhanSettings: sl(),
+      watchAdhanSettings: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => AdhanSettingsCubit(
+      getAdhanSettings: sl(),
+      saveAdhanSettings: sl(),
+      ensureAdhanPermitted: sl(),
     ),
   );
 
   sl.registerLazySingleton(() => GetPrayerTimes(sl()));
+  sl.registerLazySingleton(() => GetAdhanSettings(sl()));
+  sl.registerLazySingleton(() => SaveAdhanSettings(sl()));
+  sl.registerLazySingleton(() => WatchAdhanSettings(sl()));
+  sl.registerLazySingleton(
+    () => EnsureAdhanPermitted(
+      repository: sl(),
+      notificationPermission: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<NotificationPermission>(
+    () => PluginNotificationPermission(),
+  );
+
+  // One instance: its watch() stream is how the prayer card and the settings
+  // screen stay in step.
+  sl.registerLazySingleton<AdhanSettingsRepository>(
+    () => AdhanSettingsRepositoryImpl(jsonStore: sl()),
+  );
 
   sl.registerLazySingleton<PrayerRepository>(
     () => PrayerRepositoryImpl(

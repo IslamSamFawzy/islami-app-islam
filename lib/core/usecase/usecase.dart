@@ -9,6 +9,12 @@ abstract class UseCase<T, Params> {
   Future<Either<Failure, T>> call(Params params);
 }
 
+/// Contract for a use case that yields a stream of values rather than one
+/// result — watching settings, say.
+abstract class StreamUseCase<T, Params> {
+  Stream<T> call(Params params);
+}
+
 /// Placeholder for use cases that take no arguments.
 class NoParams extends Equatable {
   const NoParams();

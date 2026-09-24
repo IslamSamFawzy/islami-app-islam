@@ -6,11 +6,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/presentation/view_status.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../domain/entities/adhan_settings.dart';
 import '../../domain/entities/prayer_times.dart';
 import '../../domain/services/adhan_prayer_policy.dart';
 import '../../domain/services/adhan_scheduler.dart';
 import '../../domain/services/next_prayer_calculator.dart';
+import '../../domain/usecases/ensure_adhan_permitted.dart';
 import '../../domain/usecases/get_prayer_times.dart';
+import '../../domain/usecases/save_adhan_settings.dart';
+import '../../domain/usecases/watch_adhan_settings.dart';
 
 part 'time_event.dart';
 part 'time_state.dart';
@@ -22,8 +26,15 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
   final NextPrayerCalculator nextPrayerCalculator;
   final ConnectivityService connectivityService;
 
+  /// Settings the user can also change from the settings screen, so they are
+  /// watched rather than read once.
+  final EnsureAdhanPermitted ensureAdhanPermitted;
+  final SaveAdhanSettings saveAdhanSettings;
+  final WatchAdhanSettings watchAdhanSettings;
+
   Timer? _ticker;
   StreamSubscription<bool>? _connectivitySub;
+  StreamSubscription<AdhanSettings>? _settingsSub;
 
   TimeBloc({
     required this.getPrayerTimes,
@@ -31,16 +42,24 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     required this.adhanPrayerPolicy,
     required this.nextPrayerCalculator,
     required this.connectivityService,
-  }) : super(const TimeState()) {
+    required this.ensureAdhanPermitted,
+    required this.saveAdhanSettings,
+    required this.watchAdhanSettings,
+  }) : super(TimeState(settings: AdhanSettings.defaults)) {
     on<LoadPrayerTimesEvent>(_onLoad);
     on<_TickEvent>(_onTick);
-    on<ToggleMuteEvent>(_onToggleMute);
+    on<ToggleAdhanEvent>(_onToggleAdhan);
+    on<_SettingsChangedEvent>(_onSettingsChanged);
     on<_ConnectivityChangedEvent>(_onConnectivityChanged);
 
     _connectivitySub = connectivityService.onConnectivityChanged.listen((
       online,
     ) {
       if (!isClosed) add(_ConnectivityChangedEvent(online));
+    });
+
+    _settingsSub = watchAdhanSettings(const NoParams()).listen((settings) {
+      if (!isClosed) add(_SettingsChangedEvent(settings));
     });
   }
 
@@ -49,6 +68,16 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     Emitter<TimeState> emit,
   ) async {
     emit(state.copyWith(status: ViewStatus.loading));
+
+    // Opening the tab is where the adhan permission is asked for, if the user
+    // has adhans on and has not been asked yet. A refusal turns them off.
+    final settings = await ensureAdhanPermitted(const NoParams());
+    emit(
+      state.copyWith(
+        settings: settings.getOrElse(() => state.settings),
+      ),
+    );
+
     final result = await getPrayerTimes(const NoParams());
     await result.fold(
       (failure) async => emit(
@@ -59,7 +88,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
       ),
       (cached) async {
         final times = cached.data;
-        await _syncAdhans(times);
+        await _syncAdhans(times, state.settings);
         final next = _nextPrayer(times);
         emit(
           state.copyWith(
@@ -100,16 +129,31 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     );
   }
 
-  Future<void> _onToggleMute(
-    ToggleMuteEvent event,
+  /// The volume icon on the prayer card: the master switch, and nothing else.
+  ///
+  /// Saving is all this does — the settings stream brings the change back
+  /// through [_onSettingsChanged], which is the one place alarms are armed.
+  Future<void> _onToggleAdhan(
+    ToggleAdhanEvent event,
     Emitter<TimeState> emit,
   ) async {
-    final muted = !state.muted;
-    emit(state.copyWith(muted: muted));
+    final turningOn = !state.settings.enabled;
+    await saveAdhanSettings(state.settings.copyWith(enabled: turningOn));
+    if (turningOn) await ensureAdhanPermitted(const NoParams());
+  }
 
-    await _syncAdhans(state.prayerTimes);
-    // Muted must also mean nothing is heard right now.
-    if (muted) await adhanScheduler.stopNow();
+  Future<void> _onSettingsChanged(
+    _SettingsChangedEvent event,
+    Emitter<TimeState> emit,
+  ) async {
+    final wasEnabled = state.settings.enabled;
+    emit(state.copyWith(settings: event.settings));
+
+    await _syncAdhans(state.prayerTimes, event.settings);
+    // Switching the adhan off must also silence one that is playing.
+    if (wasEnabled && !event.settings.enabled) {
+      await adhanScheduler.stopNow();
+    }
   }
 
   void _startTicker() {
@@ -130,17 +174,20 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
     );
   }
 
-  /// Arms the native adhan alarms for [times], or clears them when muted.
+  /// Arms the native adhan alarms for the prayers [settings] asks for, or
+  /// clears them when the master switch is off.
   ///
   /// With no schedule yet there is nothing to arm, and yesterday's alarms
   /// repeat daily, so they are left alone rather than cancelled.
-  Future<void> _syncAdhans(PrayerTimes? times) async {
-    if (state.muted) {
+  Future<void> _syncAdhans(PrayerTimes? times, AdhanSettings settings) async {
+    if (!settings.enabled) {
       await adhanScheduler.cancel();
       return;
     }
     if (times != null) {
-      await adhanScheduler.schedule(adhanPrayerPolicy.adhanTimes(times));
+      await adhanScheduler.schedule(
+        adhanPrayerPolicy.adhanTimes(times, settings),
+      );
     }
   }
 
@@ -148,6 +195,7 @@ class TimeBloc extends Bloc<TimeEvent, TimeState> {
   Future<void> close() {
     _ticker?.cancel();
     _connectivitySub?.cancel();
+    _settingsSub?.cancel();
     return super.close();
   }
 }

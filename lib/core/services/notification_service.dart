@@ -1,17 +1,14 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-/// Sets up notifications and asks for the permission the adhan's foreground
-/// notification needs.
+/// Sets notifications up at startup.
 ///
 /// The adhan itself is scheduled and played natively (see AdhanScheduler and
 /// the Kotlin AdhanService), not through this plugin, so nothing is scheduled
-/// here.
+/// here. The permission is asked for when the user turns the adhan on, not on
+/// launch — see NotificationPermission in the Time feature.
 abstract class NotificationService {
   /// Prepares the plugin. Safe to call more than once.
   Future<void> init();
-
-  /// Asks the platform for permission to post notifications.
-  Future<void> requestPermissions();
 }
 
 /// [NotificationService] implementation backed by flutter_local_notifications.
@@ -40,17 +37,4 @@ class LocalNotificationService implements NotificationService {
     _initialized = true;
   }
 
-  @override
-  Future<void> requestPermissions() async {
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
-  }
 }

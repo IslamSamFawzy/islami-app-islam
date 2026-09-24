@@ -14,6 +14,7 @@ import '../../../azkar/presentation/pages/azkar_view.dart';
 import '../../../qibla/presentation/pages/qibla_view.dart';
 import '../bloc/time_bloc.dart';
 import '../widgets/prayer_times_card.dart';
+import 'adhan_settings_view.dart';
 
 class TimeView extends StatelessWidget {
   const TimeView({super.key});
@@ -38,7 +39,28 @@ class _TimeViewBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const HeaderLogo(),
+            // The logo sits centred with the settings gear on its right.
+            Stack(
+              children: [
+                const HeaderLogo(),
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      tooltip: 'Settings',
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: AppColors.primaryColor,
+                      ),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        AdhanSettingsView.routeName,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             OfflineBannerFor<TimeBloc, TimeState>(
               hasData: (state) => state.hasSavedData,
             ),
@@ -62,7 +84,7 @@ class _TimeViewBody extends StatelessWidget {
                   countdown: state.countdown,
                   muted: state.muted,
                   onToggleMute: () =>
-                      context.read<TimeBloc>().add(const ToggleMuteEvent()),
+                      context.read<TimeBloc>().add(const ToggleAdhanEvent()),
                 );
               },
             ),
