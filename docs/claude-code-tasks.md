@@ -25,6 +25,11 @@ When a phase is done, paste the "Report back" block from the end of this file
   separately and is integrated in Phase 7).
 - After each logical step: `flutter analyze` must report **no issues** and
   `flutter test` must pass. Add or update tests for anything you move or add.
+- **Never drive the physical phone**: no taps, no input events, no installs
+  or uninstalls, no clearing its data. It is a personal device in daily use.
+  Every on-device check goes on the Android emulator (`Pixel_9_Pro_XL`), and
+  `adb` calls name it explicitly (`adb -s emulator-5554 …`) so a connected
+  phone can never be the target. The owner tests on the phone themselves.
 - One commit per numbered item (or per small group of related items), with a
   clear message. Never commit `build/`, `.dart_tool/` or local IDE files.
 - Before the first commit, check `git status`: about 200 files outside `lib/`
