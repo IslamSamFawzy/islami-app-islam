@@ -84,6 +84,20 @@ no network at all. Radio lists are cached for 7 days and prayer times a month
 at a time, both through `CacheManager`; downloaded suras play from disk. A
 screen showing saved data while offline says so with `OfflineBannerFor`.
 
+## Adhan
+
+Which adhans sound is a persisted setting (`AdhanSettings`: a master switch and
+the prayers that are on). Everything follows from saving it: `TimeBloc` watches
+the settings and is the only place alarms are armed, so the settings screen and
+the prayer card's volume icon simply save. The policy hands the native
+scheduler exactly the prayers that are switched on, and it re-arms only what it
+was last given — after a reboot, a clock change, or nothing at all when the
+master switch is off.
+
+The notification permission is asked for when the adhan is switched on, not at
+launch; refusing it switches the adhan off rather than leaving a promise the
+device will not keep.
+
 ## Audio
 
 There is one player (`AudioPlayerService`), so there is one owner: every play
@@ -106,7 +120,7 @@ one rule.
 | tasbeh  | `TasbehCubit` (counter + dhikr) | — |
 | radio   | `RadioBloc` (stations, reciters, search, playback), `SuraPlaybackCubit` | mp3quran.net API, cached |
 | downloads | `DownloadsBloc` (queue + index), `DownloadsPlaybackCubit` | files on disk (`DownloadService`) + an index in SharedPreferences |
-| time    | `TimeBloc` (schedule, countdown, adhan alarms) | Aladhan API, a month cached; alarms armed natively |
+| time    | `TimeBloc` (schedule, countdown, adhan alarms), `AdhanSettingsCubit` (which adhans) | Aladhan API, a month cached; alarms armed natively; adhan settings in SharedPreferences |
 | qibla   | `QiblaCubit` (location + compass) | last location cached for offline use |
 | prayer_guide | `PrayerGuideCubit` | `assets/files/prayer_guide/prayer_guide.json` — present but not yet wired into the app |
 
