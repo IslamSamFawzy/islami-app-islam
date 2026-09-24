@@ -11,10 +11,10 @@ class SuraModel extends Sura {
 
   factory SuraModel.fromJson(Map<String, dynamic> json) {
     return SuraModel(
-      id: json['id'] as String,
+      id: json['id'] as int,
       nameEn: json['nameEn'] as String,
       nameAr: json['nameAr'] as String,
-      ayaCount: json['ayaCount'] as String,
+      ayaCount: json['ayaCount'] as int,
     );
   }
 

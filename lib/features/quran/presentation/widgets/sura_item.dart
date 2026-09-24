@@ -38,7 +38,7 @@ class SuraItem extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    sura.id,
+                    '${sura.id}',
                     style: theme.textTheme.titleLarge!.copyWith(
                       color: AppColors.white,
                     ),

@@ -2,10 +2,13 @@ import 'package:equatable/equatable.dart';
 
 /// Domain entity representing a single Quran chapter (Sura).
 class Sura extends Equatable {
-  final String id;
+  /// Sura number, 1..114 — the same number the rest of the app uses to look a
+  /// sura up (SuraNames, the reciter lists, the downloads index).
+  final int id;
+
   final String nameEn;
   final String nameAr;
-  final String ayaCount;
+  final int ayaCount;
 
   const Sura({
     required this.id,

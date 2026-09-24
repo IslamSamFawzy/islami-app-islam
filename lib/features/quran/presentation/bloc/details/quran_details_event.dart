@@ -9,7 +9,7 @@ abstract class QuranDetailsEvent extends Equatable {
 
 /// Loads the verses for the sura identified by [suraId].
 class LoadVersesEvent extends QuranDetailsEvent {
-  final String suraId;
+  final int suraId;
 
   const LoadVersesEvent(this.suraId);
 

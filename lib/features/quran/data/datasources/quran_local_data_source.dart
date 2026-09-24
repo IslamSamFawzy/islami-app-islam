@@ -11,13 +11,13 @@ abstract class QuranLocalDataSource {
   Future<List<SuraModel>> getAllSuras();
 
   /// Loads the verses of a sura from its bundled text file.
-  Future<List<String>> getSuraVerses(String suraId);
+  Future<List<String>> getSuraVerses(int suraId);
 
-  /// Returns the IDs of recently read suras, most recent first.
-  Future<List<String>> getRecentSuraIds();
+  /// Returns the numbers of recently read suras, most recent first.
+  Future<List<int>> getRecentSuraIds();
 
   /// Records [suraId] as the most recently read sura (deduped, capped).
-  Future<void> addRecentSuraId(String suraId);
+  Future<void> addRecentSuraId(int suraId);
 }
 
 class QuranLocalDataSourceImpl implements QuranLocalDataSource {
@@ -34,14 +34,13 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   @override
   Future<List<SuraModel>> getAllSuras() async {
     try {
-      // Built from the shared canonical list. The Quran entity keeps id and
-      // ayaCount as Strings, so convert at this boundary (don't churn Quran).
+      // Built from the shared canonical list.
       return SuraNames.all
           .map((s) => SuraModel(
-                id: s.number.toString(),
+                id: s.number,
                 nameEn: s.nameEn,
                 nameAr: s.nameAr,
-                ayaCount: s.ayaCount.toString(),
+                ayaCount: s.ayaCount,
               ))
           .toList();
     } catch (e) {
@@ -50,21 +49,27 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   }
 
   @override
-  Future<List<String>> getRecentSuraIds() async {
+  Future<List<int>> getRecentSuraIds() async {
     try {
-      return sharedPreferences.getStringList(_recentKey) ?? <String>[];
+      // Stored as strings (SharedPreferences has no int list) and parsed here,
+      // so the key and its contents stay as earlier versions wrote them.
+      return (sharedPreferences.getStringList(_recentKey) ?? <String>[])
+          .map(int.tryParse)
+          .whereType<int>()
+          .toList();
     } catch (e) {
       throw LocalDataException('Failed to load recent suras: $e');
     }
   }
 
   @override
-  Future<void> addRecentSuraId(String suraId) async {
+  Future<void> addRecentSuraId(int suraId) async {
     try {
       final current = sharedPreferences.getStringList(_recentKey) ?? <String>[];
       // Move to front, remove duplicates, cap length.
-      current.remove(suraId);
-      current.insert(0, suraId);
+      current
+        ..remove('$suraId')
+        ..insert(0, '$suraId');
       final capped = current.take(_recentLimit).toList();
       await sharedPreferences.setStringList(_recentKey, capped);
     } catch (e) {
@@ -73,7 +78,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   }
 
   @override
-  Future<List<String>> getSuraVerses(String suraId) async {
+  Future<List<String>> getSuraVerses(int suraId) async {
     try {
       final content =
           await rootBundle.loadString('assets/files/suras/$suraId.txt');

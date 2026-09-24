@@ -17,7 +17,7 @@ class AddRecentSura implements UseCase<Unit, AddRecentSuraParams> {
 }
 
 class AddRecentSuraParams extends Equatable {
-  final String suraId;
+  final int suraId;
 
   const AddRecentSuraParams(this.suraId);
 

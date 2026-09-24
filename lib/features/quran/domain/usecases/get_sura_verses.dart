@@ -17,7 +17,7 @@ class GetSuraVerses implements UseCase<List<String>, SuraVersesParams> {
 }
 
 class SuraVersesParams extends Equatable {
-  final String suraId;
+  final int suraId;
 
   const SuraVersesParams(this.suraId);
 

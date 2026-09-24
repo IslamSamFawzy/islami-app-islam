@@ -17,7 +17,7 @@ class QuranRepositoryImpl implements QuranRepository {
   }
 
   @override
-  Future<Either<Failure, List<String>>> getSuraVerses(String suraId) {
+  Future<Either<Failure, List<String>>> getSuraVerses(int suraId) {
     return guardLocalData(() => localDataSource.getSuraVerses(suraId));
   }
 
@@ -33,7 +33,7 @@ class QuranRepositoryImpl implements QuranRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> addRecentSura(String suraId) {
+  Future<Either<Failure, Unit>> addRecentSura(int suraId) {
     return guardLocalData(() async {
       await localDataSource.addRecentSuraId(suraId);
       return unit;

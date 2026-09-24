@@ -10,11 +10,11 @@ abstract class QuranRepository {
   Future<Either<Failure, List<Sura>>> getAllSuras();
 
   /// Returns the verses (ayat) of the sura identified by [suraId].
-  Future<Either<Failure, List<String>>> getSuraVerses(String suraId);
+  Future<Either<Failure, List<String>>> getSuraVerses(int suraId);
 
   /// Returns the recently read suras, most recent first.
   Future<Either<Failure, List<Sura>>> getRecentSuras();
 
   /// Records the sura identified by [suraId] as recently read.
-  Future<Either<Failure, Unit>> addRecentSura(String suraId);
+  Future<Either<Failure, Unit>> addRecentSura(int suraId);
 }
