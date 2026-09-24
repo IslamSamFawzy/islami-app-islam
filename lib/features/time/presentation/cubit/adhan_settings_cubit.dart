@@ -47,9 +47,16 @@ class AdhanSettingsCubit extends Cubit<AdhanSettingsState> {
   }
 
   /// Sends the user to the system screen for exact alarms. The device re-arms
-  /// the adhans itself once the answer changes; the row disappears the next
-  /// time this screen is opened.
+  /// the adhans itself once the answer changes; the screen picks the new
+  /// answer up when the app comes back to the foreground.
   Future<void> requestExactAlarms() => adhanScheduler.requestExactAlarms();
+
+  /// Re-reads whether exact alarms are allowed — called when the app resumes,
+  /// which is how the user returns from the system settings screen.
+  Future<void> refreshExactAlarms() async {
+    final allowed = await adhanScheduler.canScheduleExactAlarms();
+    if (!isClosed) emit(state.copyWith(exactAlarmsAllowed: allowed));
+  }
 
   /// The master switch. Turning it on asks for the notification permission;
   /// if that is refused the adhan stays off and the screen explains why.

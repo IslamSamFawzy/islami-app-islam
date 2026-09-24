@@ -157,6 +157,23 @@ void main() {
     expect(scheduler.exactRequests, 1);
   });
 
+  testWidgets('the exact-alarm row goes away when the app comes back allowed',
+      (tester) async {
+    await pumpScreen(
+      tester,
+      AdhanSettings.defaults,
+      exactAlarmsAllowed: false,
+    );
+    expect(find.text('Allow exact alarms for on-time adhan'), findsOneWidget);
+
+    // The user allowed it in system settings and returned to the app.
+    scheduler.exactAllowed = true;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Allow exact alarms for on-time adhan'), findsNothing);
+  });
+
   testWidgets('switching one prayer off saves it', (tester) async {
     await pumpScreen(tester, AdhanSettings.defaults);
 

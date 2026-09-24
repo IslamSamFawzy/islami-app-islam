@@ -23,8 +23,35 @@ class AdhanSettingsView extends StatelessWidget {
   }
 }
 
-class _AdhanSettingsBody extends StatelessWidget {
+class _AdhanSettingsBody extends StatefulWidget {
   const _AdhanSettingsBody();
+
+  @override
+  State<_AdhanSettingsBody> createState() => _AdhanSettingsBodyState();
+}
+
+class _AdhanSettingsBodyState extends State<_AdhanSettingsBody>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back from the system's exact-alarm screen: the answer may have
+    // changed, so the row updates straight away.
+    if (state == AppLifecycleState.resumed) {
+      context.read<AdhanSettingsCubit>().refreshExactAlarms();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +92,9 @@ class _AdhanSettingsBody extends StatelessWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'Without this the adhan may play a few minutes late.',
+                      'Without this the adhan may play a few minutes late, '
+                      'and on some devices you get a notification instead of '
+                      'the adhan itself.',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: AppColors.textColor.withValues(alpha: 0.7),
                       ),

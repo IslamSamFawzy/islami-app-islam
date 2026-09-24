@@ -151,6 +151,11 @@ void main() {
 
     await restricted.requestExactAlarms();
     expect(scheduler.exactRequests, 1);
+
+    // Allowed in system settings, then back to the app.
+    scheduler.exactAllowed = true;
+    await restricted.refreshExactAlarms();
+    expect(restricted.state.exactAlarmsAllowed, isTrue);
     await restricted.close();
   });
 
