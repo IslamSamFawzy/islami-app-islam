@@ -32,6 +32,17 @@ void main() {
         'Isha',
       ]);
     });
+
+    test('a schedule lists them in order, with Sunrise after Fajr', () {
+      expect(PrayerName.scheduleLabels, [
+        'Fajr',
+        'Sunrise',
+        'Dhuhr',
+        'Asr',
+        'Maghrib',
+        'Isha',
+      ]);
+    });
   });
 
   group('DefaultAdhanPrayerPolicy', () {

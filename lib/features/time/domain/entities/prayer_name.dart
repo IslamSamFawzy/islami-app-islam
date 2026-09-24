@@ -23,4 +23,16 @@ enum PrayerName {
     }
     return null;
   }
+
+  /// Sunrise is part of a day's schedule and is shown on the prayer card, but
+  /// it never calls an adhan — which is exactly why it is not one of these.
+  static const String sunriseLabel = 'Sunrise';
+
+  /// Every name a day's schedule carries, in the order they are shown.
+  static List<String> get scheduleLabels => [
+    for (final prayer in values) ...[
+      prayer.label,
+      if (prayer == fajr) sunriseLabel,
+    ],
+  ];
 }

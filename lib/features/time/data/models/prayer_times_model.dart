@@ -1,3 +1,4 @@
+import '../../domain/entities/prayer_name.dart';
 import '../../domain/entities/prayer_times.dart';
 
 /// Parses the Aladhan API `data` object into a [PrayerTimes].
@@ -34,9 +35,8 @@ class PrayerTimesModel extends PrayerTimes {
       return DateTime(year, month, day, h, m);
     }
 
-    final order = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final prayers = [
-      for (final name in order)
+      for (final name in PrayerName.scheduleLabels)
         if (timings.containsKey(name)) Prayer(name: name, time: parse(name)),
     ];
 
