@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/view_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/prayer_guide.dart';
 import '../../domain/usecases/get_prayer_guide.dart';
@@ -14,18 +15,18 @@ class PrayerGuideCubit extends Cubit<PrayerGuideState> {
     : super(const PrayerGuideState());
 
   Future<void> load() async {
-    emit(state.copyWith(status: PrayerGuideStatus.loading));
+    emit(state.copyWith(status: ViewStatus.loading));
     final result = await getPrayerGuide(const NoParams());
     result.fold(
       (failure) => emit(
         state.copyWith(
-          status: PrayerGuideStatus.failure,
+          status: ViewStatus.failure,
           errorMessage: failure.message,
         ),
       ),
       (guide) => emit(
         state.copyWith(
-          status: PrayerGuideStatus.success,
+          status: ViewStatus.success,
           guide: guide,
           pageIndex: 0,
         ),

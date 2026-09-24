@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/error/failures.dart';
+import 'package:islami/core/presentation/view_status.dart';
 import 'package:islami/features/prayer_guide/domain/entities/prayer_guide.dart';
 import 'package:islami/features/prayer_guide/domain/entities/prayer_posture.dart';
 import 'package:islami/features/prayer_guide/domain/repositories/prayer_guide_repository.dart';
@@ -47,7 +48,7 @@ void main() {
       getPrayerGuide: GetPrayerGuide(_FakeRepository(const Right(_guide))),
     );
     await cubit.load();
-    expect(cubit.state.status, PrayerGuideStatus.success);
+    expect(cubit.state.status, ViewStatus.success);
     expect(cubit.state.pageCount, 3);
     expect(cubit.state.isFirstPage, isTrue);
 
@@ -63,7 +64,7 @@ void main() {
       ),
     );
     await cubit.load();
-    expect(cubit.state.status, PrayerGuideStatus.failure);
+    expect(cubit.state.status, ViewStatus.failure);
     expect(cubit.state.errorMessage, 'boom');
     await cubit.close();
   });

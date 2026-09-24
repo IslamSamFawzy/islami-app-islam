@@ -27,6 +27,12 @@ import '../../features/hadith/presentation/bloc/hadith_bloc.dart';
 // Onboarding (shared by Intro and Splash)
 import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
+// Prayer guide feature
+import '../../features/prayer_guide/data/datasources/prayer_guide_local_data_source.dart';
+import '../../features/prayer_guide/data/repositories/prayer_guide_repository_impl.dart';
+import '../../features/prayer_guide/domain/repositories/prayer_guide_repository.dart';
+import '../../features/prayer_guide/domain/usecases/get_prayer_guide.dart';
+import '../../features/prayer_guide/presentation/cubit/prayer_guide_cubit.dart';
 // Qibla feature
 import '../../features/qibla/data/repositories/last_location_repository_impl.dart';
 import '../../features/qibla/domain/repositories/last_location_repository.dart';
@@ -339,6 +345,21 @@ Future<void> init() async {
 
   sl.registerLazySingleton<DownloadsLocalDataSource>(
     () => DownloadsLocalDataSourceImpl(jsonStore: sl()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // Prayer guide feature
+  // ---------------------------------------------------------------------------
+  sl.registerFactory(() => PrayerGuideCubit(getPrayerGuide: sl()));
+
+  sl.registerLazySingleton(() => GetPrayerGuide(sl()));
+
+  sl.registerLazySingleton<PrayerGuideRepository>(
+    () => PrayerGuideRepositoryImpl(localDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<PrayerGuideLocalDataSource>(
+    () => PrayerGuideLocalDataSourceImpl(),
   );
 
   // ---------------------------------------------------------------------------

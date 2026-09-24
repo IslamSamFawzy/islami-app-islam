@@ -1,9 +1,7 @@
 part of 'prayer_guide_cubit.dart';
 
-enum PrayerGuideStatus { initial, loading, success, failure }
-
 class PrayerGuideState extends Equatable {
-  final PrayerGuideStatus status;
+  final ViewStatus status;
   final PrayerGuide? guide;
 
   /// 0 = the overview page; 1..n = the steps.
@@ -11,7 +9,7 @@ class PrayerGuideState extends Equatable {
   final String errorMessage;
 
   const PrayerGuideState({
-    this.status = PrayerGuideStatus.initial,
+    this.status = ViewStatus.initial,
     this.guide,
     this.pageIndex = 0,
     this.errorMessage = '',
@@ -25,7 +23,7 @@ class PrayerGuideState extends Equatable {
   bool get isLastPage => pageIndex >= pageCount - 1;
 
   PrayerGuideState copyWith({
-    PrayerGuideStatus? status,
+    ViewStatus? status,
     PrayerGuide? guide,
     int? pageIndex,
     String? errorMessage,

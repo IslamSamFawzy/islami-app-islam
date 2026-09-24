@@ -20,6 +20,13 @@ class $AssetsFilesGen {
   /// Directory path: assets/files/azkar
   $AssetsFilesAzkarGen get azkar => const $AssetsFilesAzkarGen();
 
+  /// Directory path: assets/files/hadeeth
+  $AssetsFilesHadeethGen get hadeeth => const $AssetsFilesHadeethGen();
+
+  /// Directory path: assets/files/prayer_guide
+  $AssetsFilesPrayerGuideGen get prayerGuide =>
+      const $AssetsFilesPrayerGuideGen();
+
   /// Directory path: assets/files/suras
   $AssetsFilesSurasGen get suras => const $AssetsFilesSurasGen();
 }
@@ -40,6 +47,9 @@ class $AssetsIconsGen {
   /// File path: assets/icons/ic_hadeth.svg
   SvgGenImage get icHadeth => const SvgGenImage('assets/icons/ic_hadeth.svg');
 
+  /// File path: assets/icons/ic_prayer.svg
+  SvgGenImage get icPrayer => const SvgGenImage('assets/icons/ic_prayer.svg');
+
   /// File path: assets/icons/ic_quran.svg
   SvgGenImage get icQuran => const SvgGenImage('assets/icons/ic_quran.svg');
 
@@ -53,7 +63,14 @@ class $AssetsIconsGen {
   SvgGenImage get icTime => const SvgGenImage('assets/icons/ic_time.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values => [icHadeth, icQuran, icRadio, icSebha, icTime];
+  List<SvgGenImage> get values => [
+    icHadeth,
+    icPrayer,
+    icQuran,
+    icRadio,
+    icSebha,
+    icTime,
+  ];
 }
 
 class $AssetsImagesGen {
@@ -210,6 +227,224 @@ class $AssetsFilesAzkarGen {
 
   /// List of all assets
   List<String> get values => [evening, morning];
+}
+
+class $AssetsFilesHadeethGen {
+  const $AssetsFilesHadeethGen();
+
+  /// File path: assets/files/hadeeth/h1.txt
+  String get h1 => 'assets/files/hadeeth/h1.txt';
+
+  /// File path: assets/files/hadeeth/h10.txt
+  String get h10 => 'assets/files/hadeeth/h10.txt';
+
+  /// File path: assets/files/hadeeth/h11.txt
+  String get h11 => 'assets/files/hadeeth/h11.txt';
+
+  /// File path: assets/files/hadeeth/h12.txt
+  String get h12 => 'assets/files/hadeeth/h12.txt';
+
+  /// File path: assets/files/hadeeth/h13.txt
+  String get h13 => 'assets/files/hadeeth/h13.txt';
+
+  /// File path: assets/files/hadeeth/h14.txt
+  String get h14 => 'assets/files/hadeeth/h14.txt';
+
+  /// File path: assets/files/hadeeth/h15.txt
+  String get h15 => 'assets/files/hadeeth/h15.txt';
+
+  /// File path: assets/files/hadeeth/h16.txt
+  String get h16 => 'assets/files/hadeeth/h16.txt';
+
+  /// File path: assets/files/hadeeth/h17.txt
+  String get h17 => 'assets/files/hadeeth/h17.txt';
+
+  /// File path: assets/files/hadeeth/h18.txt
+  String get h18 => 'assets/files/hadeeth/h18.txt';
+
+  /// File path: assets/files/hadeeth/h19.txt
+  String get h19 => 'assets/files/hadeeth/h19.txt';
+
+  /// File path: assets/files/hadeeth/h2.txt
+  String get h2 => 'assets/files/hadeeth/h2.txt';
+
+  /// File path: assets/files/hadeeth/h20.txt
+  String get h20 => 'assets/files/hadeeth/h20.txt';
+
+  /// File path: assets/files/hadeeth/h21.txt
+  String get h21 => 'assets/files/hadeeth/h21.txt';
+
+  /// File path: assets/files/hadeeth/h22.txt
+  String get h22 => 'assets/files/hadeeth/h22.txt';
+
+  /// File path: assets/files/hadeeth/h23.txt
+  String get h23 => 'assets/files/hadeeth/h23.txt';
+
+  /// File path: assets/files/hadeeth/h24.txt
+  String get h24 => 'assets/files/hadeeth/h24.txt';
+
+  /// File path: assets/files/hadeeth/h25.txt
+  String get h25 => 'assets/files/hadeeth/h25.txt';
+
+  /// File path: assets/files/hadeeth/h26.txt
+  String get h26 => 'assets/files/hadeeth/h26.txt';
+
+  /// File path: assets/files/hadeeth/h27.txt
+  String get h27 => 'assets/files/hadeeth/h27.txt';
+
+  /// File path: assets/files/hadeeth/h28.txt
+  String get h28 => 'assets/files/hadeeth/h28.txt';
+
+  /// File path: assets/files/hadeeth/h29.txt
+  String get h29 => 'assets/files/hadeeth/h29.txt';
+
+  /// File path: assets/files/hadeeth/h3.txt
+  String get h3 => 'assets/files/hadeeth/h3.txt';
+
+  /// File path: assets/files/hadeeth/h30.txt
+  String get h30 => 'assets/files/hadeeth/h30.txt';
+
+  /// File path: assets/files/hadeeth/h31.txt
+  String get h31 => 'assets/files/hadeeth/h31.txt';
+
+  /// File path: assets/files/hadeeth/h32.txt
+  String get h32 => 'assets/files/hadeeth/h32.txt';
+
+  /// File path: assets/files/hadeeth/h33.txt
+  String get h33 => 'assets/files/hadeeth/h33.txt';
+
+  /// File path: assets/files/hadeeth/h34.txt
+  String get h34 => 'assets/files/hadeeth/h34.txt';
+
+  /// File path: assets/files/hadeeth/h35.txt
+  String get h35 => 'assets/files/hadeeth/h35.txt';
+
+  /// File path: assets/files/hadeeth/h36.txt
+  String get h36 => 'assets/files/hadeeth/h36.txt';
+
+  /// File path: assets/files/hadeeth/h37.txt
+  String get h37 => 'assets/files/hadeeth/h37.txt';
+
+  /// File path: assets/files/hadeeth/h38.txt
+  String get h38 => 'assets/files/hadeeth/h38.txt';
+
+  /// File path: assets/files/hadeeth/h39.txt
+  String get h39 => 'assets/files/hadeeth/h39.txt';
+
+  /// File path: assets/files/hadeeth/h4.txt
+  String get h4 => 'assets/files/hadeeth/h4.txt';
+
+  /// File path: assets/files/hadeeth/h40.txt
+  String get h40 => 'assets/files/hadeeth/h40.txt';
+
+  /// File path: assets/files/hadeeth/h41.txt
+  String get h41 => 'assets/files/hadeeth/h41.txt';
+
+  /// File path: assets/files/hadeeth/h42.txt
+  String get h42 => 'assets/files/hadeeth/h42.txt';
+
+  /// File path: assets/files/hadeeth/h43.txt
+  String get h43 => 'assets/files/hadeeth/h43.txt';
+
+  /// File path: assets/files/hadeeth/h44.txt
+  String get h44 => 'assets/files/hadeeth/h44.txt';
+
+  /// File path: assets/files/hadeeth/h45.txt
+  String get h45 => 'assets/files/hadeeth/h45.txt';
+
+  /// File path: assets/files/hadeeth/h46.txt
+  String get h46 => 'assets/files/hadeeth/h46.txt';
+
+  /// File path: assets/files/hadeeth/h47.txt
+  String get h47 => 'assets/files/hadeeth/h47.txt';
+
+  /// File path: assets/files/hadeeth/h48.txt
+  String get h48 => 'assets/files/hadeeth/h48.txt';
+
+  /// File path: assets/files/hadeeth/h49.txt
+  String get h49 => 'assets/files/hadeeth/h49.txt';
+
+  /// File path: assets/files/hadeeth/h5.txt
+  String get h5 => 'assets/files/hadeeth/h5.txt';
+
+  /// File path: assets/files/hadeeth/h50.txt
+  String get h50 => 'assets/files/hadeeth/h50.txt';
+
+  /// File path: assets/files/hadeeth/h6.txt
+  String get h6 => 'assets/files/hadeeth/h6.txt';
+
+  /// File path: assets/files/hadeeth/h7.txt
+  String get h7 => 'assets/files/hadeeth/h7.txt';
+
+  /// File path: assets/files/hadeeth/h8.txt
+  String get h8 => 'assets/files/hadeeth/h8.txt';
+
+  /// File path: assets/files/hadeeth/h9.txt
+  String get h9 => 'assets/files/hadeeth/h9.txt';
+
+  /// List of all assets
+  List<String> get values => [
+    h1,
+    h10,
+    h11,
+    h12,
+    h13,
+    h14,
+    h15,
+    h16,
+    h17,
+    h18,
+    h19,
+    h2,
+    h20,
+    h21,
+    h22,
+    h23,
+    h24,
+    h25,
+    h26,
+    h27,
+    h28,
+    h29,
+    h3,
+    h30,
+    h31,
+    h32,
+    h33,
+    h34,
+    h35,
+    h36,
+    h37,
+    h38,
+    h39,
+    h4,
+    h40,
+    h41,
+    h42,
+    h43,
+    h44,
+    h45,
+    h46,
+    h47,
+    h48,
+    h49,
+    h5,
+    h50,
+    h6,
+    h7,
+    h8,
+    h9,
+  ];
+}
+
+class $AssetsFilesPrayerGuideGen {
+  const $AssetsFilesPrayerGuideGen();
+
+  /// File path: assets/files/prayer_guide/prayer_guide.json
+  String get prayerGuide => 'assets/files/prayer_guide/prayer_guide.json';
+
+  /// List of all assets
+  List<String> get values => [prayerGuide];
 }
 
 class $AssetsFilesSurasGen {

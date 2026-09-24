@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/gen/assets.gen.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../hadith/presentation/pages/hadith_view.dart';
+import '../../../prayer_guide/presentation/pages/prayer_guide_view.dart';
 import '../../../quran/presentation/pages/quran_view.dart';
 import '../../../radio/presentation/pages/radio_view.dart';
 import '../../../tasbeh/presentation/pages/tasbeh_view.dart';
 import '../../../time/presentation/pages/time_view.dart';
 import '../cubit/home_cubit.dart';
+import '../widgets/home_navigation_bar.dart';
 
 class HomeLayout extends StatelessWidget {
   static const String routeName = '/layout';
@@ -33,6 +33,7 @@ class _HomeLayoutBody extends StatelessWidget {
     TasbehView(),
     RadioView(),
     TimeView(),
+    PrayerGuideView(),
   ];
 
   @override
@@ -42,50 +43,20 @@ class _HomeLayoutBody extends StatelessWidget {
         return Scaffold(
           body: IndexedStack(
             index: selectedIndex,
-            children: _screens,
+            children: [
+              for (var i = 0; i < _screens.length; i++)
+                // Every screen stays alive in the stack, so their animations
+                // (the prayer figure, the radio waveform) would keep ticking
+                // out of sight. Only the visible tab gets a ticker.
+                TickerMode(enabled: i == selectedIndex, child: _screens[i]),
+            ],
           ),
-          bottomNavigationBar: BottomNavigationBar(
+          bottomNavigationBar: HomeNavigationBar(
             currentIndex: selectedIndex,
             onTap: (index) => context.read<HomeCubit>().changeTab(index),
-            items: [
-              _buildItem(Assets.icons.icQuran, 'Quran'),
-              _buildItem(Assets.icons.icHadeth, 'Hadith'),
-              _buildItem(Assets.icons.icSebha, 'Sebha'),
-              _buildItem(Assets.icons.icRadio, 'Radio'),
-              _buildItem(Assets.icons.icTime, 'Time'),
-            ],
           ),
         );
       },
-    );
-  }
-
-  BottomNavigationBarItem _buildItem(SvgGenImage icon, String label) {
-    return BottomNavigationBarItem(
-      // Unselected: dark icon only, on the gold bar (spec §2.9).
-      icon: icon.svg(
-        width: 22,
-        height: 22,
-        colorFilter: const ColorFilter.mode(
-          AppColors.titleTextColor,
-          BlendMode.srcIn,
-        ),
-      ),
-      // Selected: dark #202020 pill (radius ~40, padding 20×6) with the icon
-      // tinted white inside; the label renders under it (dark) via the theme.
-      activeIcon: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundColor,
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: icon.svg(
-          width: 22,
-          height: 22,
-          colorFilter: const ColorFilter.mode(AppColors.white, BlendMode.srcIn),
-        ),
-      ),
-      label: label,
     );
   }
 }
