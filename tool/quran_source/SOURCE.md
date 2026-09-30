@@ -78,8 +78,3 @@ are freely available for commercial use."
 - `quran-data.xml` carries `license="cc-by"`,
   `copyright="(C) 2008-2009 Tanzil.info"`. Its `pages` follow the 1405H print, so
   they are not used.
-
-## quran-simple.txt
-
-Tanzil Simple, the text of the old ayah-card list. It goes in Phase 3, since
-the owner removed list mode.

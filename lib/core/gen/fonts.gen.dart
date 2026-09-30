@@ -13,4 +13,10 @@ class FontFamily {
 
   /// Font family: Janna
   static const String janna = 'Janna';
+
+  /// Font family: SurahName
+  static const String surahName = 'SurahName';
+
+  /// Font family: UthmanicHafs
+  static const String uthmanicHafs = 'UthmanicHafs';
 }

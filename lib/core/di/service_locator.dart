@@ -55,9 +55,7 @@ import '../../features/quran/domain/usecases/get_page_for_ayah.dart';
 import '../../features/quran/domain/usecases/get_recent_suras.dart';
 import '../../features/quran/domain/usecases/get_reading_progress.dart';
 import '../../features/quran/domain/usecases/get_sura_info.dart';
-import '../../features/quran/domain/usecases/get_sura_verses.dart';
 import '../../features/quran/domain/usecases/save_reading_progress.dart';
-import '../../features/quran/presentation/bloc/details/quran_details_bloc.dart';
 import '../../features/quran/presentation/bloc/mushaf/mushaf_reader_bloc.dart';
 import '../../features/quran/presentation/bloc/quran_bloc.dart';
 // Radio feature
@@ -182,17 +180,9 @@ Future<void> init() async {
       addRecentSura: sl(),
     ),
   );
-  sl.registerFactory(
-    () => QuranDetailsBloc(
-      getSuraVerses: sl(),
-      getReadingProgress: sl(),
-      saveReadingProgress: sl(),
-    ),
-  );
 
   // Use cases (singleton: created once, reused)
   sl.registerLazySingleton(() => GetAllSuras(sl()));
-  sl.registerLazySingleton(() => GetSuraVerses(sl()));
   sl.registerLazySingleton(() => GetRecentSuras(sl()));
   sl.registerLazySingleton(() => AddRecentSura(sl()));
   sl.registerLazySingleton(() => GetReadingProgress(sl()));

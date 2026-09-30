@@ -17,11 +17,6 @@ class Sura extends Equatable {
     required this.ayaCount,
   });
 
-  /// Whether the basmala is shown above the first ayah. Al-Fatiha (1) is
-  /// left out because the basmala is its first ayah, and At-Tawba (9)
-  /// because it has none.
-  bool get opensWithBasmala => id != 1 && id != 9;
-
   @override
   List<Object?> get props => [id, nameEn, nameAr, ayaCount];
 }

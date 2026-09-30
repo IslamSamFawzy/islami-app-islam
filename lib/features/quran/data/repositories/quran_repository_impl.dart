@@ -19,11 +19,6 @@ class QuranRepositoryImpl implements QuranRepository {
   }
 
   @override
-  Future<Either<Failure, List<String>>> getSuraVerses(int suraId) {
-    return guardLocalData(() => localDataSource.getSuraVerses(suraId));
-  }
-
-  @override
   Future<Either<Failure, List<Sura>>> getRecentSuras() {
     return guardLocalData(() async {
       final recentIds = await localDataSource.getRecentSuraIds();

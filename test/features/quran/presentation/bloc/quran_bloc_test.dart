@@ -40,9 +40,6 @@ class _FakeRepository implements QuranRepository {
   @override
   Future<Either<Failure, Unit>> saveProgress(ReadingProgress p) async =>
       const Right(unit);
-  @override
-  Future<Either<Failure, List<String>>> getSuraVerses(int suraId) async =>
-      const Right([]);
 }
 
 void main() {

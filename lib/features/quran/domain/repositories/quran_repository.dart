@@ -10,9 +10,6 @@ abstract class QuranRepository {
   /// Returns the full list of 114 suras.
   Future<Either<Failure, List<Sura>>> getAllSuras();
 
-  /// Returns the verses (ayat) of the sura identified by [suraId].
-  Future<Either<Failure, List<String>>> getSuraVerses(int suraId);
-
   /// Returns the recently read suras, most recent first.
   Future<Either<Failure, List<Sura>>> getRecentSuras();
 

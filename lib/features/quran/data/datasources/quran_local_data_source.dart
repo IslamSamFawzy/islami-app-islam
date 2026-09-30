@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/cache/json_store.dart';
@@ -11,9 +10,6 @@ import '../models/sura_model.dart';
 abstract class QuranLocalDataSource {
   /// Returns the static list of all 114 suras.
   Future<List<SuraModel>> getAllSuras();
-
-  /// Loads the verses of a sura from its bundled text file.
-  Future<List<String>> getSuraVerses(int suraId);
 
   /// Returns the numbers of recently read suras, most recent first.
   Future<List<int>> getRecentSuraIds();
@@ -115,21 +111,6 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       await jsonStore.writeMap(_progressKey, all);
     } catch (e) {
       throw LocalDataException('Failed to save reading progress: $e');
-    }
-  }
-
-  @override
-  Future<List<String>> getSuraVerses(int suraId) async {
-    try {
-      final content =
-          await rootBundle.loadString('assets/files/suras/$suraId.txt');
-      return content
-          .split('\n')
-          .map((line) => line.trim())
-          .where((line) => line.isNotEmpty)
-          .toList();
-    } catch (e) {
-      throw LocalDataException('Failed to load verses for sura $suraId');
     }
   }
 }
