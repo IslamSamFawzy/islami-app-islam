@@ -99,7 +99,7 @@ Captured on the `Pixel_9_Pro_XL` emulator at 1344×2992 (well over Play's
 | 1 | `01-prayer-times.png` | Time tab, prayer card showing today's date (Gregorian + Hijri), the three prayers with the next one raised, and the "Next Pray" countdown running. No offline banner. |
 | 2 | `02-adhan-settings.png` | The gear screen: "Adhan notifications" on, all five prayer switches on, exact-alarm row absent (permission already granted). |
 | 3 | `03-quran-list.png` | Quran tab with the "Most Recently" card showing Al-Baqarah and its "Ayah N" line, and the suras list beneath it. |
-| 4 | `04-sura-reading.png` | The Mushaf reader on page 2 (Al-Baqarah's header, the basmala and 2:1–5), or on a full page such as 50. **Retake:** the current file still shows the old ayah cards. |
+| 4 | `04-sura-reading.png` | The Mushaf reader on page 50: Aal-E-Imran's header, the basmala and 3:1–9 on 15 justified lines. |
 | 5 | `05-reciters.png` | Radio tab on the Reciters toggle, the reciter list loaded. |
 | 6 | `06-downloads.png` | Downloads screen with at least two saved suras under one reciter and the "Total on device" line. |
 | 7 | `07-prayer-guide.png` | Salah tab, overview card with the figure mid-posture (not standing still). |
