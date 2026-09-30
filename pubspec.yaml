@@ -105,6 +105,8 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/files/suras/
+    - assets/quran/
+    - assets/quran/pages/
     - assets/files/azkar/
     - assets/files/hadeeth/
     - assets/files/prayer_guide/
