@@ -128,6 +128,15 @@ flutter:
     - family: Janna
       fonts:
         - asset: assets/fonts/janna-lt-Bold.ttf
+    # The Mushaf text. KFGQPC's font, shipped byte for byte (its licence
+    # forbids modifying it); see tool/quran_source/SOURCE.md.
+    - family: UthmanicHafs
+      fonts:
+        - asset: assets/fonts/uthmanic_hafs_v20.ttf
+    # Sura names for the Mushaf headers (QUL), drawn by ligature: "surah001".
+    - family: SurahName
+      fonts:
+        - asset: assets/fonts/surah-name-v4.ttf
 
   #   - family:
   #     fonts:
