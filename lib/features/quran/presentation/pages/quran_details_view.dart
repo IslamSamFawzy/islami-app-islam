@@ -63,7 +63,7 @@ class QuranDetailsView extends StatelessWidget {
                 ],
               ),
             ),
-            const Expanded(child: _VersesList()),
+            Expanded(child: _VersesList(withBasmala: sura.opensWithBasmala)),
             Assets.images.imgBottomDecoration.image(),
           ],
         ),
@@ -74,7 +74,11 @@ class QuranDetailsView extends StatelessWidget {
 
 /// The ayah list, which also reports where the reader is.
 class _VersesList extends StatefulWidget {
-  const _VersesList();
+  /// Show the basmala as a header above the first ayah. It is not an ayah:
+  /// it takes list slot 0, and every ayah index is shifted by one.
+  final bool withBasmala;
+
+  const _VersesList({required this.withBasmala});
 
   @override
   State<_VersesList> createState() => _VersesListState();
@@ -120,9 +124,16 @@ class _VersesListState extends State<_VersesList> with WidgetsBindingObserver {
       (a, b) => a.itemLeadingEdge <= b.itemLeadingEdge ? a : b,
     );
 
+    // The basmala header counts as being on the first ayah.
+    final ayah = first.index - _offset;
+
     if (!mounted) return;
-    context.read<QuranDetailsBloc>().add(VerseVisibleEvent(first.index));
+    context.read<QuranDetailsBloc>().add(
+      VerseVisibleEvent(ayah < 0 ? 0 : ayah),
+    );
   }
+
+  int get _offset => widget.withBasmala ? 1 : 0;
 
   @override
   Widget build(BuildContext context) {
@@ -136,12 +147,16 @@ class _VersesListState extends State<_VersesList> with WidgetsBindingObserver {
 
         return ScrollablePositionedList.separated(
           itemPositionsListener: _positions,
-          // Where the reader left off, or the top for a fresh read.
-          initialScrollIndex: state.initialIndex < 0 ? 0 : state.initialIndex,
+          // Where the reader left off, or the top (basmala included) for a
+          // fresh read.
+          initialScrollIndex:
+              state.initialIndex <= 0 ? 0 : state.initialIndex + _offset,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          itemCount: state.verses.length,
+          itemCount: state.verses.length + _offset,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
+          itemBuilder: (context, item) {
+            if (item < _offset) return const _Basmala();
+            final index = item - _offset;
             return _AyahCard(
               text: "${state.verses[index]} ﴿${toArabicDigits(index + 1)}﴾",
               selected: state.selectedIndex == index,
@@ -152,6 +167,31 @@ class _VersesListState extends State<_VersesList> with WidgetsBindingObserver {
           },
         );
       },
+    );
+  }
+}
+
+/// The basmala above every sura except Al-Fatiha and At-Tawba: gold text on
+/// its own, without a card or a number, since it is not one of the ayat.
+class _Basmala extends StatelessWidget {
+  const _Basmala();
+
+  /// Tanzil's text, the same as Al-Fatiha 1:1.
+  static const String text = 'بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ';
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text(
+        text,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+          color: AppColors.primaryColor,
+          height: 1.8,
+        ),
+      ),
     );
   }
 }
