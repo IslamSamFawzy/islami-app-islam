@@ -245,3 +245,12 @@ phone.**
 3. **List mode:** does the ayah-card list stay as a second reading mode (then it would use the same KFGQPC text and font), or go?
 4. **Size:** is +3 MB (B) acceptable? If A-V2: is +118 MB acceptable?
 5. **Sura headers:** QUL's sura-name font (looks like print, no licence text) or the name in the KFGQPC font inside a drawn frame (clean licence)?
+
+## Owner's decisions (2026-09-30)
+1. **Option B**: the KFGQPC Uthmanic Hafs text and font (+≈3 MB accepted).
+2. **Layout**: use the QUL V2 15-line layout and credit QUL.
+3. **List mode**: removed. The Tanzil Simple text and its script go.
+4. **Sura headers**: QUL's sura-name font (`surah-name-v4.ttf`). Correction to
+   the question as asked: this font carries no copyright or licence text at
+   all; it was QUL's other header font (`QCF_SurahHeader_COLOR`) that names
+   "King Fahad Complex".
