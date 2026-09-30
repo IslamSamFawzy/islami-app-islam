@@ -113,6 +113,12 @@ void main() {
     expect((meta['suras'] as List)[113]['page'], 604);
   });
 
+  test('print anchors: juz 11 at 9:93 on page 201, a rub at 15:49', () {
+    expect((meta['juz'] as List)[10], [9, 93]);
+    expect(rebuild().page['9:93'], 201);
+    expect(meta['quarters'], anyElement(equals([15, 49])));
+  });
+
   test('the 15 sajdah ayat, and only they, are flagged', () {
     final flagged = <String>{};
     final ayahs = meta['ayahs'] as List;

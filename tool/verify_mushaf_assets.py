@@ -243,6 +243,12 @@ def main():
     check(meta['suras'][1]['page'] == 2, 'Al-Baqarah does not start on page 2')
     check(first_page[(18, 1)] == 293, f'18:1 is on page {first_page[(18, 1)]}, not 293')
     check(first_page[(114, 1)] == 604, f'An-Nas starts on page {first_page[(114, 1)]}, not 604')
+    # From the printed Madinah Mushaf (the owner's copy, 2026-09-30).
+    juz_starts = [tuple(j) for j in meta['juz']]
+    check(juz_starts[10] == (9, 93) and first_page[(9, 93)] == 201,
+          f'juz 11 starts at {juz_starts[10]}, not 9:93 on page 201')
+    check((15, 49) in [tuple(q) for q in meta['quarters']],
+          'no rub starts at 15:49')
     flagged = {(si, ai) for si, rows in enumerate(meta['ayahs'], start=1)
                for ai, row in enumerate(rows, start=1) if row[3]}
     check(flagged == SAJDAH_AYAT, f'sajdah ayat flagged: {sorted(flagged)}')
