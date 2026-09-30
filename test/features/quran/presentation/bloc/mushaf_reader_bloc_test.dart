@@ -183,6 +183,17 @@ void main() {
       expect(state.selected, const AyahRef(114, 1));
     });
 
+    test('going to a page saves its first ayah', () async {
+      final bloc = build()..add(const MushafOpenedEvent(1));
+      await opened(bloc);
+      bloc.add(const MushafGoToEvent(PageTarget(293)));
+      await bloc.stream.firstWhere((s) => s.pages.containsKey(293));
+      await bloc.close();
+      // Page 293 opens with 17:105.
+      expect(quran.saved.single.suraId, 17);
+      expect(quran.saved.single.ayah, 105);
+    });
+
     test('a page out of range goes nowhere', () async {
       final bloc = build()..add(const MushafOpenedEvent(1));
       await opened(bloc);

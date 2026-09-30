@@ -209,9 +209,13 @@ class MushafReaderBloc extends Bloc<MushafReaderEvent, MushafReaderState> {
         selected: () => highlight,
       ),
     );
+    // Going somewhere is reading on from there: the ayah asked for, or the
+    // page's first ayah once it is loaded.
     if (highlight != null) {
       _clearHighlightLater();
       _markRead(highlight);
+    } else {
+      _markOnArrival = page;
     }
     for (final p in [page, page + 1, page - 1]) {
       add(MushafPageNeededEvent(p));
