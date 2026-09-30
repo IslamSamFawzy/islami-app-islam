@@ -11,6 +11,7 @@ import '../../domain/entities/mushaf_page.dart';
 import '../bloc/mushaf/mushaf_reader_bloc.dart';
 import '../widgets/mushaf_go_to_sheet.dart';
 import '../widgets/mushaf_page_widget.dart';
+import 'quran_text_about_view.dart';
 
 /// What the reader is opened with: which sura, and whether to pick up where
 /// the reader left off in it (Most Recently) or start at its first page.
@@ -120,6 +121,14 @@ class _ReaderState extends State<_Reader> with WidgetsBindingObserver {
               fontWeight: FontWeight.bold,
             ),
             actions: [
+              IconButton(
+                tooltip: 'About the Quran text',
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  QuranTextAboutView.routeName,
+                ),
+              ),
               IconButton(
                 tooltip: 'Go to',
                 icon: const Icon(Icons.menu_book_outlined),
