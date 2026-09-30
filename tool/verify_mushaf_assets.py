@@ -34,7 +34,7 @@ ASSETS = 'assets/quran'
 SOURCE_SHA256 = {
     'kfgqpc/hafsData_v2-0.json': 'd2960b3217962e7e4252abdcece67bea3d6b48271e4cd3af45bbbb2dd5c872ca',
     'kfgqpc/uthmanic_hafs_v20.ttf': 'd560bbbc7a90a4f4d416d206a5ac48bd8a1ad00273d64d232f16ca54941bd041',
-    'qul/qpc-v2-15-lines.db': '26f1afbe0417bb9a724780a5f6ffb2a19d58a442836fc74b29f88c364667d6cf',
+    'qul/qpc-v2-15-lines.db': 'e4df98f35dd3b8927ff096337c8739e0f0b12c8ba622834c345eaa4c3e28dd8c',
     'qul/qpc-quran-script.db': '4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d',
     'qul/surah-name-v4.ttf': '026cfe8ac461531a7b1c8e4edd05ce3343f09e9c73447ff14c6bc93f3193d661',
     'tanzil/quran-uthmani.txt': '6933e133dd56db778c801bf738848454e43648105a151e8d84d86a7cae39ec5f',

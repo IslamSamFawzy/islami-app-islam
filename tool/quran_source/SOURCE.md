@@ -40,21 +40,33 @@ KFGQPC.
 ## qul/: the 15-line layout and the sura names (Quranic Universal Library, Tarteel)
 
 QUL (https://qul.tarteel.ai) publishes no licence text for these. The owner
-decided on 2026-09-30 to use them and credit QUL. QUL's own download buttons
-need a login, so the two databases come from public mirrors, pinned to a commit.
+decided on 2026-09-30 to use them and credit QUL, and has asked QUL for
+permission; production release waits for the answer.
 
-| File | From | Bytes | sha256 |
+The owner downloaded the two databases from QUL itself with his account on
+2026-09-30. The pages show no version number. The zips are kept as downloaded
+in `qul-official/`; the `.db` files in `qul/` are their contents, unchanged.
+
+| File in `qul/` | Official source (owner's QUL account, 2026-09-30) | Bytes | sha256 |
 |---|---|---|---|
-| `qpc-v2-15-lines.db`: "KFGQPC V2 (1421H print)" layout, QUL resource https://qul.tarteel.ai/resources/mushaf-layout/10 | extracted unchanged from `qpc-v2-15-lines.db.zip` (99,450 B, sha256 `29941fa5e8504bc50a3007e2d1ef2f65280c483ea8b465662141f2ce7cdaed3d`) at https://raw.githubusercontent.com/blueheron786/quranic-universal-library-mushaf-layouts/5fe1704df9630ec9ed523c34a289ad920a99989e/qpc-v2-15-lines.db.zip (repo has no licence file; zip entry dated 2025-05-26) | 241,664 | `26f1afbe0417bb9a724780a5f6ffb2a19d58a442836fc74b29f88c364667d6cf` |
-| `qpc-quran-script.db`: QUL "QPC V2 Glyph word-by-word" (https://qul.tarteel.ai/resources/quran-script/61). Only its word id and location are used. | https://raw.githubusercontent.com/thebayaan/Bayaan/cf1b710f37c0e4734a4a40aebfc208576b42293b/data/mushaf/qcf/qpc-quran-script.db (repo licence AGPL-3.0) | 2,437,120 | `4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d` |
-| `surah-name-v4.ttf`: QUL "Surah name v4" (https://qul.tarteel.ai/resources/font/457) | https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf | 215,592 | `026cfe8ac461531a7b1c8e4edd05ce3343f09e9c73447ff14c6bc93f3193d661` |
+| `qpc-v2-15-lines.db`: "KFGQPC V2 (1421H print)" layout | https://qul.tarteel.ai/resources/mushaf-layout/10, "Download sqlite": `qul-official/qpc-v2-15-lines.db.zip` (99,483 B, sha256 `697cbc7f16db1f56b6d95c4d11a9eea074ad4759babd2d75abcad5738e2fdf96`), inner `qpc-v2-15-lines.db` dated 2025-11-18 | 241,664 | `e4df98f35dd3b8927ff096337c8739e0f0b12c8ba622834c345eaa4c3e28dd8c` |
+| `qpc-quran-script.db`: "QPC V2 Glyph word-by-word"; only word id and location are used | https://qul.tarteel.ai/resources/quran-script/61, "Download sqlite": `qul-official/qpc-v2.db.zip` (1,197,952 B, sha256 `a766a033cad47b36f00f493f5f0541d5f07e1336857eaa6feba92465af3f68bb`), inner `qpc-v2.db` dated 2025-05-28 | 2,437,120 | `4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d` |
+| `surah-name-v4.ttf`: "Surah name v4" | https://qul.tarteel.ai/resources/font/457, via https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf. **The owner's own download is not in `qul-official/` yet**, so this one is not yet compared. | 215,592 | `026cfe8ac461531a7b1c8e4edd05ce3343f09e9c73447ff14c6bc93f3193d661` |
+
+Compared with the public mirrors used until 2026-09-30:
+- `qpc-quran-script.db`: byte-identical to the Bayaan mirror
+  (https://raw.githubusercontent.com/thebayaan/Bayaan/cf1b710f37c0e4734a4a40aebfc208576b42293b/data/mushaf/qcf/qpc-quran-script.db).
+- `qpc-v2-15-lines.db`: differs from the blueheron786 mirror (sha256
+  `26f1afbe…d6cf`, zip entry dated 2025-05-26). Same schema, same `info`, and
+  9,044 of 9,046 `pages` rows are equal; page 27 lines 14–15 differ by one
+  word: word 3479 (2:181 word 6, «فَإِنَّمَآ», the word after «سَمِعَهُۥ»)
+  opens line 15 in QUL's file and ended line 14 in the mirror. QUL's file is byte-identical to the
+  Bayaan mirror's `qpc-mushaf-layout.db`. The assets were rebuilt from QUL's
+  file; only `assets/quran/pages/027.json` changed.
 
 Notes:
 - `qpc-v2-15-lines.db`'s `info` table reads "QCF V2 ( 1421H print )", with 604
   pages and 15 lines.
-- A second mirror of the V2 layout (Bayaan, `data/mushaf/qcf/qpc-mushaf-layout.db`)
-  differs only on page 27, lines 14–15 (one word, id 3478 vs 3479). Page 27 is
-  on the owner's visual check list.
 - `surah-name-v4.ttf` carries no copyright or licence text in its name table.
 
 QUL FAQ (https://qul.tarteel.ai/faq), verbatim: "The resources available on

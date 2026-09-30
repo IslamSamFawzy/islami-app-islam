@@ -16,7 +16,7 @@ review these pages, and the app itself on a real phone.**
 | 2 | `p002.png` | Al-Baqarah header, basmala, 2:1–5 centred. |
 | 3 | `p003.png` | First full page: 15 justified lines, 2:6–16. |
 | 10 | `p010.png` | 2:72 «فَٱدَّٰرَٰءۡتُمۡ»: the one word whose hamza is encoded differently from Tanzil's text. It should look as printed. |
-| 27 | `p027.png` | Lines 14–15: two copies of the layout data differ here by one word. |
+| 27 | `p027.png` | Lines 14–15: in 2:181, line 14 should end «…بَعۡدَ مَا سَمِعَهُۥ» and line 15 open «فَإِنَّمَآ». QUL's own file breaks it there (retaken 2026-09-30); an earlier mirror had «فَإِنَّمَآ» ending line 14. |
 | 50 | `p050.png` | Aal-E-Imran header and basmala at the top of a full page. |
 | 106 | `p106.png` | End of An-Nisa, Al-Ma'idah header mid-page. |
 | 187 | `p187.png` | At-Tawba: header, and no basmala. |
