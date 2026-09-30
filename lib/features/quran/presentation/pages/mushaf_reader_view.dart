@@ -48,7 +48,12 @@ class _Reader extends StatefulWidget {
 class _ReaderState extends State<_Reader> with WidgetsBindingObserver {
   PageController? _controller;
 
-  /// Paging is off while a page is zoomed in, so a pan moves the page.
+  /// Pinch-zoom over the pages. It sits outside the PageView, so a one-finger
+  /// swipe reaches the PageView first and always turns the page, however
+  /// fast; a pinch reaches the zoom. The line breaks stay the Mushaf's.
+  final _zoom = TransformationController();
+
+  /// Paging is off while zoomed in, so a pan moves around the page.
   bool _zoomed = false;
 
   @override
@@ -61,6 +66,7 @@ class _ReaderState extends State<_Reader> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
+    _zoom.dispose();
     super.dispose();
   }
 
@@ -141,24 +147,31 @@ class _ReaderState extends State<_Reader> with WidgetsBindingObserver {
     _controller ??= PageController(
       initialPage: context.read<MushafReaderBloc>().state.page - 1,
     );
-    // Right to left: page 2 lies to the left of page 1, as in a Mushaf.
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: PageView.builder(
-        controller: _controller,
-        itemCount: MushafReaderBloc.pageCount,
-        physics: _zoomed
-            ? const NeverScrollableScrollPhysics()
-            : const PageScrollPhysics(),
-        onPageChanged: (i) {
-          setState(() => _zoomed = false);
-          context.read<MushafReaderBloc>().add(MushafPageChangedEvent(i + 1));
-        },
-        itemBuilder: (context, i) => _PageSlot(
-          number: i + 1,
-          onZoomChanged: (zoomed) {
-            if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+    return InteractiveViewer(
+      transformationController: _zoom,
+      minScale: 1,
+      maxScale: 3,
+      panEnabled: _zoomed,
+      onInteractionEnd: (_) {
+        final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
+        if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+      },
+      // Right to left: page 2 lies to the left of page 1, as in a Mushaf.
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: PageView.builder(
+          controller: _controller,
+          itemCount: MushafReaderBloc.pageCount,
+          physics: _zoomed
+              ? const NeverScrollableScrollPhysics()
+              : const PageScrollPhysics(),
+          onPageChanged: (i) {
+            // A new page starts unzoomed.
+            _zoom.value = Matrix4.identity();
+            setState(() => _zoomed = false);
+            context.read<MushafReaderBloc>().add(MushafPageChangedEvent(i + 1));
           },
+          itemBuilder: (context, i) => _PageSlot(number: i + 1),
         ),
       ),
     );
@@ -172,30 +185,21 @@ class _ReaderState extends State<_Reader> with WidgetsBindingObserver {
 }
 
 /// One page of the PageView: asks for its content, then shows it with its
-/// margins, zoomable.
+/// margins.
 class _PageSlot extends StatefulWidget {
   final int number;
-  final ValueChanged<bool> onZoomChanged;
 
-  const _PageSlot({required this.number, required this.onZoomChanged});
+  const _PageSlot({required this.number});
 
   @override
   State<_PageSlot> createState() => _PageSlotState();
 }
 
 class _PageSlotState extends State<_PageSlot> {
-  final _zoom = TransformationController();
-
   @override
   void initState() {
     super.initState();
     context.read<MushafReaderBloc>().add(MushafPageNeededEvent(widget.number));
-  }
-
-  @override
-  void dispose() {
-    _zoom.dispose();
-    super.dispose();
   }
 
   @override
@@ -219,14 +223,7 @@ class _PageSlotState extends State<_PageSlot> {
                 .add(MushafPageNeededEvent(widget.number)),
           );
         }
-        return InteractiveViewer(
-          transformationController: _zoom,
-          minScale: 1,
-          maxScale: 3,
-          onInteractionEnd: (_) =>
-              widget.onZoomChanged(_zoom.value.getMaxScaleOnAxis() > 1.01),
-          child: _framed(context, page, state),
-        );
+        return _framed(context, page, state);
       },
     );
   }
