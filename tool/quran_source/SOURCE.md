@@ -51,9 +51,12 @@ in `qul-official/`; the `.db` files in `qul/` are their contents, unchanged.
 |---|---|---|---|
 | `qpc-v2-15-lines.db`: "KFGQPC V2 (1421H print)" layout | https://qul.tarteel.ai/resources/mushaf-layout/10, "Download sqlite": `qul-official/qpc-v2-15-lines.db.zip` (99,483 B, sha256 `697cbc7f16db1f56b6d95c4d11a9eea074ad4759babd2d75abcad5738e2fdf96`), inner `qpc-v2-15-lines.db` dated 2025-11-18 | 241,664 | `e4df98f35dd3b8927ff096337c8739e0f0b12c8ba622834c345eaa4c3e28dd8c` |
 | `qpc-quran-script.db`: "QPC V2 Glyph word-by-word"; only word id and location are used | https://qul.tarteel.ai/resources/quran-script/61, "Download sqlite": `qul-official/qpc-v2.db.zip` (1,197,952 B, sha256 `a766a033cad47b36f00f493f5f0541d5f07e1336857eaa6feba92465af3f68bb`), inner `qpc-v2.db` dated 2025-05-28 | 2,437,120 | `4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d` |
-| `surah-name-v4.ttf`: "Surah name v4" | https://qul.tarteel.ai/resources/font/457, via https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf. **The owner's own download is not in `qul-official/` yet**, so this one is not yet compared. | 215,592 | `026cfe8ac461531a7b1c8e4edd05ce3343f09e9c73447ff14c6bc93f3193d661` |
+| `surah-name-v4.ttf`: "Surah name v4" | https://qul.tarteel.ai/resources/font/457, "Download ttf": `qul-official/surah-name-v4.ttf.zip` (sha256 `207d0b1e784cde175eab93523fd0ee33a3cf8ab87c66871280aca4b92954b567`), inner `surah-name-v4.ttf` dated 2025-06-02 | 215,592 | `026cfe8ac461531a7b1c8e4edd05ce3343f09e9c73447ff14c6bc93f3193d661` |
 
 Compared with the public mirrors used until 2026-09-30:
+- `surah-name-v4.ttf`: byte-identical to the copy from QUL's CDN
+  (https://static-cdn.tarteel.ai/qul/fonts/surah-names/v4/surah-name-v4.ttf)
+  and to `assets/fonts/surah-name-v4.ttf`.
 - `qpc-quran-script.db`: byte-identical to the Bayaan mirror
   (https://raw.githubusercontent.com/thebayaan/Bayaan/cf1b710f37c0e4734a4a40aebfc208576b42293b/data/mushaf/qcf/qpc-quran-script.db).
 - `qpc-v2-15-lines.db`: differs from the blueheron786 mirror (sha256

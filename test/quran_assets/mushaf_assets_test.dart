@@ -113,7 +113,10 @@ void main() {
     expect((meta['suras'] as List)[113]['page'], 604);
   });
 
-  test('print anchors: juz 11 at 9:93 on page 201, a rub at 15:49', () {
+  test('print anchors: juz 4 at 3:93 on page 62, juz 11 at 9:93 on page 201, '
+      'a rub at 15:49', () {
+    expect((meta['juz'] as List)[3], [3, 93]);
+    expect(rebuild().page['3:93'], 62);
     expect((meta['juz'] as List)[10], [9, 93]);
     expect(rebuild().page['9:93'], 201);
     expect(meta['quarters'], anyElement(equals([15, 49])));

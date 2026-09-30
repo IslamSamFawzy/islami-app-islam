@@ -254,3 +254,23 @@ phone.**
    the question as asked: this font carries no copyright or licence text at
    all; it was QUL's other header font (`QCF_SurahHeader_COLOR`) that names
    "King Fahad Complex".
+
+## Known discrepancy in the KFGQPC data: the `jozz` field
+
+Checked by the owner against his printed Madinah Mushaf (2026-09-30):
+
+| | Printed Mushaf | ۞ in the KFGQPC text | KFGQPC `jozz` field |
+|---|---|---|---|
+| Juz 4 starts | 3:93 «كُلُّ ٱلطَّعَامِ», page 62 | 3:93 | 3:92 (page 62), **wrong** |
+| Juz 11 starts | 9:93 «إِنَّمَا ٱلسَّبِيلُ», page 201 | 9:93 | 9:94 (page 202), **wrong** |
+
+* The ۞ marks in the KFGQPC text match print. Each is the first codepoint of
+  its ayah, and every ayah's number codepoint confirms its ayah, so this is
+  not a parsing off-by-one.
+* The `jozz` field is not used. Juz and quarter starts come from the ۞ marks,
+  plus the quarters that open a sura, where the Mushaf prints the sura header
+  instead of ۞. This gives 240 quarters and 30 juz, and puts the rubʿ at 15:49
+  as print does (Tanzil's metadata has 15:50).
+* `tool/verify_mushaf_assets.py` and `test/quran_assets/` assert these print
+  anchors: juz 4 at 3:93 (page 62), juz 11 at 9:93 (page 201), and a rubʿ at
+  15:49. No data was edited.

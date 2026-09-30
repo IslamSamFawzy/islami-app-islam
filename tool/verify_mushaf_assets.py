@@ -245,6 +245,8 @@ def main():
     check(first_page[(114, 1)] == 604, f'An-Nas starts on page {first_page[(114, 1)]}, not 604')
     # From the printed Madinah Mushaf (the owner's copy, 2026-09-30).
     juz_starts = [tuple(j) for j in meta['juz']]
+    check(juz_starts[3] == (3, 93) and first_page[(3, 93)] == 62,
+          f'juz 4 starts at {juz_starts[3]}, not 3:93 on page 62')
     check(juz_starts[10] == (9, 93) and first_page[(9, 93)] == 201,
           f'juz 11 starts at {juz_starts[10]}, not 9:93 on page 201')
     check((15, 49) in [tuple(q) for q in meta['quarters']],
