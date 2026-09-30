@@ -15,6 +15,9 @@ class SuraItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return GestureDetector(
+      // The whole row opens the sura, the space between the names included,
+      // not only the painted number and text.
+      behavior: HitTestBehavior.opaque,
       onTap: () => openSura(context, sura),
       child: Row(
         children: [
