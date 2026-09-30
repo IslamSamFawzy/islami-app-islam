@@ -94,7 +94,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     try {
       final stored = jsonStore.readMap(_progressKey)['$suraId'];
       if (stored is! Map) return null;
-      return ReadingProgressModel.fromEntry(
+      return ReadingProgressModel.tryFromEntry(
         suraId,
         stored.cast<String, dynamic>(),
       );

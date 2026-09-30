@@ -13,14 +13,22 @@ class ReadingProgressModel extends ReadingProgress {
     required super.updatedAt,
   });
 
-  factory ReadingProgressModel.fromEntry(int suraId, Map<String, dynamic> json) {
+  /// The stored entry for [suraId], or `null` when it says no ayah it can be
+  /// trusted with. An entry is never read as ayah 1 by default: a card that
+  /// says "Ayah 1" must mean the reader was on ayah 1.
+  static ReadingProgressModel? tryFromEntry(
+    int suraId,
+    Map<String, dynamic> json,
+  ) {
+    final ayah = switch (json) {
+      {'ayah': final num ayah} => ayah.toInt(),
+      {'ayahIndex': final num index} => index.toInt() + 1,
+      _ => null,
+    };
+    if (ayah == null || ayah < 1) return null;
     return ReadingProgressModel(
       suraId: suraId,
-      ayah: switch (json) {
-        {'ayah': final num ayah} => ayah.toInt(),
-        {'ayahIndex': final num index} => index.toInt() + 1,
-        _ => 1,
-      },
+      ayah: ayah,
       updatedAt:
           DateTime.tryParse((json['updatedAt'] as String?) ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
