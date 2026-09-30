@@ -79,7 +79,7 @@ uses `Cubit`s instantiated directly.
 
 ## Offline behaviour
 
-Azkar, hadith, the Quran text and the prayer guide ship as assets, so they need
+Azkar, hadith, the Mushaf and the prayer guide ship as assets, so they need
 no network at all. Radio lists are cached for 7 days and prayer times a month
 at a time, both through `CacheManager`; downloaded suras play from disk. A
 screen showing saved data while offline says so with `OfflineBannerFor`.
@@ -114,7 +114,7 @@ one rule.
 | intro   | `IntroCubit` (page, finish) | `OnboardingRepository` |
 | onboarding | — (domain + data only) | "seen the intro" flag in SharedPreferences |
 | home    | `HomeCubit` (tab index, IndexedStack) | — |
-| quran   | `QuranBloc` (list + search), `QuranDetailsBloc` (verses) | 114 suras from `SuraNames` + ayah `.txt` assets; recents in SharedPreferences |
+| quran   | `QuranBloc` (list + search), `MushafReaderBloc` (page, selection, progress, go to) | 114 suras from `SuraNames`; the Mushaf from `assets/quran/` (`MushafRepository`); recents and progress in SharedPreferences |
 | hadith  | `HadithBloc` | 50 hadiths in `assets/files/hadeeth` |
 | azkar   | `AzkarBloc` | morning/evening JSON assets |
 | tasbeh  | `TasbehCubit` (counter + dhikr) | — |
@@ -123,6 +123,40 @@ one rule.
 | time    | `TimeBloc` (schedule, countdown, adhan alarms), `AdhanSettingsCubit` (which adhans) | Aladhan API, a month cached; alarms armed natively; adhan settings in SharedPreferences |
 | qibla   | `QiblaCubit` (location + compass) | last location cached for offline use |
 | prayer_guide | `PrayerGuideCubit` | `assets/files/prayer_guide/prayer_guide.json` — present but not yet wired into the app |
+
+## The Mushaf
+
+The Quran tab reads the King Fahd Complex's Uthmanic Hafs text on the 604-page,
+15-line Madinah layout (1421H print). The reasons, sources and licences are in
+`docs/quran/SOURCE_DECISION.md` and `tool/quran_source/SOURCE.md`.
+
+* **Nobody edits Quran text.** `tool/quran_source/` holds the sources exactly
+  as downloaded (`.gitattributes` keeps them byte for byte).
+  `tool/build_mushaf_assets.py` only reshapes them into `assets/quran/`
+  (`meta.json` and one JSON per page) and copies the two fonts into
+  `assets/fonts/`; it is deterministic.
+* `tool/verify_mushaf_assets.py` proves the assets against the sources:
+  counts, a byte-exact round trip of every ayah, the letter skeleton against
+  Tanzil's Uthmani text, every ayah's page against the KFGQPC page field, the
+  anchors and the 15 sajdah ayat. `test/quran_assets/` runs the core of it in
+  `flutter test`. Run both after touching anything under `tool/quran_source/`.
+* A page asset holds its 15 lines; an ayah line holds segments of tokens with
+  the separators that follow them, so `MushafWord.text + separator` over an
+  ayah rebuilds its text exactly (`GetAyahText`).
+* `MushafLocalDataSource` decodes on another isolate (`compute`) and keeps the
+  last 12 pages in an LRU cache; `MushafReaderBloc` asks for the page on
+  screen and its neighbours.
+* The page widget lays each line out at one font size (the page is 21.5 em
+  wide, enough for the widest of the 8,820 lines — tested) and justifies it by
+  its word gaps; it never reflows a line. Pinch-zoom wraps the whole
+  `PageView`, so a swipe always reaches the PageView first.
+* Reading progress is `suraId -> {ayah}`; entries saved by 1.0.1 and earlier
+  hold a 0-based `ayahIndex` and are read as `ayahIndex + 1`.
+
+```bash
+python tool/build_mushaf_assets.py    # rebuild assets/quran and the fonts
+python tool/verify_mushaf_assets.py   # prove them against the sources
+```
 
 ## Setup
 

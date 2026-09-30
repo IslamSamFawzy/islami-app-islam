@@ -32,8 +32,11 @@ times is downloaded at once, so after the first run the schedule is there
 offline.
 
 **The Quran**
-All 114 suras, with search that understands both English and Arabic (type
-"بقره" or "Baqarah" or just "2"). Recently read suras open where you stopped.
+The Mushaf of Madinah as it is printed: the King Fahd Complex's Uthmani text
+and font, on the same 604 pages of 15 lines, each line breaking at the same
+word. Turn the pages, tap an ayah, go to any sura, juz, page or ayah, and pinch
+to zoom — all offline. Search the suras in English or Arabic (type "بقره" or
+"Baqarah" or just "2"), and recently read suras open where you stopped.
 
 **Fifty hadiths**
 Fifty hadiths in Arabic, each with the narration it comes from, one card at a
@@ -64,8 +67,11 @@ No account, no adverts, no tracking. What the app keeps, it keeps on your phone.
 مواقيت الشهر مرة واحدة، فتبقى متاحة بدون إنترنت.
 
 **القرآن الكريم**
-السور الـ114 كاملة، مع بحث يفهم العربية والإنجليزية (اكتب «بقره» أو «Baqarah» أو
-«2»). والسور التي قرأتها تُفتح من حيث توقفت.
+مصحف المدينة كما هو مطبوع: الرسم العثماني وخط مجمع الملك فهد، في الصفحات الـ604
+نفسها بأسطرها الخمسة عشر، وكل سطر ينتهي عند الكلمة نفسها. تصفَّح الصفحات، والمس
+آية لتحديدها، وانتقل إلى أي سورة أو جزء أو صفحة أو آية، وكبِّر بإصبعين — وكل ذلك
+بدون إنترنت. ابحث عن السور بالعربية أو الإنجليزية (اكتب «بقره» أو «Baqarah» أو
+«2»)، والسور التي قرأتها تُفتح من حيث توقفت.
 
 **خمسون حديثًا**
 خمسون حديثًا بالعربية مع تخريج كلٍّ منها، حديثًا حديثًا في عرض تتنقَّل بينه.
@@ -93,11 +99,23 @@ Captured on the `Pixel_9_Pro_XL` emulator at 1344×2992 (well over Play's
 | 1 | `01-prayer-times.png` | Time tab, prayer card showing today's date (Gregorian + Hijri), the three prayers with the next one raised, and the "Next Pray" countdown running. No offline banner. |
 | 2 | `02-adhan-settings.png` | The gear screen: "Adhan notifications" on, all five prayer switches on, exact-alarm row absent (permission already granted). |
 | 3 | `03-quran-list.png` | Quran tab with the "Most Recently" card showing Al-Baqarah and its "Ayah N" line, and the suras list beneath it. |
-| 4 | `04-sura-reading.png` | Al-Baqarah open, scrolled a little way in, so several ayah cards and the sura header are visible. |
+| 4 | `04-sura-reading.png` | The Mushaf reader on page 2 (Al-Baqarah's header, the basmala and 2:1–5), or on a full page such as 50. **Retake:** the current file still shows the old ayah cards. |
 | 5 | `05-reciters.png` | Radio tab on the Reciters toggle, the reciter list loaded. |
 | 6 | `06-downloads.png` | Downloads screen with at least two saved suras under one reciter and the "Total on device" line. |
 | 7 | `07-prayer-guide.png` | Salah tab, overview card with the figure mid-posture (not standing still). |
 | 8 | `08-qibla.png` | Qibla compass resolved, needle drawn, with the bearing and "km to Mecca" beneath it. |
+
+## Quran text credits
+
+Shown in the app under the reader's info button ("About the Quran text"), as
+the sources' terms ask (details in `tool/quran_source/SOURCE.md`):
+
+* Quran text and the Uthmanic Hafs font (v2.0): King Fahd Glorious Quran
+  Printing Complex (KFGQPC), Madinah — https://qurancomplex.gov.sa
+* The 604-page, 15-line layout (1421H print) and the sura-name font: Quranic
+  Universal Library (QUL) by Tarteel — https://qul.tarteel.ai
+* Juz, quarter and sajdah data (CC BY), and the Uthmani text the app is checked
+  against: Tanzil Project — https://tanzil.net
 
 ## Category and contact
 
