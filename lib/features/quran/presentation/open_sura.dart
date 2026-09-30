@@ -3,17 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/entities/sura.dart';
 import 'bloc/quran_bloc.dart';
-import 'pages/quran_details_view.dart';
+import 'pages/mushaf_reader_view.dart';
 
-/// Marks [sura] as recently read and opens it.
+/// Marks [sura] as recently read and opens the Mushaf on it.
 ///
-/// Both ways into a sura go through here: the list opens it at the top, the
-/// Most Recently cards pass [resume] so it opens where the reader stopped.
+/// Both ways into a sura go through here: the list opens it at its first
+/// page, the Most Recently cards pass [resume] so it opens where the reader
+/// stopped. The reader can page on into other suras, so the recents are
+/// reloaded when it closes.
 void openSura(BuildContext context, Sura sura, {bool resume = false}) {
-  context.read<QuranBloc>().add(MarkSuraAsReadEvent(sura));
+  final bloc = context.read<QuranBloc>()..add(MarkSuraAsReadEvent(sura));
   Navigator.pushNamed(
     context,
-    QuranDetailsView.routeName,
-    arguments: QuranDetailsArgs(sura, resume: resume),
-  );
+    MushafReaderView.routeName,
+    arguments: MushafReaderArgs(sura.id, resume: resume),
+  ).then((_) {
+    if (!bloc.isClosed) bloc.add(const LoadRecentSurasEvent());
+  });
 }

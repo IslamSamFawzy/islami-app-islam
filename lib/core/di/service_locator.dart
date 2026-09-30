@@ -58,6 +58,7 @@ import '../../features/quran/domain/usecases/get_sura_info.dart';
 import '../../features/quran/domain/usecases/get_sura_verses.dart';
 import '../../features/quran/domain/usecases/save_reading_progress.dart';
 import '../../features/quran/presentation/bloc/details/quran_details_bloc.dart';
+import '../../features/quran/presentation/bloc/mushaf/mushaf_reader_bloc.dart';
 import '../../features/quran/presentation/bloc/quran_bloc.dart';
 // Radio feature
 import '../../features/radio/data/datasources/radio_local_data_source.dart';
@@ -168,6 +169,17 @@ Future<void> init() async {
       addRecentSura: sl(),
       getReadingProgress: sl(),
       suraSearchFilter: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => MushafReaderBloc(
+      getPage: sl(),
+      getPageForAyah: sl(),
+      getSuraInfo: sl(),
+      getJuzStart: sl(),
+      getReadingProgress: sl(),
+      saveReadingProgress: sl(),
+      addRecentSura: sl(),
     ),
   );
   sl.registerFactory(
