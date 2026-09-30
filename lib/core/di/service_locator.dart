@@ -38,14 +38,23 @@ import '../../features/qibla/data/repositories/last_location_repository_impl.dar
 import '../../features/qibla/domain/repositories/last_location_repository.dart';
 import '../../features/qibla/presentation/cubit/qibla_cubit.dart';
 // Quran feature
+import '../../features/quran/data/datasources/mushaf_local_data_source.dart';
 import '../../features/quran/data/datasources/quran_local_data_source.dart';
+import '../../features/quran/data/repositories/mushaf_repository_impl.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
+import '../../features/quran/domain/repositories/mushaf_repository.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/quran/domain/services/sura_search_filter.dart';
 import '../../features/quran/domain/usecases/add_recent_sura.dart';
 import '../../features/quran/domain/usecases/get_all_suras.dart';
+import '../../features/quran/domain/usecases/get_ayah.dart';
+import '../../features/quran/domain/usecases/get_ayah_text.dart';
+import '../../features/quran/domain/usecases/get_juz_start.dart';
+import '../../features/quran/domain/usecases/get_mushaf_page.dart';
+import '../../features/quran/domain/usecases/get_page_for_ayah.dart';
 import '../../features/quran/domain/usecases/get_recent_suras.dart';
 import '../../features/quran/domain/usecases/get_reading_progress.dart';
+import '../../features/quran/domain/usecases/get_sura_info.dart';
 import '../../features/quran/domain/usecases/get_sura_verses.dart';
 import '../../features/quran/domain/usecases/save_reading_progress.dart';
 import '../../features/quran/presentation/bloc/details/quran_details_bloc.dart';
@@ -176,15 +185,27 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddRecentSura(sl()));
   sl.registerLazySingleton(() => GetReadingProgress(sl()));
   sl.registerLazySingleton(() => SaveReadingProgress(sl()));
+  sl.registerLazySingleton(() => GetPage(sl()));
+  sl.registerLazySingleton(() => GetPageForAyah(sl()));
+  sl.registerLazySingleton(() => GetAyah(sl()));
+  sl.registerLazySingleton(() => GetSuraInfo(sl()));
+  sl.registerLazySingleton(() => GetJuzStart(sl()));
+  sl.registerLazySingleton(() => GetAyahText(sl()));
 
   // Repository
   sl.registerLazySingleton<QuranRepository>(
     () => QuranRepositoryImpl(localDataSource: sl()),
   );
+  sl.registerLazySingleton<MushafRepository>(
+    () => MushafRepositoryImpl(localDataSource: sl()),
+  );
 
   // Data source
   sl.registerLazySingleton<QuranLocalDataSource>(
     () => QuranLocalDataSourceImpl(sharedPreferences: sl(), jsonStore: sl()),
+  );
+  sl.registerLazySingleton<MushafLocalDataSource>(
+    () => MushafLocalDataSourceImpl(),
   );
 
   // ---------------------------------------------------------------------------
