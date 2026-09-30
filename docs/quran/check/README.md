@@ -20,9 +20,9 @@ review these pages, and the app itself on a real phone.**
 | 50 | `p050.png` | Aal-E-Imran header and basmala at the top of a full page. |
 | 106 | `p106.png` | End of An-Nisa, Al-Ma'idah header mid-page. |
 | 187 | `p187.png` | At-Tawba: header, and no basmala. |
-| 282 | `p282.png` | Al-Isra header mid-page. |
+| 282 | `p282.png` | Al-Isra's header at the top of the page. |
 | 293 | `p293.png` | 17:107–109 sajdah: the line over «يَخِرُّونَ لِلۡأَذۡقَانِ سُجَّدٗا» and ۩; then Al-Kahf 18:1. |
-| 377 | `p377.png` | An-Naml's header. |
+| 377 | `p377.png` | An-Naml: its header is the last line of page 376, so this page opens with the basmala. |
 | 400 | `p400.png` | A line where quran.com's data disagrees with the layout by one word. |
 | 442 | `p442.png` | Ya-Sin. |
 | 443 | `p443.png` | Another line where quran.com disagrees by one word. |
