@@ -1,0 +1,4 @@
+# Quran sources and generated Quran assets must stay byte for byte as they
+# are: no line-ending conversion, no diffs as text.
+tool/quran_source/** -text -diff
+assets/quran/** -text -diff
