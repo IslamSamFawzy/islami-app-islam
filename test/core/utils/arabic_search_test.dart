@@ -1,5 +1,42 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/utils/arabic_search.dart';
+
+/// Each ayah's text from the two sources, as they were downloaded (see
+/// tool/quran_source/SOURCE.md). Nothing here is typed by hand.
+({Map<String, String> kfgqpc, Map<String, String> tanzil}) _sources() {
+  final raw = File(
+    'tool/quran_source/kfgqpc/hafsData_v2-0.json',
+  ).readAsStringSync().replaceFirst('﻿', '');
+  final kfgqpc = <String, String>{};
+  for (final r in (jsonDecode(raw) as List).cast<Map<String, dynamic>>()) {
+    final text = r['aya_text'] as String;
+    // Without its ayah-number codepoint and the space before it.
+    kfgqpc['${r['sura_no']}:${r['aya_no']}'] = text.substring(
+      0,
+      text.length - 2,
+    );
+  }
+  final tanzil = <String, String>{};
+  for (final line in File(
+    'tool/quran_source/tanzil/quran-uthmani.txt',
+  ).readAsLinesSync()) {
+    if (line.isEmpty || line.startsWith('#')) continue;
+    final parts = line.split('|');
+    tanzil['${parts[0]}:${parts[1]}'] = parts.sublist(2).join('|');
+  }
+  return (kfgqpc: kfgqpc, tanzil: tanzil);
+}
+
+/// The words of [s] as search sees them, joined without spaces (the two
+/// sources split a few words differently).
+String _letters(String s, {int skipWords = 0}) => s
+    .split(RegExp(r'[  ]+'))
+    .skip(skipWords)
+    .map(ArabicSearch.normalize)
+    .join();
 
 void main() {
   group('normalize', () {
@@ -59,11 +96,11 @@ void main() {
 
   group('suraMatches', () {
     bool q(String query) => ArabicSearch.suraMatches(
-          query: query,
-          number: 2,
-          nameEn: 'Al-Baqarah',
-          nameAr: 'البقرة',
-        );
+      query: query,
+      number: 2,
+      nameEn: 'Al-Baqarah',
+      nameAr: 'البقرة',
+    );
 
     test('matches by number, English or Arabic (2 / baqara / بقرة / بقره)', () {
       expect(q('2'), isTrue);
@@ -87,6 +124,41 @@ void main() {
         ),
         isTrue,
       );
+    });
+  });
+
+  group('the two Quran sources search the same', () {
+    final sources = _sources();
+
+    test('2:72: hamza as a letter (KFGQPC) or as a mark (Tanzil)', () {
+      final kfgqpc = sources.kfgqpc['2:72']!;
+      final tanzil = sources.tanzil['2:72']!;
+      // The sources really do differ here: U+0621 in one, U+0654 in the other.
+      expect(kfgqpc, contains('ءۡ'));
+      expect(tanzil, contains('ْٔ'));
+
+      expect(_letters(kfgqpc), _letters(tanzil));
+      // Each finds the other's word.
+      final kWord = kfgqpc.split(' ').firstWhere((w) => w.contains('ء'));
+      final tWord = tanzil.split(' ').firstWhere((w) => w.contains('ٔ'));
+      expect(ArabicSearch.matches(kWord, tanzil), isTrue);
+      expect(ArabicSearch.matches(tWord, kfgqpc), isTrue);
+    });
+
+    test('every ayah folds to the same letters from either source', () {
+      final basmalaWords = sources.tanzil['1:1']!.split(' ').length;
+      final differ = <String>[];
+      sources.kfgqpc.forEach((key, kfgqpc) {
+        final (sura, ayah) = (key.split(':')[0], key.split(':')[1]);
+        // Tanzil puts the basmala before 1 of every sura but 1 and 9.
+        final withBasmala = ayah == '1' && sura != '1' && sura != '9';
+        final tanzil = _letters(
+          sources.tanzil[key]!,
+          skipWords: withBasmala ? basmalaWords : 0,
+        );
+        if (_letters(kfgqpc) != tanzil) differ.add(key);
+      });
+      expect(differ, isEmpty);
     });
   });
 }

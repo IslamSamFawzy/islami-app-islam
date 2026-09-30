@@ -19,16 +19,28 @@ abstract class ArabicSearch {
 
   /// Folds an Arabic (or Latin) string to a comparable form: lower-cased,
   /// tashkeel/tatweel stripped, alef variants (U+0623/0625/0622/0671) -> alef,
-  /// teh marbuta (U+0629) -> heh, alef maksura (U+0649) -> yeh, and a leading
-  /// definite article "al-" (alef+lam) removed. Latin text is only lower-cased.
+  /// the hamza dropped wherever it is written (the letter U+0621, or the marks
+  /// U+0654/U+0655 stripped above) and its seats folded (U+0624 -> waw,
+  /// U+0626 -> yeh), teh marbuta (U+0629) -> heh, alef maksura (U+0649) ->
+  /// yeh, and a leading definite article "al-" (alef+lam) removed. Latin text
+  /// is only lower-cased.
+  ///
+  /// The hamza has to go entirely: the KFGQPC Mushaf text and Tanzil's write
+  /// some hamzas differently (2:72 has the letter in one and the combining
+  /// mark in the other), and a search must not care which it was given.
   static String normalize(String input) {
-    var s = input.toLowerCase().trim();
+    // A no-break space (the Mushaf text has one before each ayah number and
+    // after each rub sign) is a space like any other.
+    var s = input.replaceAll('\u00A0', ' ').toLowerCase().trim();
     s = s.replaceAll(_diacritics, '');
     s = s
         .replaceAll('أ', _alef) // hamza-on-alef -> alef
         .replaceAll('إ', _alef) // hamza-under-alef -> alef
         .replaceAll('آ', _alef) // alef-madda -> alef
         .replaceAll('ٱ', _alef) // alef-wasla -> alef
+        .replaceAll('\u0621', '') // hamza letter -> gone
+        .replaceAll('\u0624', '\u0648') // hamza on waw -> waw
+        .replaceAll('\u0626', '\u064A') // hamza on yeh -> yeh
         .replaceAll('ة', 'ه') // teh marbuta -> heh
         .replaceAll('ى', 'ي'); // alef maksura -> yeh
     // Drop a leading "al-" so "al-baqarah" and "baqarah" (Arabic) compare equal.
