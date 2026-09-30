@@ -93,7 +93,7 @@ class MostRecentlyWidget extends StatelessWidget {
                                   ),
                                   if (progress != null)
                                     Text(
-                                      'Ayah ${progress.ayahNumber}',
+                                      'Ayah ${progress.ayah}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodyMedium!

@@ -56,7 +56,7 @@ void main() {
   test('opening from the list starts at the top', () async {
     repository.progress[2] = ReadingProgress(
       suraId: 2,
-      ayahIndex: 20,
+      ayah: 21,
       updatedAt: DateTime(2026),
     );
     final bloc = build();
@@ -72,7 +72,7 @@ void main() {
   test('resuming opens at the saved ayah and highlights it', () async {
     repository.progress[2] = ReadingProgress(
       suraId: 2,
-      ayahIndex: 20,
+      ayah: 21,
       updatedAt: DateTime(2026),
     );
     final bloc = build();
@@ -98,7 +98,7 @@ void main() {
   test('a saved ayah beyond the sura is ignored', () async {
     repository.progress[2] = ReadingProgress(
       suraId: 2,
-      ayahIndex: 999,
+      ayah: 1000,
       updatedAt: DateTime(2026),
     );
     final bloc = build();
@@ -125,7 +125,7 @@ void main() {
     await Future<void>.delayed(QuranDetailsBloc.saveDebounce * 2);
 
     expect(repository.saved.length, 1);
-    expect(repository.saved.single.ayahIndex, 8);
+    expect(repository.saved.single.ayah, 9);
     expect(repository.saved.single.suraId, 2);
     await bloc.close();
   });
@@ -139,7 +139,7 @@ void main() {
 
     await bloc.close(); // the debounce has not fired yet
 
-    expect(repository.saved.single.ayahIndex, 12);
+    expect(repository.saved.single.ayah, 13);
   });
 
   test('going to the background saves without waiting', () async {
@@ -151,14 +151,14 @@ void main() {
     bloc.add(const SaveProgressNowEvent());
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    expect(repository.saved.single.ayahIndex, 4);
+    expect(repository.saved.single.ayah, 5);
     await bloc.close();
   });
 
   test('the resume highlight clears itself', () async {
     repository.progress[2] = ReadingProgress(
       suraId: 2,
-      ayahIndex: 3,
+      ayah: 4,
       updatedAt: DateTime(2026),
     );
     final bloc = build();

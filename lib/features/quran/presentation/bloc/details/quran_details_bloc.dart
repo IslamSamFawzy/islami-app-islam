@@ -114,7 +114,10 @@ class QuranDetailsBloc extends Bloc<QuranDetailsEvent, QuranDetailsState> {
   /// since grown shorter than it).
   Future<int> _savedIndex(int verseCount) async {
     final result = await getReadingProgress(_suraId);
-    final index = result.fold((_) => -1, (progress) => progress?.ayahIndex ?? -1);
+    final index = result.fold(
+      (_) => -1,
+      (progress) => progress == null ? -1 : progress.ayah - 1,
+    );
     return index >= 0 && index < verseCount ? index : -1;
   }
 
@@ -127,7 +130,7 @@ class QuranDetailsBloc extends Bloc<QuranDetailsEvent, QuranDetailsState> {
     await saveReadingProgress(
       ReadingProgress(
         suraId: _suraId,
-        ayahIndex: index,
+        ayah: index + 1,
         updatedAt: DateTime.now(),
       ),
     );

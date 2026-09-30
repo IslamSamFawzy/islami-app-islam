@@ -4,20 +4,17 @@ import 'package:equatable/equatable.dart';
 class ReadingProgress extends Equatable {
   final int suraId;
 
-  /// Index of the first ayah that was fully on screen, counting from 0.
-  final int ayahIndex;
+  /// The ayah the reader was on, as a reader counts it (from 1).
+  final int ayah;
 
   final DateTime updatedAt;
 
   const ReadingProgress({
     required this.suraId,
-    required this.ayahIndex,
+    required this.ayah,
     required this.updatedAt,
   });
 
-  /// The ayah number a reader would recognise (1-based).
-  int get ayahNumber => ayahIndex + 1;
-
   @override
-  List<Object?> get props => [suraId, ayahIndex, updatedAt];
+  List<Object?> get props => [suraId, ayah, updatedAt];
 }

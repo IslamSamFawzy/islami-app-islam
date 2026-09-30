@@ -53,7 +53,7 @@ class QuranRepositoryImpl implements QuranRepository {
       await localDataSource.saveProgress(
         ReadingProgressModel(
           suraId: progress.suraId,
-          ayahIndex: progress.ayahIndex,
+          ayah: progress.ayah,
           updatedAt: progress.updatedAt,
         ),
       );

@@ -2,8 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:islami/core/cache/json_store.dart';
+import 'package:islami/features/quran/data/datasources/mushaf_local_data_source.dart';
 import 'package:islami/features/quran/data/datasources/quran_local_data_source.dart';
 import 'package:islami/features/quran/data/models/reading_progress_model.dart';
+import 'package:islami/features/quran/data/repositories/mushaf_repository_impl.dart';
+import 'package:islami/features/quran/domain/entities/ayah_ref.dart';
+import 'package:islami/features/quran/domain/usecases/get_page_for_ayah.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -66,14 +70,13 @@ void main() {
       await ds.saveProgress(
         ReadingProgressModel(
           suraId: 2,
-          ayahIndex: 41,
+          ayah: 42,
           updatedAt: DateTime(2026, 9, 24, 8),
         ),
       );
 
       final progress = await ds.getProgress(2);
-      expect(progress?.ayahIndex, 41);
-      expect(progress?.ayahNumber, 42);
+      expect(progress?.ayah, 42);
       expect(progress?.updatedAt, DateTime(2026, 9, 24, 8));
 
       // Its own key; the recents list is untouched.
@@ -85,27 +88,27 @@ void main() {
       await ds.saveProgress(
         ReadingProgressModel(
           suraId: 2,
-          ayahIndex: 5,
+          ayah: 6,
           updatedAt: DateTime(2026),
         ),
       );
       await ds.saveProgress(
         ReadingProgressModel(
           suraId: 36,
-          ayahIndex: 9,
+          ayah: 10,
           updatedAt: DateTime(2026),
         ),
       );
       await ds.saveProgress(
         ReadingProgressModel(
           suraId: 2,
-          ayahIndex: 7,
+          ayah: 8,
           updatedAt: DateTime(2026),
         ),
       );
 
-      expect((await ds.getProgress(2))?.ayahIndex, 7);
-      expect((await ds.getProgress(36))?.ayahIndex, 9);
+      expect((await ds.getProgress(2))?.ayah, 8);
+      expect((await ds.getProgress(36))?.ayah, 10);
     });
 
     test('a sura never read has none', () async {
@@ -118,6 +121,59 @@ void main() {
       });
 
       expect(await ds.getProgress(2), isNull);
+    });
+  });
+
+  group('progress saved by 1.0.1 and earlier', () {
+    // Those versions stored the 0-based index of the ayah in the old list.
+    test('reads as the ayah after its index', () async {
+      await build({
+        'reading_progress': json.encode({
+          '2': {'ayahIndex': 41, 'updatedAt': '2026-09-24T08:00:00.000'},
+          '18': {'ayahIndex': 0, 'updatedAt': '2026-09-24T08:00:00.000'},
+        }),
+      });
+
+      expect((await ds.getProgress(2))?.ayah, 42);
+      expect((await ds.getProgress(18))?.ayah, 1);
+      expect((await ds.getProgress(2))?.updatedAt, DateTime(2026, 9, 24, 8));
+    });
+
+    test('is written in the new form on the next save', () async {
+      await build({
+        'reading_progress': json.encode({
+          '2': {'ayahIndex': 41, 'updatedAt': '2026-09-24T08:00:00.000'},
+        }),
+      });
+
+      await ds.saveProgress(await ds.getProgress(2) as ReadingProgressModel);
+
+      final stored =
+          json.decode(prefs.getString('reading_progress')!) as Map;
+      expect(stored['2'], {'ayah': 42, 'updatedAt': '2026-09-24T08:00:00.000'});
+    });
+
+    test('resumes on the Mushaf page of that ayah', () async {
+      await build({
+        'reading_progress': json.encode({
+          '2': {'ayahIndex': 41, 'updatedAt': '2026-09-24T08:00:00.000'},
+          '18': {'ayahIndex': 0, 'updatedAt': '2026-09-24T08:00:00.000'},
+          '114': {'ayahIndex': 5, 'updatedAt': '2026-09-24T08:00:00.000'},
+        }),
+      });
+      final pageFor = GetPageForAyah(
+        MushafRepositoryImpl(localDataSource: MushafLocalDataSourceImpl()),
+      );
+
+      Future<int?> resumePage(int sura) async {
+        final progress = await ds.getProgress(sura);
+        final page = await pageFor(AyahRef(sura, progress!.ayah));
+        return page.fold((_) => null, (p) => p);
+      }
+
+      expect(await resumePage(2), 7); // 2:42
+      expect(await resumePage(18), 293); // 18:1
+      expect(await resumePage(114), 604); // 114:6
     });
   });
 

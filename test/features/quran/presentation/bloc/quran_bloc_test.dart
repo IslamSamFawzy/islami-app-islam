@@ -63,7 +63,7 @@ void main() {
     repository.recents = const [_baqarah, _fatiha];
     repository.progress[2] = ReadingProgress(
       suraId: 2,
-      ayahIndex: 41,
+      ayah: 42,
       updatedAt: DateTime(2026),
     );
     final bloc = build();
@@ -74,7 +74,7 @@ void main() {
     );
 
     expect(state.recentSuras, [_baqarah, _fatiha]);
-    expect(state.recentProgress[2]?.ayahNumber, 42);
+    expect(state.recentProgress[2]?.ayah, 42);
     expect(state.recentProgress.containsKey(1), isFalse);
     await bloc.close();
   });
